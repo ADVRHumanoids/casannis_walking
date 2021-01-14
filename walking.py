@@ -1,19 +1,27 @@
 import casadi as cs 
 import numpy as np
+from matplotlib import pyplot as plt
 
 class Walking:
     """
     Assumptions:
-     1) mass concentrated at com
-     2) zero angular momentum
-     3) point contacts
+      1) mass concentrated at com
+      2) zero angular momentum
+      3) point contacts
 
     Dynamics:
-     1) input is com jerk
-     2) dyamics is a triple integrator of com jerk
-     3) there must be contact forces that
-       - realize the motion
-       - fulfil contact constraints (i.e. unilateral constr)
+      1) input is com jerk
+      2) dyamics is a triple integrator of com jerk
+      3) there must be contact forces that
+        - realize the motion
+        - fulfil contact constraints (i.e. unilateral constr)
+
+    TODO:
+      1) interpolate motion to a higher frequency (small dt)
+      2) swing leg trajectory (at least continuous acceleration)
+      3) send to cartesio for ik (using ros topics)
+      4) gazebo simulation
+      5) contact detection
     """
 
     def __init__(self, mass, N, dt):
@@ -62,6 +70,12 @@ class Walking:
         P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
+
+        self._trj = {
+            'x': X,
+            'u': U,
+            'F': F
+        }
 
         # iterate over knots starting from k = 0
         for k in range(N):
@@ -131,7 +145,7 @@ class Walking:
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
-    def solve(self, x0, contacts, swing_id, swing_tgt, swing_t):
+    def solve(self, x0, contacts, swing_id, swing_tgt, swing_t, min_f=50):
         """Solve the stepping problem
 
         Args:
@@ -174,7 +188,7 @@ class Walking:
 
             # force bounds
             f_max = np.full(self._dimf * self._ncontacts, cs.inf)
-            f_min = np.array([-cs.inf, -cs.inf, 0.0] * self._ncontacts)
+            f_min = np.array([-cs.inf, -cs.inf, min_f] * self._ncontacts)
 
             # swing phase
             is_swing = k >= swing_t[0]/self._dt and k <= swing_t[1]/self._dt
@@ -206,15 +220,45 @@ class Walking:
         Xl[-1][3:] = 0
         Xu[-1][3:] = 0
 
-        # call solver
+        # initial guess
         v0 = np.zeros(self._nvars)
+
+        # format bounds an params according to solver
         lbv = cs.vertcat(*Xl, *Ul, *Fl)
         ubv = cs.vertcat(*Xu, *Uu, *Fu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
 
+        # compute solution-call solver
         sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
+
+        # plot com trajectory
+        x_trj = cs.horzcat(*self._trj['x']) # pack states in a desired matrix
+        f_trj = cs.horzcat(*self._trj['F']) # pack forces in a desired matrix
+
+        return {
+            'x': self.evaluate(x_trj, sol['x']), 
+            'F': self.evaluate(f_trj, sol['x']), 
+        }
+        
+    def evaluate(self, expr, solution):
+
+        # make a casadi function to evaluate the given expression
+        expr_fun = cs.Function('expr_fun',
+                                {
+                                    'expr': expr, 
+                                    'v': self._nlp['x']
+                                },
+                                ['v'], 
+                                ['expr'])
+        
+        expr_value = expr_fun(v=solution)['expr'].toarray()
+
+        return expr_value
+
+    def interpolate(self, args):
+        pass
 
 
             
@@ -247,4 +291,23 @@ swing_tgt = np.array([0.4, 0.3, 0.1])
 
 swing_t = (1.0, 2.0)
 
-w.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
+sol = w.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
+
+plt.figure()
+plt.plot(np.arange(w._N)*w._dt, sol['x'][0:3, :].transpose(), 'o-')
+plt.grid()
+plt.title('State trajectory')
+plt.legend(['x', 'y', 'z'])
+plt.xlabel('Time [s]')
+
+plt.figure()
+feet_labels = ['front left', 'front right', 'hind right', 'hind left']
+for i, name in enumerate(feet_labels):
+    plt.subplot(2, 2, i+1)
+    plt.plot(np.arange(w._N)*w._dt, sol['F'][3*i:3*(i+1), :].transpose(), 'o-')
+    plt.grid()
+    plt.title('Force trajectory ({})'.format(name))
+    plt.legend(['x', 'y', 'z'])
+    plt.xlabel('Time [s]')
+
+plt.show()
