@@ -17,6 +17,7 @@ class Walking:
         - fulfil contact constraints (i.e. unilateral constr)
 
     TODO:
+      0) play around, change cost, etc
       1) interpolate motion to a higher frequency (small dt)
       2) swing leg trajectory (at least continuous acceleration)
       3) send to cartesio for ik (using ros topics)
