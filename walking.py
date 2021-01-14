@@ -111,23 +111,25 @@ class Walking:
                 euler += cs.cross(p_i_k - c_k, f_i_k)
         
             g.append(euler)
-
-        # final constraint (vel and acc should vanish)
-        x_final = X[-1]
-        dc_final = x_final[3:6]
-        ddc_final = x_final[6:9]
-        g.append(dc_final)
-        g.append(ddc_final)
         
         # construct the solver
-        nlp = {
+        self._nlp = {
             'x': cs.vertcat(*X, *U, *F),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P) 
             }
 
-        self._solver = cs.nlpsol('solver', 'ipopt', nlp)
+        # save dimensions
+        self._nvars = self._nlp['x'].size1()
+        self._nconstr = self._nlp['g'].size1()
+        self._nparams = self._nlp['p'].size1()
+
+        solver_options = {
+            'ipopt.linear_solver': 'ma57'
+        }
+
+        self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
     def solve(self, x0, contacts, swing_id, swing_tgt, swing_t):
         """Solve the stepping problem
@@ -140,15 +142,15 @@ class Walking:
             swing_t ([type]): pair (t_lift, t_touch) in secs
         """
         
-        Xl = list()
-        Xu = list()
-        Ul = list()
-        Uu = list()
-        Fl = list()
-        Fu = list()
-        gl = list()
-        gu = list()
-        P = list()
+        Xl = list()  # state lower bounds
+        Xu = list()  # state upper bounds
+        Ul = list()  # control lower bounds
+        Uu = list()  # control upper bounds
+        Fl = list()  # force lower bounds
+        Fu = list()  # force upper bounds
+        gl = list()  # constraint lower bounds
+        gu = list()  # constraint upper bounds
+        P = list()  # parameter values
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -188,18 +190,33 @@ class Walking:
             if k >= swing_t[0]/self._dt:
                 # after the swing, the swing foot is now at swing_tgt
                 p_k[3*swing_id:3*(swing_id+1)] = swing_tgt
-            P.append(p_k)
 
+            P.append(p_k)
             
-            # dynamics boudns
+            # dynamics bounds
             if k > 0:
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
 
-            # constraint bounds (ne eq.)
+            # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6)) 
             gu.append(np.zeros(6)) 
 
+        # final constraints
+        Xl[-1][3:] = 0
+        Xu[-1][3:] = 0
+
+        # call solver
+        v0 = np.zeros(self._nvars)
+        lbv = cs.vertcat(*Xl, *Ul, *Fl)
+        ubv = cs.vertcat(*Xu, *Uu, *Fu)
+        lbg = cs.vertcat(*gl)
+        ubg = cs.vertcat(*gu)
+        params = cs.vertcat(*P)
+
+        sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
+
+
             
 
 
@@ -209,6 +226,25 @@ class Walking:
             
 
 
-w = Walking(mass=90, N=50, dt=0.1)
+w = Walking(mass=90, N=30, dt=0.1)
 
-w.solve(x0=np.zeros(9), contacts=[np.ones(3) for _ in range(4)], swing_id=1, swing_tgt=[0, 1, 2], swing_t=(2, 3))
+c0 = np.array([0.1, 0.0, 0.6])
+dc0 = np.zeros(3)
+ddc0 = np.zeros(3)
+
+x0 = np.hstack([c0, dc0, ddc0])
+
+contacts = [
+    np.array([0.3, 0.3, 0.0]),   # fl
+    np.array([0.3, -0.3, 0.0]),  # fr
+    np.array([-0.3, -0.3, 0.0]), # hr
+    np.array([-0.3, 0.3, 0.0])   # hl
+]
+
+swing_id = 0
+
+swing_tgt = np.array([0.4, 0.3, 0.1])
+
+swing_t = (1.0, 2.0)
+
+w.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
