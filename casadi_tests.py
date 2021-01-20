@@ -1,5 +1,7 @@
 import casadi as cs
 import numpy as np
+import scipy.interpolate as ip
+from matplotlib import pyplot as plt
 
 # select a sym type
 sym_t = cs.SX
@@ -28,3 +30,36 @@ print(jacF(p=p)['jac'])
 hesF = jacF.jacobian()
 print(hesF)
 print(hesF(p=p)['jac'])
+
+# ---------------------------------------------
+
+xgrid = np.linspace(1,6,6)
+V = [-1, -1, -2, -3, 0, 2]
+print(V)
+
+# interpolation
+lut = cs.interpolant('LUT', 'bspline', [xgrid], V)
+print (lut(2.5))
+
+interp = ip.InterpolatedUnivariateSpline(xgrid, V)
+print(interp(2.5))
+
+# evaluation points
+N=100
+x = np.linspace(1, 6, N)
+print(x[1])
+y = []
+y1 = []
+
+for i in range(0, N):
+    y.append(lut(x[i]))
+for i in range(0, N):
+    y1.append(interp(x[i]))
+
+plt.figure()
+plt.plot(x, y, x, y1, xgrid, V, 'o-')
+plt.grid()
+plt.title('State trajectory')
+plt.legend(['x', 'y', 'z'])
+plt.xlabel('Time [s]')
+plt.show()
