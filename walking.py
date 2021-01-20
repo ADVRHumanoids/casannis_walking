@@ -37,6 +37,7 @@ class Walking:
         self._N = N 
         self._dt = dt   # dt used for optimization knots
         self._mass = mass
+        self._time = [(i * dt) for i in range(N)]
 
         gravity = np.array([0, 0, -9.81])
 
@@ -276,7 +277,10 @@ class Walking:
                 solution['u'] 9x30 --> optimized control
             NN: intermediate points for interpolation between two knots
 
-        Returns:
+        Returns: a dictionary with:
+            time list for interpolation times (in sec)
+            state values for the interpolation points
+            force splines or linears
 
         '''
 
@@ -298,7 +302,7 @@ class Walking:
                 x_next = self._integrator(x_old, u_old, delta_t)    # next state
                 x_old = x_next     # refreshing the current state
 
-        # initialize state and time lists to be plotted
+        # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]
         t = [(ii*delta_t) for ii in range(self._N*NN)]
 
@@ -308,47 +312,20 @@ class Walking:
                 # store the value of x_i component on ii point of interpolation
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
-        # State plot
-        state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
-        plt.figure()
-        for i, name in enumerate(state_labels):
-            plt.subplot(3, 1, i+1)
-            for j in range(self._dimc):
-                plt.plot(t, int_state[self._dimc*i+j], '-')
-            plt.grid()
-            plt.legend(['x', 'y', 'z'])
-            plt.title(name)
-        plt.xlabel('Time [s]')
-        plt.show()
-
-
-        ''' Alternative: Interpolation of all state vector with splines
-        plt.figure()
-        for i, name in enumerate(state_labels):
-            plt.subplot(3, 1, i + 1)
-            for k in range(3):
-                plt.plot(x, interpl_data['X_SPL'][3 * i + k](x), '-')
-            plt.grid()
-            plt.title(name)
-            plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
-        plt.xlabel('Time [s]')
-        plt.show()'''
-
-
-
-        '''x_spl = []
-        for i in range(len(states)):
-            x_spl.append(cs.interpolant('X_CONT', 'bspline', self._time, states[i, :].transpose()))
 
         # force interpolation
-        f_spl = []
-        for i in range(len(forces)):
-            f_spl.append(cs.interpolant('X_CONT', 'bspline', self._time, forces[i, :].transpose()))
+        int_force = [[] for i in range(len(solution['F']))] # list to store the splines
+
+        for i in range(len(solution['F'])): # loop for each component of the force vector
+
+            # store the spline (by casadi) in the i element of the list int_force
+            int_force[i].append(cs.interpolant('X_CONT', 'linear', [self._time], solution['F'][i]))
 
         return {
-            'X_SPL': x_spl,
-            'F_SPL': f_spl
-        }'''
+            't': t,
+            'x': int_state,
+            'f': int_force
+        }
 
 # Main program
 w = Walking(mass=90, N=30, dt=0.1)
@@ -376,9 +353,9 @@ swing_t = (1.0, 2.0)
 sol = w.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
 
 # interpolate the values, pass values and intermediate points between knots
-w.interpolate(sol, 20)
+interpl = w.interpolate(sol, 20)
 
-# plot com position
+# plot com position from optimization
 plt.figure()
 plt.plot(np.arange(w._N)*w._dt, sol['x'][0:3, :].transpose(), '-o')
 plt.grid()
@@ -386,7 +363,7 @@ plt.title('State trajectory')
 plt.legend(['x', 'y', 'z'])
 plt.xlabel('Time [s]')
 
-# plot forces
+# plot forces from optimization problem
 plt.figure()
 feet_labels = ['front left', 'front right', 'hind right', 'hind left']
 for i, name in enumerate(feet_labels):
@@ -397,38 +374,28 @@ for i, name in enumerate(feet_labels):
     plt.legend(['x', 'y', 'z'])
     plt.xlabel('Time [s]')
 
-plt.show()
-
-'''
-# Alternative: Interpolation of all state vector with splines
-interpl_data = []
-interpl_data = w.interpolate(states=sol['x'][:, :], forces=sol['F'][:, :])
-
-# Number of plot points
-x = np.linspace(0, 3, 600)
-
-# plot interpolated state
+# Interpolated state plot
+state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
 plt.figure()
-state_labels = ['position', 'velocity', 'acceleration']
 for i, name in enumerate(state_labels):
     plt.subplot(3, 1, i+1)
-    for k in range(3):
-        plt.plot(x, interpl_data['X_SPL'][3*i+k](x), '-')
+    for j in range(w._dimc):
+        plt.plot(interpl['t'], interpl['x'][w._dimc*i+j], '-')
     plt.grid()
+    plt.legend(['x', 'y', 'z'])
     plt.title(name)
-    plt.legend([str(name)+'_x', str(name)+'_y', str(name)+'_z'])
 plt.xlabel('Time [s]')
-plt.show()
 
-# plot interpolated forces
+# Interpolated force plot
 plt.figure()
 for i, name in enumerate(feet_labels):
-    plt.subplot(2, 2, i+1)
+    plt.subplot(2, 2, i + 1)
     for k in range(3):
-        plt.plot(x, interpl_data['F_SPL'][3*i+k](x), '-')
+        plt.plot(w._time, interpl['f'][3*i+k][0](w._time), '-')
     plt.grid()
     plt.title(name)
-    plt.legend([str(name)+'_x', str(name)+'_y', str(name)+'_z'])
+    plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
 plt.xlabel('Time [s]')
+
 plt.show()
-'''
+
