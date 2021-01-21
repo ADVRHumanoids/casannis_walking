@@ -1,2 +1,4 @@
 venv/
 .idea/
+
+casannis-ros-pkg/src/__pycache__/walking.cpython-36.pyc
