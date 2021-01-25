@@ -5,7 +5,61 @@ from matplotlib import pyplot as plt
 
 # select a sym type
 sym_t = cs.SX
+a0 = sym_t.sym('a0', 1)
+a1 = sym_t.sym('a1', 1)
+a2 = sym_t.sym('a2', 1)
+a3 = sym_t.sym('a3', 1)
+a4 = sym_t.sym('a4', 1)
+a5 = sym_t.sym('a5', 1)
 
+t = sym_t.sym('t', 1)
+
+# initial and final position, vel, acc
+
+
+# the 5th order polynomial expression
+spline = a0 + a1*t + a2*t**2 + a3*t**3 + a4*t**4 + a5*t**5
+
+# wrap the polynomial expression in a function
+p = cs.Function('p', [t, a0, a1, a2, a3, a4, a5], [spline], ['t', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5'], ['spline'])
+#spline = cs.Function('spline', [t], [p], ['t'], ['p'])
+
+# initial and final conditions
+p0 = sym_t.sym('p0', 1)
+v0 = sym_t.sym('v0', 1)
+ac0 = sym_t.sym('ac0', 1)
+p1 = sym_t.sym('p1', 1)
+v1 = sym_t.sym('v1', 1)
+ac1 = sym_t.sym('ac1', 1)
+
+# velocity
+first_der = cs.jacobian(spline, t)
+dp = cs.Function('dp', [t, a1, a2, a3, a4, a5], [first_der], ['t', 'a1', 'a2', 'a3', 'a4', 'a5'], ['first_der'])
+print(cs.jacobian(spline, t))
+print(dp)
+
+# acceleration
+sec_der = cs.jacobian(first_der, t)
+ddp = cs.Function('ddp', [t, a2, a3, a4, a5], [sec_der], ['t', 'a2', 'a3', 'a4', 'a5'], ['sec_der'])
+print(cs.jacobian(first_der, t))
+print(ddp)
+
+print("-------->", dp(1, a1, a2, a3, a4, a5))
+
+
+
+
+'''d_spl = spline.jacobian()
+print(d_spl(t=t))
+dd_spl = d_spl.jacobian()
+print(dd_spl)
+#sec_der = cs.Function('sec_der', [t], [dd_spl], ['t'], ['dd_spl'])
+#print(sec_der(t=0))
+#print("---------", dd_spl(t=0))'''
+
+
+
+'''
 dimp = 3
 p = sym_t.sym('p', dimp)
 
@@ -62,4 +116,4 @@ plt.grid()
 plt.title('State trajectory')
 plt.legend(['x', 'y', 'z'])
 plt.xlabel('Time [s]')
-plt.show()
+plt.show()'''
