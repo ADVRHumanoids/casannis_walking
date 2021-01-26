@@ -6,10 +6,9 @@ from walking import Walking
 import numpy as np
 from swing_leg_trj import swing_leg
 from matplotlib import pyplot as plt
-import sys
+
 
 def casannis(pub_freq):
-
 
     """
     This function call the optimization problem constructor, the solver, the interpolators and interfaces with cartesio
@@ -89,7 +88,7 @@ def casannis(pub_freq):
     fl_msg = PoseStamped()
 
 
-    # keep the same orientation of the foot
+    # keep the same orientation of the swinging foot
     fl_msg.pose.orientation = fl_init.pose.orientation
 
     counter = 0 # counter for describing interpolation points

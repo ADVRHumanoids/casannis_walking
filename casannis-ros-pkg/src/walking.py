@@ -328,9 +328,6 @@ class Walking:
         }
 
 
-
-
-
 if __name__ == "__main__":
 
     w = Walking(mass=90, N=30, dt=0.1)
