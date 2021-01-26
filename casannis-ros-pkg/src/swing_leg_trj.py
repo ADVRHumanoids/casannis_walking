@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import casadi as cs
 
-def swing_leg(pos_curr, pos_tgt, dz, swing_t):
+def swing_leg(pos_curr, pos_tgt, swing_t):
     '''
 
     Args:
@@ -16,109 +16,36 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
 
     '''
 
-    N = 6  # number of points in swing phase
+    # list of first and last point of swing phase
+    points = [pos_curr] + [pos_tgt]
 
-    # d --> difference between first and last point
-    # dd --> elementary difference to vary every point from the previous
-    d = []
-    dd = []
-    for i in range(3):  # 3 dimensions
-        d.append(pos_tgt[i] - pos_curr[i])
-        dd.append((pos_tgt[i] - pos_curr[i])/(N-1))
+    # list of the two points for each coordinate
+    x = [points[0][0], points[1][0]]
+    y = [points[0][1], points[1][1]]
+    z = [points[0][2], points[1][1]]
 
-    # height distance that the foot covers during the swing
-    s = d[2] + 2 * dz
-    ds = s / (N-1)  # elementary height distance
+    # conditions, initial point of swing phase
+    init_x = [x[0], 0, 0]
+    init_y = [y[0], 0, 0]
+    init_z = [z[0], 0, 0]
 
-    # intermediate points
-    mid_point = [[] for j in range(N-2)]
-    for i in range(N-2):
-        mid_point[i].append(pos_curr[0] + (i+1) * dd[0])
-        mid_point[i].append(pos_curr[1] + (i+1) * dd[1])
-        mid_point[i].append(pos_curr[2] + (i+1) * ds)
+    # conditions, final point of swing phase
+    fin_x = [x[1], 0, 0]
+    fin_y = [y[1], 0, 0]
+    fin_z = [z[1], 0, 0]
 
-    # list of all points of swing phase
-    points = [pos_curr] + mid_point + [pos_tgt]
+    # save polynomial coefficients in one list for each coordinate
+    # inverse the elements as [0, 1, 1] is translated into 1 + x from polynomial function
+    coeff_x = splines(swing_t, init_x, fin_x)[::-1]
+    coeff_y = splines(swing_t, init_y, fin_y)[::-1]
+    coeff_z = splines(swing_t, init_z, fin_z)[::-1]
 
-    # elementary time difference
-    dt = (swing_t[1] - swing_t[0]) / (N-1)
-
-    # time list corresponding to point list
-    time = [(swing_t[0] + i * dt) for i in range(N)] # for points in swing phase
-
-    # list of total points for each coordinate
-    x = [points[i][0] for i in range(N)]
-    y = [points[i][1] for i in range(N)]
-    z = [points[i][2] for i in range(N)]
-
-    # coefficients' list for each spline
-    coeff_x = []
-    coeff_y = []
-    coeff_z = []
-
-    # polynomials
-    poly_x = [[] for i in range(N - 1)]
-    poly_y = [[] for i in range(N - 1)]
-    poly_z = [[] for i in range(N - 1)]
-
-    # compute the splines by calling splines function
-    for i in range(N-1):    # loop for every spline
-        dt = [time[i], time[i+1]]   # use time period for each spline
-
-        # first point of spline conditions
-        init_x = [x[i], 0.01, 0.0]
-        init_y = [y[i], 0.0, 0.0]
-        init_z = [z[i], 0.1, 0.0]
-
-        # final point of spline conditions
-        fin_x = [x[i + 1], 0.05, 0.0]
-        fin_y = [y[i + 1], 0.0, 0.0]
-        fin_z = [z[i + 1], 0.1, 0.0]
-
-        # initial point of swing phase
-        if i == 0:
-            init_x = [x[i], 0, 0]
-            init_y = [y[i], 0, 0]
-            init_z = [z[i], 0, 0]
-
-        # final point of swing phase
-        if i == N - 2:
-            fin_x = [x[i + 1], 0, 0]
-            fin_y = [y[i + 1], 0, 0]
-            fin_z = [z[i + 1], 0, 0]
-
-        # save spline coefficients in one list for each coordinate
-        # inverse the elements as [0, 1, 1] is translated into 1 + x from polynomial function
-        coeff_x.append(splines(dt, init_x, fin_x)[::-1])
-        coeff_y.append(splines(dt, init_y, fin_y)[::-1])
-        coeff_z.append(splines(dt, init_z, fin_z)[::-1])
-
-        # convert to polynomial functions
-        poly_x[i] = np.poly1d(coeff_x[i])
-        poly_y[i] = np.poly1d(coeff_y[i])
-        poly_z[i] = np.poly1d(coeff_z[i])
-
-    # Splines interpolation with order 5
-    '''(tx, cx, kx) = intrpl.splrep(time, x, k=5)
-    (ty, cy, ky) = intrpl.splrep(time, y, k=5)
-    (tz, cz, kz) = intrpl.splrep(time, z, k=5)
-
-    traj_x = intrpl.BSpline(tx, cx, kx)
-    traj_y = intrpl.BSpline(ty, cy, ky)
-    traj_z = intrpl.BSpline(tz, cz, kz)'''
-
-    # Polynomial interpolation
-    '''traj_x = np.polyfit(time, x, 5)
-    traj_y = np.polyfit(time, y, 5)
-    traj_z = np.polyfit(time, z, 5)
-    return {
-        'x': traj_x,
-        'y': traj_y,
-        'z': traj_z
-    }'''
+    # convert to polynomial functions
+    poly_x = np.poly1d(coeff_x)
+    poly_y = np.poly1d(coeff_y)
+    poly_z = np.poly1d(coeff_z)
 
     return {
-        't': time,
         'x': poly_x,
         'y': poly_y,
         'z': poly_z
@@ -128,9 +55,9 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
 # function for symbolic solution of a parameterization with 5th order splines
 def splines(dt, init_cond, fin_cond):
     '''
-    This function computes the spline polynomial of 5th order between two points with 6 given conditions
+    This function computes the polynomial of 5th order between two points with 6 given conditions
     Args:
-        dt: time interval that the spline applies
+        dt: time interval that the polynomial applies
         init_cond: list with initial position, velocity and acceleration conditions
         fin_cond: list with final position, velocity and acceleration conditions
 
@@ -198,26 +125,23 @@ if __name__ == "__main__":
 
     period = (0.5, 2.5)
 
-    trj = swing_leg(pos_curr=position, pos_tgt=target, dz=height, swing_t=period)
+    trj = swing_leg(pos_curr=position, pos_tgt=target, swing_t=period)
 
-    print(trj['x'][0](0))
+    #print(trj['x'](0)) #debug
 
     # plot all splines in one graph
     s = np.linspace(period[0], period[1], 100)
     plt.figure()
     plt.subplot(3, 1, 1)
-    for i in range(len(trj['x'])):
-        plt.plot(s[20*i:20*(i+1)], trj['x'][i](s[20*i:20*(i+1)]))
+    plt.plot(s, trj['x'](s))
     plt.grid()
     plt.title("Trajectory X")
     plt.subplot(3, 1, 2)
-    for i in range(len(trj['y'])):
-        plt.plot(s[20 * i:20 * (i + 1)], trj['y'][i](s[20*i:20*(i+1)]))
+    plt.plot(s, trj['y'](s))
     plt.grid()
     plt.title("Trajectory Y")
     plt.subplot(3, 1, 3)
-    for i in range(len(trj['z'])):
-        plt.plot(s[20 * i:20 * (i + 1)], trj['z'][i](s[20*i:20*(i+1)]))
+    plt.plot(s, trj['z'](s))
     plt.grid()
     plt.title("Trajectory Z")
     plt.xlabel("Time [s]")
