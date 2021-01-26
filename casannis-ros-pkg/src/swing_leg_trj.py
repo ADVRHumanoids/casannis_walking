@@ -2,17 +2,19 @@ import numpy as np
 from matplotlib import pyplot as plt
 import casadi as cs
 
-def swing_leg(pos_curr, pos_tgt, swing_t):
+def swing_leg(pos_curr, pos_tgt, swing_t, resol):
+
+
     '''
 
     Args:
         pos_curr: current position of the foot
         pos_tgt: target position of the foot
-        dz: height difference between the target position and the highest point of the trajectory
         swing_t: (start, stop) period of swinging in a global manner wrt to optimization problem
+        resol: resolution of the trajectory (number of points per second) = frequency of trajectory publishing
 
     Returns:
-        a dictionary with a list of polynomials (5th order splines) for each coordinate
+        a dictionary with a list of points for each coordinate at the specified resolution frequency
 
     '''
 
@@ -22,7 +24,7 @@ def swing_leg(pos_curr, pos_tgt, swing_t):
     # list of the two points for each coordinate
     x = [points[0][0], points[1][0]]
     y = [points[0][1], points[1][1]]
-    z = [points[0][2], points[1][1]]
+    z = [points[0][2], points[1][2]]
 
     # conditions, initial point of swing phase
     init_x = [x[0], 0, 0]
@@ -45,10 +47,30 @@ def swing_leg(pos_curr, pos_tgt, swing_t):
     poly_y = np.poly1d(coeff_y)
     poly_z = np.poly1d(coeff_z)
 
+    # construct list of interpolated points according to specified resolution
+    dt = swing_t[1] - swing_t[0]
+    interpl_t = np.linspace(swing_t[0], swing_t[1], int(resol * dt))
+    interpl_x = poly_x(interpl_t)
+    interpl_y = poly_y(interpl_t)
+    interpl_z = poly_z(interpl_t)
+
+    # add points for non swing phase
+    t_start = 0.0   #will be removed
+    t_end = 3.0
+
+    # number of interpolation points in non swing phases
+    t1 = int(resol * (swing_t[0] - t_start))
+    t2 = int(resol * (t_end - swing_t[1]))
+
+    # add points for non swing phases
+    interpl_x = [pos_curr[0]] * t1 + [interpl_x[i] for i in range(len(interpl_x))] + [pos_tgt[0]] * t2
+    interpl_y = [pos_curr[1]] * t1 + [interpl_y[i] for i in range(len(interpl_y))] + [pos_tgt[1]] * t2
+    interpl_z = [pos_curr[2]] * t1 + [interpl_z[i] for i in range(len(interpl_z))] + [pos_tgt[2]] * t2
+
     return {
-        'x': poly_x,
-        'y': poly_y,
-        'z': poly_z
+        'x': interpl_x,
+        'y': interpl_y,
+        'z': interpl_z
     }
 
 
@@ -125,23 +147,22 @@ if __name__ == "__main__":
 
     period = (0.5, 2.5)
 
-    trj = swing_leg(pos_curr=position, pos_tgt=target, swing_t=period)
-
-    #print(trj['x'](0)) #debug
+    trj = swing_leg(pos_curr=position, pos_tgt=target, swing_t=period, resol=200)
 
     # plot all splines in one graph
-    s = np.linspace(period[0], period[1], 100)
+    s = np.linspace(0, 3, 600)
+    #s = np.linspace(period[0], period[1], 400)
     plt.figure()
     plt.subplot(3, 1, 1)
-    plt.plot(s, trj['x'](s))
+    plt.plot(s, trj['x'])
     plt.grid()
     plt.title("Trajectory X")
     plt.subplot(3, 1, 2)
-    plt.plot(s, trj['y'](s))
+    plt.plot(s, trj['y'])
     plt.grid()
     plt.title("Trajectory Y")
     plt.subplot(3, 1, 3)
-    plt.plot(s, trj['z'](s))
+    plt.plot(s, trj['z'])
     plt.grid()
     plt.title("Trajectory Z")
     plt.xlabel("Time [s]")
