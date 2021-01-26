@@ -55,13 +55,13 @@ def casannis(pub_freq):
     x0 = np.hstack([c0, dc0, ddc0])
 
     # ID of the foot to be moved, get from parameters
-    swing_id = rospy.get_param("~swing_id") # get from command line
+    swing_id = 0# rospy.get_param("~swing_id") # get from command line
     print("Swing id received:", swing_id)
 
     # Target position of the foot to be moved wrt to the current position
-    tgt_dx = rospy.get_param("~tgt_dx") # get from command line
-    tgt_dy = rospy.get_param("~tgt_dy")
-    tgt_dz = rospy.get_param("~tgt_dz")
+    tgt_dx = 0.1#rospy.get_param("~tgt_dx") # get from command line
+    tgt_dy = 0#rospy.get_param("~tgt_dy")
+    tgt_dz = 0.1#rospy.get_param("~tgt_dz")
     swing_tgt = np.array([contacts[0][0] + tgt_dx, contacts[0][1] + tgt_dy, contacts[0][2] + tgt_dz])
 
     # time period of the swing phase ?get from parameters
@@ -71,92 +71,43 @@ def casannis(pub_freq):
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
 
-    # interpolate the values, pass solution values and number of interpolation points between knots
-    N_int = 20  # interpolation points between knots
-    interpl = walk.interpolate(sol, N_int)
+    # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
+    interpl = walk.interpolate(sol, pub_freq)
 
-    N_total = walk._N * N_int  # total points --> Opt. knots * Int. points
-
-    # height difference that the foot will reach during swing phase wrt the target
-    dz = 0.1    # it will go dz m higher than target during swing phase
+    # All points to be published
+    N_total = int(walk._N * walk._dt * pub_freq)  # total points --> total time * frequency
 
     # interpolation of the swing foot trajectory
-    swing_trj = swing_leg(contacts[0], swing_tgt, dz, swing_t)
+    swing_trj = swing_leg(contacts[0], swing_tgt, swing_t, pub_freq)
 
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()
     fl_msg = PoseStamped()
 
-
     # keep the same orientation of the swinging foot
     fl_msg.pose.orientation = fl_init.pose.orientation
 
-    counter = 0 # counter for describing interpolation points
-
     rate = rospy.Rate(pub_freq)  # Frequency of publish process
-
-    # step of publishing interpolating points according to publ. frequency
-    step = int(N_total / (walk._dt * walk._N * pub_freq))
-
     # loop interpolation points to publish on a specified frequency
-    for counter in range(0, N_total, step):
+    for counter in range(N_total):
 
         if not rospy.is_shutdown():
+
             # com trajectory
             com_msg.pose.position.x = interpl['x'][0][counter]
             com_msg.pose.position.y = interpl['x'][1][counter]
             com_msg.pose.position.z = interpl['x'][2][counter]
 
-            # tt represent the absolute time of the optimization problem
-            tt = counter * 0.005
+            # swing foot trajectory
+            fl_msg.pose.position.x = swing_trj['x'][counter]
+            fl_msg.pose.position.y = swing_trj['y'][counter]
+            # add radius as origin of the wheel frame is in the center
+            fl_msg.pose.position.z = swing_trj['z'][counter] + r
 
-            # If we are in the swing phase
-            if swing_trj['t'][0] <= tt <= swing_trj['t'][5]:
+            # publish messages and attach time
+            fl_msg.header.stamp = rospy.Time.now()
+            fl_pub_.publish(fl_msg)
 
-                # Check which splane should be activated according to time
-                if swing_trj['t'][0] <= tt <= swing_trj['t'][1]:
-
-                    # swing leg trajectory
-                    fl_msg.pose.position.x = swing_trj['x'][0](tt)
-                    fl_msg.pose.position.y = swing_trj['y'][0](tt)
-                    # add radius as origin of the wheel frame is in the center
-                    fl_msg.pose.position.z = swing_trj['z'][0](tt) + r
-
-                elif swing_trj['t'][1] <= tt <= swing_trj['t'][2]:
-
-                    # swing leg trajectory
-                    fl_msg.pose.position.x = swing_trj['x'][1](tt)
-                    fl_msg.pose.position.y = swing_trj['y'][1](tt)
-                    fl_msg.pose.position.z = swing_trj['z'][1](tt) + r  # add radius
-
-                elif swing_trj['t'][2] <= tt <= swing_trj['t'][3]:
-
-                    # swing leg trajectory
-                    fl_msg.pose.position.x = swing_trj['x'][2](tt)
-                    fl_msg.pose.position.y = swing_trj['y'][2](tt)
-                    fl_msg.pose.position.z = swing_trj['z'][2](tt) + r  # add radius
-
-                elif swing_trj['t'][3] <= tt <= swing_trj['t'][4]:
-
-                    # swing leg trajectory
-                    fl_msg.pose.position.x = swing_trj['x'][3](tt)
-                    fl_msg.pose.position.y = swing_trj['y'][3](tt)
-                    fl_msg.pose.position.z = swing_trj['z'][3](tt) + r  # add radius
-
-                elif swing_trj['t'][4] <= tt <= swing_trj['t'][5]:
-
-                    # swing leg trajectory
-                    fl_msg.pose.position.x = swing_trj['x'][4](tt)
-                    fl_msg.pose.position.y = swing_trj['y'][4](tt)
-                    fl_msg.pose.position.z = swing_trj['z'][4](tt) + r  # add radius
-
-                # attach time to message
-                fl_msg.header.stamp = rospy.Time.now()
-
-                # publish messages
-                fl_pub_.publish(fl_msg)
-
-            # attach time to message
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
 
@@ -187,13 +138,12 @@ def casannis(pub_freq):
     plt.show()'''
 
     # plot swing trajectory
-    s = np.linspace(0.5, 2.5, 100)
+    s = np.linspace(0, walk._dt * walk._N, N_total)
     coord_labels = ['x', 'y', 'z']
     plt.figure()
     for i, name in enumerate(coord_labels):
         plt.subplot(3, 1, i + 1)
-        for k in range(len(swing_trj['t'])-1):
-            plt.plot(s[20*k:20*(k+1)], swing_trj[name][k](s[20*k:20*(k+1)]), '-')
+        plt.plot(s, swing_trj[name])
         plt.grid()
         plt.title('Trajectory ' + name)
     plt.xlabel('Time [s]')
@@ -203,8 +153,8 @@ def casannis(pub_freq):
 if __name__ == '__main__':
 
     # desired publish frequency
-    freq = 100
-    #casannis(freq)
+    freq = 150
+
     try:
         casannis(freq)
     except rospy.ROSInterruptException:
