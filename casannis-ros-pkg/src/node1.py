@@ -72,13 +72,13 @@ def casannis(pub_freq):
     sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
 
     # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
-    interpl = walk.interpolate(sol, pub_freq)
+    interpl = walk.interpolate(sol, contacts[0], swing_tgt, swing_t, pub_freq)
 
     # All points to be published
     N_total = int(walk._N * walk._dt * pub_freq)  # total points --> total time * frequency
 
     # interpolation of the swing foot trajectory
-    swing_trj = swing_leg(contacts[0], swing_tgt, swing_t, pub_freq)
+    #swing_trj = swing_leg(contacts[0], swing_tgt, swing_t, pub_freq)
 
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()
@@ -99,10 +99,10 @@ def casannis(pub_freq):
             com_msg.pose.position.z = interpl['x'][2][counter]
 
             # swing foot trajectory
-            fl_msg.pose.position.x = swing_trj['x'][counter]
-            fl_msg.pose.position.y = swing_trj['y'][counter]
+            fl_msg.pose.position.x = interpl['sw'][0][counter]
+            fl_msg.pose.position.y = interpl['sw'][1][counter]
             # add radius as origin of the wheel frame is in the center
-            fl_msg.pose.position.z = swing_trj['z'][counter] + r
+            fl_msg.pose.position.z = interpl['sw'][2][counter] + r
 
             # publish messages and attach time
             fl_msg.header.stamp = rospy.Time.now()
@@ -143,7 +143,7 @@ def casannis(pub_freq):
     plt.figure()
     for i, name in enumerate(coord_labels):
         plt.subplot(3, 1, i + 1)
-        plt.plot(s, swing_trj[name])
+        plt.plot(s, interpl['sw'][i])
         plt.grid()
         plt.title('Trajectory ' + name)
     plt.xlabel('Time [s]')

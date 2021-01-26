@@ -268,7 +268,7 @@ class Walking:
 
         return expr_value
 
-    def interpolate(self, solution, resol):
+    def interpolate(self, solution, pos_curr, pos_tgt, swing_t, resol):
         """ Interpolate the solution of the problem
 
         Args:
@@ -276,16 +276,20 @@ class Walking:
                 solution['x'] 9x30 --> optimized states
                 solution['f'] 12x30 --> optimized forces
                 solution['u'] 9x30 --> optimized control
+            pos_curr: current position of the foot to be swinged
+            pos_tgt: target position of the foot to be swinged
+            swing_t: (start, stop) period of foot swinging in a global manner wrt to optimization problem
             resol: interpolation resolution (points per second)
 
         Returns: a dictionary with:
             time list for interpolation times (in sec)
             list of list with state trajectory points
             list of lists with forces' trajectory points
+            list of lists with the swinging foot's trajectory points
 
         """
 
-        # -------- state interpolation ------------
+        # -------- state trajectory interpolation ------------
         delta_t = 1 / resol # delta_t for interpolation
 
         # intermediate points between two knots --> time interval * resolution
@@ -317,7 +321,7 @@ class Walking:
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
 
-        # ----------- force interpolation --------------
+        # ----------- force trajectory interpolation --------------
         force_func = [[] for i in range(len(solution['F']))] # list to store the splines
         int_force = [[] for i in range(len(solution['F']))]  # list to store lists of points
 
@@ -329,10 +333,65 @@ class Walking:
             # store the interpolation points for each force component in the i element of the list int_force
             int_force[i] = force_func[i][0](t)
 
+        # ----------- swing leg trajectory interpolation --------------
+
+        # list of first and last point of swing phase
+        sw_points = [pos_curr] + [pos_tgt]
+
+        # list of the two points for each coordinate
+        x = [sw_points[0][0], sw_points[1][0]]
+        y = [sw_points[0][1], sw_points[1][1]]
+        z = [sw_points[0][2], sw_points[1][2]]
+
+        # conditions, initial point of swing phase
+        init_x = [x[0], 0, 0]
+        init_y = [y[0], 0, 0]
+        init_z = [z[0], 0, 0]
+
+        # conditions, final point of swing phase
+        fin_x = [x[1], 0, 0]
+        fin_y = [y[1], 0, 0]
+        fin_z = [z[1], 0, 0]
+
+        # save polynomial coefficients in one list for each coordinate
+        # inverse the elements as [0, 1, 1] is translated into 1 + x from polynomial function
+        coeff_x = self.splines(swing_t, init_x, fin_x)[::-1]
+        coeff_y = self.splines(swing_t, init_y, fin_y)[::-1]
+        coeff_z = self.splines(swing_t, init_z, fin_z)[::-1]
+
+        # convert to polynomial functions
+        poly_x = np.poly1d(coeff_x)
+        poly_y = np.poly1d(coeff_y)
+        poly_z = np.poly1d(coeff_z)
+
+        # construct list of interpolated points according to specified resolution
+        sw_dt = swing_t[1] - swing_t[0]
+        sw_interpl_t = np.linspace(swing_t[0], swing_t[1], int(resol * sw_dt))
+        sw_interpl_x = poly_x(sw_interpl_t)
+        sw_interpl_y = poly_y(sw_interpl_t)
+        sw_interpl_z = poly_z(sw_interpl_t)
+
+        # add points for non swing phase
+        t_start = 0.0  # will be removed
+        t_end = 3.0
+
+        # number of interpolation points in non swing phases
+        sw_t1 = int(resol * (swing_t[0] - t_start))
+        sw_t2 = int(resol * (t_end - swing_t[1]))
+
+        # add points for non swing phases
+        sw_interpl_x = [pos_curr[0]] * sw_t1 + [sw_interpl_x[i] for i in range(len(sw_interpl_x))] + [pos_tgt[0]] * sw_t2
+        sw_interpl_y = [pos_curr[1]] * sw_t1 + [sw_interpl_y[i] for i in range(len(sw_interpl_y))] + [pos_tgt[1]] * sw_t2
+        sw_interpl_z = [pos_curr[2]] * sw_t1 + [sw_interpl_z[i] for i in range(len(sw_interpl_z))] + [pos_tgt[2]] * sw_t2
+
+        # include all coordinates in a single list
+        sw_interpl = [sw_interpl_x, sw_interpl_y, sw_interpl_z]
+
         return {
             't': t,
             'x': int_state,
-            'f': int_force
+            'f': int_force,
+            'sw': sw_interpl
         }
 
     def splines(self, dt, init_cond, fin_cond):
@@ -434,7 +493,7 @@ if __name__ == "__main__":
 
     # interpolate the values, pass values and interpolation resolution
     res = 100
-    interpl = w.interpolate(sol, res)
+    interpl = w.interpolate(sol, contacts[0], swing_tgt, swing_t, res)
 
     # plot com position from optimization
     plt.figure()
