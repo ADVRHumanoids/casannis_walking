@@ -250,7 +250,7 @@ class Walking:
         }
         
     def evaluate(self, solution, expr):
-        ''' Evaluate the given expression
+        """ Evaluate the given expression
 
         Args:
             solution: given solution
@@ -259,7 +259,8 @@ class Walking:
         Returns:
             Numerical value of the given expression
 
-        '''
+        """
+
         # casadi function that symbolically maps the _nlp to the given expression
         expr_fun = cs.Function('expr_fun', [self._nlp['x']], [expr], ['v'], ['expr'])
 
@@ -268,7 +269,7 @@ class Walking:
         return expr_value
 
     def interpolate(self, solution, resol):
-        ''' Interpolate the solution of the problem
+        """ Interpolate the solution of the problem
 
         Args:
             solution: solution of the problem (values) is a directory
@@ -279,19 +280,19 @@ class Walking:
 
         Returns: a dictionary with:
             time list for interpolation times (in sec)
-            state values for the interpolation points
-            force splines or linears
+            list of list with state trajectory points
+            list of lists with forces' trajectory points
 
-        '''
+        """
 
-        # state interpolation
+        # -------- state interpolation ------------
         delta_t = 1 / resol # delta_t for interpolation
 
         # intermediate points between two knots --> time interval * resolution
         n = int(self._dt * resol)
 
-        x_old = solution['x'][0:9, 0]  #initial state
-        x_all = []  #list to append all states
+        x_old = solution['x'][0:9, 0]  #i nitial state
+        x_all = []  # list to append all states
 
         for ii in range(self._N):   # loop for knots
 
@@ -309,26 +310,100 @@ class Walking:
         int_state = [[] for i in range(self._dimx)]
         t = [(ii*delta_t) for ii in range(self._N * n)]
 
-        for i in range(self._dimx): #loop for every element of the state vector
-            for j in range(self._N * n):    #loop for every point of interpolation
+        for i in range(self._dimx): # loop for every element of the state vector
+            for j in range(self._N * n):    # loop for every point of interpolation
 
                 # store the value of x_i component on ii point of interpolation
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
 
-        # force interpolation
-        int_force = [[] for i in range(len(solution['F']))] # list to store the splines
+        # ----------- force interpolation --------------
+        force_func = [[] for i in range(len(solution['F']))] # list to store the splines
+        int_force = [[] for i in range(len(solution['F']))]  # list to store lists of points
 
         for i in range(len(solution['F'])): # loop for each component of the force vector
 
-            # store the spline (by casadi) in the i element of the list int_force
-            int_force[i].append(cs.interpolant('X_CONT', 'linear', [self._time], solution['F'][i]))
+            # store the spline (by casadi) in the i element of the list force_func
+            force_func[i].append(cs.interpolant('X_CONT', 'linear', [self._time], solution['F'][i]))
+
+            # store the interpolation points for each force component in the i element of the list int_force
+            int_force[i] = force_func[i][0](t)
 
         return {
             't': t,
             'x': int_state,
             'f': int_force
         }
+
+    def splines(self, dt, init_cond, fin_cond):
+        """
+        This function computes the polynomial of 5th order between two points with 6 given conditions
+        Args:
+            dt: time interval that the polynomial applies
+            init_cond: list with initial position, velocity and acceleration conditions
+            fin_cond: list with final position, velocity and acceleration conditions
+
+        Returns:
+            a list with the coefficient of the polynomial of the spline
+        """
+
+        # symbolic polynomial coefficients
+        sym_t = cs.SX
+        a0 = sym_t.sym('a0', 1)
+        a1 = sym_t.sym('a1', 1)
+        a2 = sym_t.sym('a2', 1)
+        a3 = sym_t.sym('a3', 1)
+        a4 = sym_t.sym('a4', 1)
+        a5 = sym_t.sym('a5', 1)
+
+        # time
+        t = sym_t.sym('t', 1)
+
+        # initial and final conditions
+        p0 = init_cond[0]
+        v0 = init_cond[1]
+        ac0 = init_cond[2]
+        p1 = fin_cond[0]
+        v1 = fin_cond[1]
+        ac1 = fin_cond[2]
+        print('Initial and final conditions are:', p0, v0, ac0, p1, v1, ac1)
+
+        # the 5th order polynomial expression
+        spline = a0 + a1 * t + a2 * t ** 2 + a3 * t ** 3 + a4 * t ** 4 + a5 * t ** 5
+
+        # wrap the polynomial expression in a function
+        p = cs.Function('p', [t, a0, a1, a2, a3, a4, a5], [spline], ['t', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5'],
+                        ['spline'])
+
+        # symbolic velocity - 1st derivative
+        first_der = cs.jacobian(spline, t)
+        dp = cs.Function('dp', [t, a1, a2, a3, a4, a5], [first_der], ['t', 'a1', 'a2', 'a3', 'a4', 'a5'], ['first_der'])
+
+        # symbolic acceleration - 2nd derivative
+        sec_der = cs.jacobian(first_der, t)
+        ddp = cs.Function('ddp', [t, a2, a3, a4, a5], [sec_der], ['t', 'a2', 'a3', 'a4', 'a5'], ['sec_der'])
+
+        # construct the system of equations Ax=B, with x the list of coefficients to be computed
+        A = np.array([[p(dt[0], 1, 0, 0, 0, 0, 0), p(dt[0], 0, 1, 0, 0, 0, 0), p(dt[0], 0, 0, 1, 0, 0, 0),
+                       p(dt[0], 0, 0, 0, 1, 0, 0), p(dt[0], 0, 0, 0, 0, 1, 0), p(dt[0], 0, 0, 0, 0, 0, 1)],\
+                      [0, dp(dt[0], 1, 0, 0, 0, 0), dp(dt[0], 0, 1, 0, 0, 0), dp(dt[0], 0, 0, 1, 0, 0),
+                       dp(dt[0], 0, 0, 0, 1, 0), dp(dt[0], 0, 0, 0, 0, 1)],\
+                      [0, 0, ddp(dt[0], 1, 0, 0, 0), ddp(dt[0], 0, 1, 0, 0), ddp(dt[0], 0, 0, 1, 0),
+                       ddp(dt[0], 0, 0, 0, 1)],\
+                      [p(dt[1], 1, 0, 0, 0, 0, 0), p(dt[1], 0, 1, 0, 0, 0, 0), p(dt[1], 0, 0, 1, 0, 0, 0),
+                       p(dt[1], 0, 0, 0, 1, 0, 0), p(dt[1], 0, 0, 0, 0, 1, 0), p(dt[1], 0, 0, 0, 0, 0, 1)],\
+                      [0, dp(dt[1], 1, 0, 0, 0, 0), dp(dt[1], 0, 1, 0, 0, 0), dp(dt[1], 0, 0, 1, 0, 0),
+                       dp(dt[1], 0, 0, 0, 1, 0), dp(dt[1], 0, 0, 0, 0, 1)],\
+                      [0, 0, ddp(dt[1], 1, 0, 0, 0), ddp(dt[1], 0, 1, 0, 0), ddp(dt[1], 0, 0, 1, 0),
+                       ddp(dt[1], 0, 0, 0, 1)]])
+
+        B = np.array([p0, v0, ac0, p1, v1, ac1])
+
+        # coefficients
+        coeffs = np.linalg.inv(A).dot(B)
+        print(coeffs)
+
+        return coeffs
 
 
 if __name__ == "__main__":
@@ -357,8 +432,9 @@ if __name__ == "__main__":
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
 
-    # interpolate the values, pass values and intermediate points between knots
-    interpl = w.interpolate(sol, 20)
+    # interpolate the values, pass values and interpolation resolution
+    res = 100
+    interpl = w.interpolate(sol, res)
 
     # plot com position from optimization
     plt.figure()
@@ -392,11 +468,12 @@ if __name__ == "__main__":
     plt.xlabel('Time [s]')
   
     # Interpolated force plot
+    s = np.linspace(0, int(w._N*w._dt), int(w._N*w._dt)*res)
     plt.figure()
     for i, name in enumerate(feet_labels):
         plt.subplot(2, 2, i + 1)
         for k in range(3):
-            plt.plot(w._time, interpl['f'][3*i + k][0](w._time), '-')
+            plt.plot(s, interpl['f'][3*i + k], '-')
         plt.grid()
         plt.title(name)
         plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
