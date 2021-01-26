@@ -12,7 +12,7 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
         swing_t: (start, stop) period of swinging in a global manner wrt to optimization problem
 
     Returns:
-        a dictionary with one spline for each coordinate
+        a dictionary with a list of polynomials (5th order splines) for each coordinate
 
     '''
 
@@ -51,11 +51,17 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
     y = [points[i][1] for i in range(N)]
     z = [points[i][2] for i in range(N)]
 
-    # compute the coefficients that describe each spline between two points
+    # coefficients' list for each spline
     coeff_x = []
     coeff_y = []
     coeff_z = []
 
+    # polynomials
+    poly_x = [[] for i in range(N - 1)]
+    poly_y = [[] for i in range(N - 1)]
+    poly_z = [[] for i in range(N - 1)]
+
+    # compute the splines by calling splines function
     for i in range(N-1):    # loop for every spline
         dt = [time[i], time[i+1]]   # use time period for each spline
 
@@ -82,10 +88,15 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
             fin_z = [z[i + 1], 0, 0]
 
         # save spline coefficients in one list for each coordinate
-        # inverse the elements as [0, 1, 1] is translated into 1 + x from polyval function
+        # inverse the elements as [0, 1, 1] is translated into 1 + x from polynomial function
         coeff_x.append(splines(dt, init_x, fin_x)[::-1])
         coeff_y.append(splines(dt, init_y, fin_y)[::-1])
         coeff_z.append(splines(dt, init_z, fin_z)[::-1])
+
+        # convert to polynomial functions
+        poly_x[i] = np.poly1d(coeff_x[i])
+        poly_y[i] = np.poly1d(coeff_y[i])
+        poly_z[i] = np.poly1d(coeff_z[i])
 
     # Splines interpolation with order 5
     '''(tx, cx, kx) = intrpl.splrep(time, x, k=5)
@@ -107,9 +118,10 @@ def swing_leg(pos_curr, pos_tgt, dz, swing_t):
     }'''
 
     return {
-        'x': coeff_x,
-        'y': coeff_y,
-        'z': coeff_z
+        't': time,
+        'x': poly_x,
+        'y': poly_y,
+        'z': poly_z
     }
 
 
@@ -188,22 +200,24 @@ if __name__ == "__main__":
 
     trj = swing_leg(pos_curr=position, pos_tgt=target, dz=height, swing_t=period)
 
+    print(trj['x'][0](0))
+
     # plot all splines in one graph
     s = np.linspace(period[0], period[1], 100)
     plt.figure()
     plt.subplot(3, 1, 1)
     for i in range(len(trj['x'])):
-        plt.plot(s[20*i:20*(i+1)], np.polyval(trj['x'][i], s[20*i:20*(i+1)]))
+        plt.plot(s[20*i:20*(i+1)], trj['x'][i](s[20*i:20*(i+1)]))
     plt.grid()
     plt.title("Trajectory X")
     plt.subplot(3, 1, 2)
     for i in range(len(trj['y'])):
-        plt.plot(s[20 * i:20 * (i + 1)], np.polyval(trj['y'][i], s[20 * i:20 * (i + 1)]))
+        plt.plot(s[20 * i:20 * (i + 1)], trj['y'][i](s[20*i:20*(i+1)]))
     plt.grid()
     plt.title("Trajectory Y")
     plt.subplot(3, 1, 3)
     for i in range(len(trj['z'])):
-        plt.plot(s[20 * i:20 * (i + 1)], np.polyval(trj['z'][i], s[20 * i:20 * (i + 1)]))
+        plt.plot(s[20 * i:20 * (i + 1)], trj['z'][i](s[20*i:20*(i+1)]))
     plt.grid()
     plt.title("Trajectory Z")
     plt.xlabel("Time [s]")

@@ -46,9 +46,6 @@ print(ddp)
 
 print("-------->", dp(1, a1, a2, a3, a4, a5))
 
-
-
-
 '''d_spl = spline.jacobian()
 print(d_spl(t=t))
 dd_spl = d_spl.jacobian()

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="Swing_id" default="0"/>
+    <arg name="target_dx" default="0.1"/>
+    <arg name="target_dy" default="0.0"/>
+    <arg name="target_dz" default="0.1"/>
+
+    <node name="casannis" pkg="casannis-ros-pkg" type="node1.py" output="screen">
+        <param name="swing_id" value="$(arg Swing_id)"/>
+        <param name="tgt_dx" value="$(arg target_dx)"/>
+        <param name="tgt_dy" value="$(arg target_dy)"/>
+        <param name="tgt_dz" value="$(arg target_dz)"/>
+    </node>
+</launch>
