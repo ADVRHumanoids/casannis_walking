@@ -267,7 +267,7 @@ class Walking:
 
         return expr_value
 
-    def interpolate(self, solution, NN):
+    def interpolate(self, solution, resol):
         ''' Interpolate the solution of the problem
 
         Args:
@@ -275,7 +275,7 @@ class Walking:
                 solution['x'] 9x30 --> optimized states
                 solution['f'] 12x30 --> optimized forces
                 solution['u'] 9x30 --> optimized control
-            NN: intermediate points for interpolation between two knots
+            resol: interpolation resolution (points per second)
 
         Returns: a dictionary with:
             time list for interpolation times (in sec)
@@ -285,7 +285,10 @@ class Walking:
         '''
 
         # state interpolation
-        delta_t = self._dt / NN # delta_t for interpolation
+        delta_t = 1 / resol # delta_t for interpolation
+
+        # intermediate points between two knots --> time interval * resolution
+        n = int(self._dt * resol)
 
         x_old = solution['x'][0:9, 0]  #initial state
         x_all = []  #list to append all states
@@ -295,7 +298,7 @@ class Walking:
             # control input to change in every knot
             u_old = solution['u'][0:3, ii]
 
-            for j in range(NN):     # loop for interpolation points
+            for j in range(n):     # loop for interpolation points
 
                 x_all.append(x_old)  # storing state in the list 600x9
 
@@ -304,10 +307,10 @@ class Walking:
 
         # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]
-        t = [(ii*delta_t) for ii in range(self._N*NN)]
+        t = [(ii*delta_t) for ii in range(self._N * n)]
 
         for i in range(self._dimx): #loop for every element of the state vector
-            for j in range(self._N*NN):    #loop for every point of interpolation
+            for j in range(self._N * n):    #loop for every point of interpolation
 
                 # store the value of x_i component on ii point of interpolation
                 # in the element i of the list int_state
