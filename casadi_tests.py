@@ -4,6 +4,13 @@ import scipy.interpolate as ip
 from matplotlib import pyplot as plt
 from scipy.stats import norm
 
+a = "[0.5,2.5]"
+a = a.rstrip(']').lstrip('[').split(',')
+a = [float(i) for i in a]
+print(a)
+x=a[0]
+print(x)
+'''
 #initialize a normal distribution with frozen in mean=-1, std. dev.= 1
 rv = norm(loc = -1, scale = 55.0)
 rv1 = norm(loc = 0., scale = 2.0)
@@ -16,7 +23,7 @@ x = np.arange(-10, 10, .1)
 plt.figure()
 plt.plot(x, rv.pdf(x))
 plt.show()
-
+'''
 '''
 # select a sym type
 sym_t = cs.SX

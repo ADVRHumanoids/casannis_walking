@@ -27,11 +27,10 @@ def casannis(pub_freq):
     # radius of centauro wheels
     r = 0.078
 
-    # Publishers for com and foot for cartesio
-    com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
-    fl_pub_ = rospy.Publisher('/cartesian/FL_wheel/reference', PoseStamped, queue_size=10)
-
     rospy.init_node('casannis', anonymous=True)
+
+    # Publishers for com in the cartesian space
+    com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
     # accept one message for com and feet initial position
     com_init = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
@@ -39,6 +38,9 @@ def casannis(pub_freq):
     fr_init = rospy.wait_for_message("/cartesian/FR_wheel/current_reference", PoseStamped, timeout=None)
     hl_init = rospy.wait_for_message("/cartesian/HL_wheel/current_reference", PoseStamped, timeout=None)
     hr_init = rospy.wait_for_message("/cartesian/HR_wheel/current_reference", PoseStamped, timeout=None)
+
+    # all current feet info in a list to be used after selecting the swing leg
+    f_init = [fl_init, fr_init, hl_init, hr_init]
 
     # define contacts, take into account the radius of the wheels
     fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z - r]
@@ -55,37 +57,44 @@ def casannis(pub_freq):
     x0 = np.hstack([c0, dc0, ddc0])
 
     # ID of the foot to be moved, get from parameters
-    swing_id = 0# rospy.get_param("~swing_id") # get from command line
-    print("Swing id received:", swing_id)
+    swing_id = rospy.get_param("~sw_id") # get from command line
+
+    # map swing id to a string for publishing to the corresponding topic
+    id_name = ['FL', 'FR', 'HL', 'HR']
+
+    # publisher for the swing foot in cartesian space
+    f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id] + '_wheel/reference', PoseStamped, queue_size=10)
 
     # Target position of the foot to be moved wrt to the current position
-    tgt_dx = 0.1#rospy.get_param("~tgt_dx") # get from command line
-    tgt_dy = 0#rospy.get_param("~tgt_dy")
-    tgt_dz = 0.1#rospy.get_param("~tgt_dz")
-    swing_tgt = np.array([contacts[0][0] + tgt_dx, contacts[0][1] + tgt_dy, contacts[0][2] + tgt_dz])
+    tgt_dx = rospy.get_param("~tgt_dx")
+    tgt_dy = rospy.get_param("~tgt_dy")
+    tgt_dz = rospy.get_param("~tgt_dz")
+    swing_tgt = np.array([contacts[swing_id][0] + tgt_dx, contacts[swing_id][1] + tgt_dy, contacts[swing_id][2] + tgt_dz])
 
-    # time period of the swing phase ?get from parameters
-    swing_t = (0.5, 2.5)
+    # time period of the swing phase, get from parameters
+    swing_t = rospy.get_param("~sw_t")
+
+    # convert swing_t from "[a, b]" to [a,b]
+    swing_t = swing_t.rstrip(']').lstrip('[').split(',')
+    swing_t = [float(i) for i in swing_t]
+    print(swing_t)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt, swing_t=swing_t)
 
     # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
-    interpl = walk.interpolate(sol, contacts[0], swing_tgt, swing_t, pub_freq)
+    interpl = walk.interpolate(sol, contacts[swing_id], swing_tgt, swing_t, pub_freq)
 
     # All points to be published
     N_total = int(walk._N * walk._dt * pub_freq)  # total points --> total time * frequency
 
-    # interpolation of the swing foot trajectory
-    #swing_trj = swing_leg(contacts[0], swing_tgt, swing_t, pub_freq)
-
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()
-    fl_msg = PoseStamped()
+    f_msg = PoseStamped()
 
     # keep the same orientation of the swinging foot
-    fl_msg.pose.orientation = fl_init.pose.orientation
+    f_msg.pose.orientation = f_init[swing_id].pose.orientation
 
     rate = rospy.Rate(pub_freq)  # Frequency of publish process
     # loop interpolation points to publish on a specified frequency
@@ -99,14 +108,14 @@ def casannis(pub_freq):
             com_msg.pose.position.z = interpl['x'][2][counter]
 
             # swing foot trajectory
-            fl_msg.pose.position.x = interpl['sw'][0][counter]
-            fl_msg.pose.position.y = interpl['sw'][1][counter]
+            f_msg.pose.position.x = interpl['sw'][0][counter]
+            f_msg.pose.position.y = interpl['sw'][1][counter]
             # add radius as origin of the wheel frame is in the center
-            fl_msg.pose.position.z = interpl['sw'][2][counter] + r
+            f_msg.pose.position.z = interpl['sw'][2][counter] + r
 
             # publish messages and attach time
-            fl_msg.header.stamp = rospy.Time.now()
-            fl_pub_.publish(fl_msg)
+            f_msg.header.stamp = rospy.Time.now()
+            f_pub_.publish(f_msg)
 
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
