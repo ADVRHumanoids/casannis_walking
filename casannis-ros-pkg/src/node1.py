@@ -5,7 +5,6 @@ from geometry_msgs.msg import PoseStamped
 from walking import Walking
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.stats import norm
 
 
 def casannis(pub_freq):
@@ -139,12 +138,12 @@ def casannis(pub_freq):
     for i, name in enumerate(feet_labels):
         plt.subplot(2, 2, i + 1)
         for k in range(3):
-            plt.plot(walk._time, interpl['f'][3 * i + k][0](walk._time), '-')
+            plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
         plt.grid()
         plt.title(name)
         plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
     plt.xlabel('Time [s]')
-    plt.show()'''
+    plt.show()
 
     # plot swing trajectory
     s = np.linspace(0, walk._dt * walk._N, N_total)
@@ -156,7 +155,7 @@ def casannis(pub_freq):
         plt.grid()
         plt.title('Trajectory ' + name)
     plt.xlabel('Time [s]')
-    plt.show()
+    plt.show()'''
 
 
 if __name__ == '__main__':

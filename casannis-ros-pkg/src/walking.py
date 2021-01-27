@@ -502,9 +502,10 @@ if __name__ == "__main__":
         np.array([-0.35, 0.35, 0.0])   # hl
     ]
 
-    sw_id = 0
+    sw_id = 2
 
-    swing_target = np.array([0.45, 0.35, 0.1])
+    #swing_target = np.array([0.45, 0.35, 0.1])
+    swing_target = np.array([-0.3, -0.35, 0.1])
 
     swing_time = (1.0, 2.0)
 
@@ -513,7 +514,7 @@ if __name__ == "__main__":
 
     # interpolate the values, pass values and interpolation resolution
     res = 100
-    interpl = w.interpolate(sol, foot_contacts[0], swing_target, swing_time, res)
+    interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, swing_time, res)
 
     # Interpolated state plot
     state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
@@ -549,7 +550,7 @@ if __name__ == "__main__":
     for i, name in enumerate(coord_labels):
         plt.subplot(3, 1, i+1)
         plt.plot(interpl['t'], interpl['sw'][i], '-')
-        plt.plot(swing_time, [foot_contacts[0][i], swing_target[i]], 'o')
+        plt.plot(swing_time, [foot_contacts[sw_id][i], swing_target[i]], 'o')
         plt.grid()
         plt.title("Swing foot trajectory " + str(name))
     plt.xlabel('Time [s]')
