@@ -4,8 +4,8 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from walking import Walking
 import numpy as np
-from swing_leg_trj import swing_leg
 from matplotlib import pyplot as plt
+from scipy.stats import norm
 
 
 def casannis(pub_freq):

@@ -2,7 +2,22 @@ import casadi as cs
 import numpy as np
 import scipy.interpolate as ip
 from matplotlib import pyplot as plt
+from scipy.stats import norm
 
+#initialize a normal distribution with frozen in mean=-1, std. dev.= 1
+rv = norm(loc = -1, scale = 55.0)
+rv1 = norm(loc = 0., scale = 2.0)
+rv2 = norm(loc = 2., scale = 3.0)
+print(rv.pdf(-10))
+
+x = np.arange(-10, 10, .1)
+
+#plot the pdfs of these normal distributions
+plt.figure()
+plt.plot(x, rv.pdf(x))
+plt.show()
+
+'''
 # select a sym type
 sym_t = cs.SX
 a0 = sym_t.sym('a0', 1)
@@ -45,7 +60,7 @@ print(cs.jacobian(first_der, t))
 print(ddp)
 
 print("-------->", dp(1, a1, a2, a3, a4, a5))
-
+'''
 '''d_spl = spline.jacobian()
 print(d_spl(t=t))
 dd_spl = d_spl.jacobian()
