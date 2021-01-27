@@ -6,7 +6,7 @@ def swing_leg(pos_curr, pos_tgt, swing_t, resol):
 
 
     '''
-
+    The functions of this file have been integrated in walking.py. This script remains for debugging purposes.
     Args:
         pos_curr: current position of the foot
         pos_tgt: target position of the foot
@@ -141,17 +141,30 @@ def splines(dt, init_cond, fin_cond):
 
 if __name__ == "__main__":
 
+    # current position
     position = [0.35, 0.35, -0.71]
-    target = [0.45, 0.35, -0.61]
-    height = 0.1
 
+    #target position
+    target = [0.45, 0.35, -0.61]
+
+    # time interval of swing phase
     period = (0.5, 2.5)
 
-    trj = swing_leg(pos_curr=position, pos_tgt=target, swing_t=period, resol=200)
+    # interpolation resolution (points per sec)
+    resolution = 200
 
-    # plot all splines in one graph
-    s = np.linspace(0, 3, 600)
-    #s = np.linspace(period[0], period[1], 400)
+    trj = swing_leg(pos_curr=position, pos_tgt=target, swing_t=period, resol=resolution)
+
+    # time interval of total optimization problem
+    t_opt = [0.0, 3.0]
+
+    # plot points
+    pl_n = int((t_opt[1]-t_opt[0]) * resolution)
+
+    # time list for plotting
+    s = np.linspace(t_opt[0], t_opt[1], pl_n)
+
+    # plot
     plt.figure()
     plt.subplot(3, 1, 1)
     plt.plot(s, trj['x'])
