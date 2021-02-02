@@ -157,7 +157,7 @@ class Walking:
         Args:
             x0 ([type]): initial state (com position, velocity, acceleration)
             contacts ([type]): list of contact point positions
-            swing_id ([type]): the index of the swing leg
+            swing_id ([type]): the index of the swing leg from 0 to 3
             swing_tgt ([type]): the target foothold for the swing leg
             swing_t ([type]): pair (t_lift, t_touch) in secs
             min_f: minimum threshold for forces in z direction
@@ -505,9 +505,9 @@ if __name__ == "__main__":
     sw_id = 2
 
     #swing_target = np.array([0.45, 0.35, 0.1])
-    swing_target = np.array([-0.3, -0.35, 0.1])
+    swing_target = np.array([-0.35, -0.35, 0.0])
 
-    swing_time = (1.0, 2.0)
+    swing_time = (1.5, 2.5)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time)
