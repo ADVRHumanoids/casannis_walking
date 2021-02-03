@@ -445,7 +445,7 @@ class Walking:
         p1 = fin_cond[0]
         v1 = fin_cond[1]
         ac1 = fin_cond[2]
-        print('Initial and final conditions are:', p0, v0, ac0, p1, v1, ac1)
+        #print('Initial and final conditions are:', p0, v0, ac0, p1, v1, ac1)
 
         # the 5th order polynomial expression
         spline = a0 + a1 * t + a2 * t ** 2 + a3 * t ** 3 + a4 * t ** 4 + a5 * t ** 5
@@ -480,9 +480,58 @@ class Walking:
 
         # coefficients
         coeffs = np.linalg.inv(A).dot(B)
-        print(coeffs)
+        #print(coeffs)
 
         return coeffs
+
+    def print(self, results, publish_freq):
+        '''
+
+        Args:
+            results: results from interpolation
+            publish_freq: frequency of interpolation and publish
+
+        Returns: prints the interpolated trajectories
+
+        '''
+
+        # Interpolated state plot
+        state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+        plt.figure()
+        for i, name in enumerate(state_labels):
+            plt.subplot(3, 1, i + 1)
+            for j in range(self._dimc):
+                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
+            plt.grid()
+            plt.legend(['x', 'y', 'z'])
+            plt.title(name)
+        plt.xlabel('Time [s]')
+        feet_labels = ['front left', 'front right', 'hind right', 'hind left']
+
+        # Interpolated force plot
+        plt.figure()
+        for i, name in enumerate(feet_labels):
+            plt.subplot(2, 2, i + 1)
+            for k in range(3):
+                plt.plot(results['t'], results['f'][3 * i + k], '-')
+            plt.grid()
+            plt.title(name)
+            plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
+        plt.xlabel('Time [s]')
+
+        # plot swing trajectory
+        # All points to be published
+        N_total = int(self._N * self._dt * publish_freq)  # total points --> total time * frequency
+        s = np.linspace(0, self._dt * self._N, N_total)
+        coord_labels = ['x', 'y', 'z']
+        plt.figure()
+        for i, name in enumerate(coord_labels):
+            plt.subplot(3, 1, i + 1)
+            plt.plot(s, results['sw'][i])
+            plt.grid()
+            plt.title('Trajectory ' + name)
+        plt.xlabel('Time [s]')
+        plt.show()
 
 
 if __name__ == "__main__":

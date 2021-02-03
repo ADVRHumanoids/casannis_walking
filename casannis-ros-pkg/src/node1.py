@@ -14,10 +14,10 @@ R = 0.078
 def casannis(pub_freq):
 
     """
-    This function call the optimization problem constructor, the solver, the interpolators and interfaces with cartesio
+    This function call the optimization problem constructor, the solver, the interpolator and interfaces with cartesio
     through ros topics
     Args:
-        pub_freq: desired publish frequency
+        pub_freq: desired publish frequency (affects only the interpolation and not the optimal solution)
 
     Returns:
         publish the desired data to cartesio through ros topics
@@ -132,17 +132,14 @@ def casannis(pub_freq):
                 fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/wheel_" + str(swing_id), WrenchStamped)
 
                 # force threshold to consider as contact
-                if fl_force_sub_.wrench.force.z < - 1.0:
-
-                    #print("Contact Counter is:", i)
-                    #print("Time is:", interpl['t'][counter])
+                if fl_force_sub_.wrench.force.z < - 5.0:
 
                     # count the threshold violations
                     i = i + 1
 
                     # at 5 violations stop the trajectory execution
-                    if i == 10:
-                        print("Contact detected. Trj Counter is:", counter)
+                    if i == 5:
+                        print("Contact detected. Trj Counter is:", counter, "out of total", N_total)
                         break
 
                     # publish more conservative value of trj
@@ -160,41 +157,8 @@ def casannis(pub_freq):
         rate.sleep()
     print("Exit success")
 
-    # Interpolated state plot
-    '''state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
-    plt.figure()
-    for i, name in enumerate(state_labels):
-        plt.subplot(3, 1, i + 1)
-        for j in range(walk._dimc):
-            plt.plot(interpl['t'], interpl['x'][walk._dimc * i + j], '-')
-        plt.grid()
-        plt.legend(['x', 'y', 'z'])
-        plt.title(name)
-    plt.xlabel('Time [s]')
-    feet_labels = ['front left', 'front right', 'hind right', 'hind left']
-    # Interpolated force plot
-    plt.figure()
-    for i, name in enumerate(feet_labels):
-        plt.subplot(2, 2, i + 1)
-        for k in range(3):
-            plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
-        plt.grid()
-        plt.title(name)
-        plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
-    plt.xlabel('Time [s]')
-    plt.show()
-
-    # plot swing trajectory
-    s = np.linspace(0, walk._dt * walk._N, N_total)
-    coord_labels = ['x', 'y', 'z']
-    plt.figure()
-    for i, name in enumerate(coord_labels):
-        plt.subplot(3, 1, i + 1)
-        plt.plot(s, interpl['sw'][i])
-        plt.grid()
-        plt.title('Trajectory ' + name)
-    plt.xlabel('Time [s]')
-    plt.show()'''
+    # print the trajectories
+    walk.print(interpl, pub_freq)
 
 
 if __name__ == '__main__':
