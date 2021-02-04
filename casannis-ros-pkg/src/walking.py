@@ -110,7 +110,7 @@ class Walking:
             P.append(p_k)
 
             # cost
-            j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])  # 1/2 |u_k|^2
+            j_k = 0.5 * cs.sumsqr(u_k) + 1e-4 * cs.sumsqr(f_k) + 5e-2 * cs.sumsqr(x_k[0:2])  # 1/2 |u_k|^2
             J.append(j_k)
 
             # newton
@@ -539,71 +539,43 @@ if __name__ == "__main__":
     w = Walking(mass=90, N=30, dt=0.1)
 
     # initial state
-    c0 = np.array([0.1, 0.0, 0.64])
+    #c0 = np.array([-0.00629, -0.03317, 0.01687])
+    c0 = np.array([0.107729, 0.0000907, -0.02118])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
     x_init = np.hstack([c0, dc0, ddc0])
 
     foot_contacts = [
-        np.array([0.35, 0.35, 0.0]),   # fl
-        np.array([0.35, -0.35, 0.0]),  # fr
-        np.array([-0.35, -0.35, 0.0]), # hr
-        np.array([-0.35, 0.35, 0.0])   # hl
+        np.array([0.35, 0.35, -0.7187]),   # fl
+        np.array([0.35, -0.35, -0.7187]),  # fr
+        np.array([-0.35, 0.35, -0.7187]),    # hl
+        np.array([-0.35, -0.35, -0.7187])   # hr
     ]
 
-    sw_id = 2
+    # swing id from 0 to 3
+    #sw_id = 3
+    sw_id = 0
 
-    #swing_target = np.array([0.45, 0.35, 0.1])
-    swing_target = np.array([-0.35, -0.35, 0.0])
+    #swing_target = np.array([-0.35, -0.35, -0.719])
+    swing_target = np.array([0.35, 0.35, (-0.7187-0.05)])
 
-    swing_time = (1.5, 2.5)
+    #swing_time = (1.5, 3.0)
+    swing_time = (0.5, 2.5)
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time)
-
+    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=50)
+    # debug
+    print("X0 is:", x_init)
+    print("contacts is:", foot_contacts)
+    print("swing id is:", sw_id)
+    print("swing target is:", swing_target)
+    print("swing time:", swing_time)
     # interpolate the values, pass values and interpolation resolution
-    res = 100
+    res = 300
+
     interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, swing_time, res)
 
-    # Interpolated state plot
-    state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
-    plt.figure()
-    for i, name in enumerate(state_labels):
-        plt.subplot(3, 1, i+1)
-        for j in range(w._dimc):
-            plt.plot(interpl['t'], interpl['x'][w._dimc * i + j], '-')
-            plt.plot(np.arange(w._N) * w._dt, sol['x'][w._dimc * i + j, :].transpose(), 'o')
-        plt.grid()
-        plt.legend(['x_int', 'x', 'y_int', 'y', 'z_int', 'z'])
-        #plt.legend(['x', 'y', 'z'])
-        plt.title(name)
-    plt.xlabel('Time [s]')
-
-    # Interpolated force plot
-    feet_labels = ['front left', 'front right', 'hind right', 'hind left']
-    plt.figure()
-    for i, name in enumerate(feet_labels):
-        plt.subplot(2, 2, i + 1)
-        for k in range(w._dimc):
-            plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
-            plt.plot(np.arange(w._N) * w._dt, sol['F'][3 * i + k, :].transpose(), 'o')
-        plt.grid()
-        plt.title(name)
-        plt.legend(['x_int', 'x', 'y_int', 'y', 'z_int', 'z'])
-        #plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
-    plt.xlabel('Time [s]')
-
-    # Interpolated swing foot trajectory plot
-    coord_labels = ['x', 'y', 'z']
-    plt.figure()
-    for i, name in enumerate(coord_labels):
-        plt.subplot(3, 1, i+1)
-        plt.plot(interpl['t'], interpl['sw'][i], '-')
-        plt.plot(swing_time, [foot_contacts[sw_id][i], swing_target[i]], 'o')
-        plt.grid()
-        plt.title("Swing foot trajectory " + str(name))
-    plt.xlabel('Time [s]')
-
-    plt.show()
+    # print the results
+    w.print(interpl, res)
 
 
