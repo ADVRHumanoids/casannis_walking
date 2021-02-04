@@ -12,7 +12,7 @@
         textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
     
     <param name="cartesian/problem_description" 
-        textfile="$(find centauro_demo_1)/config/centauro_stack.yaml"/>
+        textfile="$(find casannis-ros-pkg)/config/centauro_stack.yaml"/>
     
     <include file="$(find cartesian_interface)/launch/cartesio.launch">
         <arg name="rate" value="100.0"/>
