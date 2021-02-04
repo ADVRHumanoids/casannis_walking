@@ -82,11 +82,11 @@ def casannis(pub_freq):
     sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=50)
 
     # debug
-    print("X0 is:", x0)
+    '''print("X0 is:", x0)
     print("contacts is:", contacts)
     print("swing id is:", swing_id-1)
     print("swing target is:", swing_tgt)
-    print("swing time:", swing_t)
+    print("swing time:", swing_t)'''
 
     # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
     interpl = walk.interpolate(sol, contacts[swing_id-1], swing_tgt, swing_t, pub_freq)
@@ -135,7 +135,7 @@ def casannis(pub_freq):
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
 
-            # early contact detection
+            # Early contact detection
             # detection only on the last half of the middle phase
             if cont_detection and t_early < interpl['t'][counter]:
 

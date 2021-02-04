@@ -110,7 +110,7 @@ class Walking:
             P.append(p_k)
 
             # cost
-            j_k = 0.5 * cs.sumsqr(u_k) + 1e-4 * cs.sumsqr(f_k) + 5e-2 * cs.sumsqr(x_k[0:2])  # 1/2 |u_k|^2
+            j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-2 * cs.sumsqr(x_k[0:2])  # 1/2 |u_k|^2
             J.append(j_k)
 
             # newton
