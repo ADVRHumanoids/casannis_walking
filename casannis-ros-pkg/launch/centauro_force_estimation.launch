@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<launch>
+	
+	<!--node pkg="centauro_tools" 
+          type="centauro_cop_estimation" 
+          name="centauro_cop_estimation"
+          output="screen">
+		  
+          <param name="rate" value="200.0"/>
+		  
+	</node-->
+
+  <!-- Mine issue -->
+  <!-- centauro configuration parameters -->
+  <arg name="arms" default="true"/>
+  <arg name="legs" default="true"/>
+
+<!--param name="robot_description"
+         command="$(find xacro)/xacro --inorder '$(find centauro_urdf)/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/-->
+	<param name="robot_description_semantic" textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
+
+    <node pkg="cartesian_interface" 
+          type="force_estimation_node" 
+          name="force_estimator"
+          output="screen">
+		  
+		<remap from="~torque_offset" to="cartesian/torque_offset"/>
+	
+        <param name="is_model_floating_base" value="true"/>
+        <param name="model_type" value="RBDL"/>
+        
+        <param name="links" type="yaml" value="[ankle2_1, ankle2_2, ankle2_3, ankle2_4]"/>
+        <param name="chains" type="yaml" value="[front_left_leg, front_right_leg, rear_right_leg, rear_left_leg]"/>
+        
+        <param name="arm1_8/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="arm2_8/dofs" type="yaml" value="[0, 1, 2]"/>
+	<param name="ankle2_1/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="ankle2_2/dofs" type="yaml" value="[0, 1, 2]"/>
+	<param name="ankle2_3/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="ankle2_4/dofs" type="yaml" value="[0, 1, 2]"/>
+
+		<param name="rate" value="100.0"/>
+        
+    </node>
+
+
+</launch>
