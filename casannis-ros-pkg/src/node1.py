@@ -5,7 +5,6 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import WrenchStamped
 from walking import Walking
 import numpy as np
-from matplotlib import pyplot as plt
 
 # radius of centauro wheels
 R = 0.078
@@ -25,7 +24,7 @@ def casannis(pub_freq):
     """
 
     # Construct the class the optimization problem
-    walk = Walking(90.0, 30, 0.1)
+    walk = Walking(mass=90, N=30, dt=0.1)
 
     rospy.init_node('casannis', anonymous=True)
 
@@ -77,11 +76,17 @@ def casannis(pub_freq):
     # convert swing_t from "[a, b]" to [a,b]
     swing_t = swing_t.rstrip(']').lstrip('[').split(',')
     swing_t = [float(i) for i in swing_t]
-    print(swing_t)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=50)
+
+    # debug
+    print("X0 is:", x0)
+    print("contacts is:", contacts)
+    print("swing id is:", swing_id-1)
+    print("swing target is:", swing_tgt)
+    print("swing time:", swing_t)
 
     # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
     interpl = walk.interpolate(sol, contacts[swing_id-1], swing_tgt, swing_t, pub_freq)
@@ -101,6 +106,13 @@ def casannis(pub_freq):
 
     # counter i for contact detection
     i = 0
+
+    # contact detection
+    window = 10
+    thres = 5.0
+
+    # early contact detection
+    t_early = 0.5 * (swing_t[0] + swing_t[1])
 
     rate = rospy.Rate(pub_freq)  # Frequency of publish process
     # loop interpolation points to publish on a specified frequency
@@ -123,30 +135,29 @@ def casannis(pub_freq):
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
 
-            # contact detection
-
+            # early contact detection
             # detection only on the last half of the middle phase
-            if cont_detection and interpl['t'][counter] > 0.5 * (swing_t[0]+swing_t[1]):
+            if cont_detection and t_early < interpl['t'][counter]:
 
                 # receive force in z direction of the swing leg
-                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/wheel_" + str(swing_id), WrenchStamped)
+                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/ankle2_" + str(swing_id), WrenchStamped)
 
                 # force threshold to consider as contact
-                if fl_force_sub_.wrench.force.z < - 5.0:
+                if fl_force_sub_.wrench.force.z < - thres:
 
                     # count the threshold violations
                     i = i + 1
 
-                    # at 5 violations stop the trajectory execution
-                    if i == 5:
-                        print("Contact detected. Trj Counter is:", counter, "out of total", N_total)
+                    # at 5 consecutive violations stop the trajectory execution
+                    if i == window:
+                        print("Early contact detected. Trj Counter is:", counter, "out of total", N_total)
                         break
 
-                    # publish more conservative value of trj
-                    f_msg.pose.position.z = interpl['sw'][2][counter-10] + R
+                    # publish more conservative value of trj when threshold is violated
+                    #f_msg.pose.position.z = interpl['sw'][2][counter-10] + R
 
-                # the 5 threshold violations must be sequential
-                elif i != 0:
+                # the 5 threshold violations must be consecutive, otherwise counter is set to zero again
+                elif fl_force_sub_.wrench.force.z >= - thres and i != 0:
                     i = 0
                     #print("Cont. counter set zero")
 
@@ -155,19 +166,53 @@ def casannis(pub_freq):
             f_pub_.publish(f_msg)
 
         rate.sleep()
-    print("Exit success")
 
-    # print the trajectories
+    #print("Exit success")
+
+    # Late contact detection if no early contact detected
+    if cont_detection and i != window:
+
+        # velocity of the foot
+        vel = 0.3
+
+        i = 0
+
+        # check the force on the foot until 5 consecutive threshold violations
+        while i < window:
+            # receive force in z direction of the swing leg
+            fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/ankle2_" + str(swing_id), WrenchStamped)
+
+            # force threshold to consider as contact
+            if fl_force_sub_.wrench.force.z < - thres:
+
+                # count the threshold violations
+                i = i + 1
+
+                # publish more conservative value of trj when threshold is violated
+                # f_msg.pose.position.z = interpl['sw'][2][counter-10] + R
+
+            # the 5 threshold violations must be consecutive, otherwise counter is set to zero again
+            elif fl_force_sub_.wrench.force.z >= - thres and i != 0:
+                i = 0
+                # print("Cont. counter set zero")
+
+            # publish swing foot trajectory
+            f_msg.header.stamp = rospy.Time.now()
+            f_msg.pose.position.z = f_msg.pose.position.z - vel/pub_freq
+            f_pub_.publish(f_msg)
+
+            rate.sleep()
+
+    # print the nominal trajectories
     walk.print(interpl, pub_freq)
 
 
 if __name__ == '__main__':
 
     # desired publish frequency
-    freq = 150
+    freq = 300
 
     try:
         casannis(freq)
     except rospy.ROSInterruptException:
         pass
-
