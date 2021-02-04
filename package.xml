@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>casannis-ros-pkg</name>
+  <name>casannis-walking</name>
   <version>0.0.0</version>
   <description>The casannis-ros-pkg package</description>
 
