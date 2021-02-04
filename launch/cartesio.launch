@@ -12,7 +12,7 @@
         textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
     
     <param name="cartesian/problem_description" 
-        textfile="$(find casannis-ros-pkg)/config/centauro_stack.yaml"/>
+        textfile="$(find casannis-walking)/config/centauro_stack.yaml"/>
     
     <include file="$(find cartesian_interface)/launch/cartesio.launch">
         <arg name="rate" value="100.0"/>
@@ -25,4 +25,6 @@
             pkg="rviz"
             args="-d $(find cartesian_interface)/examples/rviz/disp.rviz"
             output="screen"/>
+
+<include file="$(find casannis-walking)/launch/centauro_force_estimation.launch"/>
 </launch>
