@@ -109,7 +109,7 @@ def casannis(pub_freq):
 
     # contact detection
     window = 10
-    thres = 5.0
+    thres = 15.0
 
     # early contact detection
     t_early = 0.5 * (swing_t[0] + swing_t[1])
@@ -166,8 +166,6 @@ def casannis(pub_freq):
             f_pub_.publish(f_msg)
 
         rate.sleep()
-
-    #print("Exit success")
 
     # Late contact detection if no early contact detected
     if cont_detection and i != window:

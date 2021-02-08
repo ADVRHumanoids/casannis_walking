@@ -557,7 +557,7 @@ if __name__ == "__main__":
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    swing_target = np.array([0.35, 0.35, (-0.7187-0.05)])
+    swing_target = np.array([0.35, 0.35, (-0.7187+0.1)])
 
     #swing_time = (1.5, 3.0)
     swing_time = (0.5, 2.5)
