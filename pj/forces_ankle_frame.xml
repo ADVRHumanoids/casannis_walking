@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root version="2.3.8">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab containers="1" tab_name="tab1">
+   <Container>
+    <DockSplitter sizes="0.5;0.5" orientation="-" count="2">
+     <DockSplitter sizes="0.500317;0.499683" orientation="|" count="2">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range right="12.720250" top="55.413642" left="7.730000" bottom="-339.264992"/>
+        <limitY/>
+        <curve name="/cartesian/force_estimation/ankle2_1/wrench/force/x" color="#1f77b4"/>
+        <curve name="/cartesian/force_estimation/ankle2_1/wrench/force/y" color="#d62728"/>
+        <curve name="/cartesian/force_estimation/ankle2_1/wrench/force/z" color="#1ac938"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range right="12.720250" top="-38.395909" left="7.730000" bottom="-336.904494"/>
+        <limitY/>
+        <curve name="/cartesian/force_estimation/ankle2_2/wrench/force/x" color="#ff7f0e"/>
+        <curve name="/cartesian/force_estimation/ankle2_2/wrench/force/y" color="#f14cc1"/>
+        <curve name="/cartesian/force_estimation/ankle2_2/wrench/force/z" color="#9467bd"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter sizes="0.500317;0.499683" orientation="|" count="2">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range right="12.720250" top="-11.185241" left="7.730000" bottom="-172.021189"/>
+        <limitY/>
+        <curve name="/cartesian/force_estimation/ankle2_3/wrench/force/x" color="#17becf"/>
+        <curve name="/cartesian/force_estimation/ankle2_3/wrench/force/y" color="#bcbd22"/>
+        <curve name="/cartesian/force_estimation/ankle2_3/wrench/force/z" color="#1f77b4"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range right="12.720250" top="19.925103" left="7.730000" bottom="-172.660745"/>
+        <limitY/>
+        <curve name="/cartesian/force_estimation/ankle2_4/wrench/force/x" color="#d62728"/>
+        <curve name="/cartesian/force_estimation/ankle2_4/wrench/force/y" color="#1ac938"/>
+        <curve name="/cartesian/force_estimation/ankle2_4/wrench/force/z" color="#ff7f0e"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <default time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad ROS bags">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="LSL Subscriber"/>
+  <plugin ID="MQTT Subscriber"/>
+  <plugin ID="ROS Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+
