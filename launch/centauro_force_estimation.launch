@@ -11,7 +11,7 @@
 		  
 	</node-->
 
-  <!-- Mine issue -->
+  <!-- Mine additions -->
   <!-- centauro configuration parameters -->
   <arg name="arms" default="true"/>
   <arg name="legs" default="true"/>
