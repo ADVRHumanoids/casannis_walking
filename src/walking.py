@@ -109,8 +109,12 @@ class Walking:
             p_k = sym_t.sym('p_' + str(k), ncontacts * dimc)
             P.append(p_k)
 
-            # cost
-            j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-2 * cs.sumsqr(x_k[0:2])  # 1/2 |u_k|^2
+            # cost  function
+            r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
+            R = np.diag(r)
+            j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)
+            #j_k = 1e3 * cs.sumsqr(x_k[0:9]) + 0.5e1 * cs.sumsqr(u_k) # 1/2 |u_k|^2
+            #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
             J.append(j_k)
 
             # newton
@@ -182,6 +186,7 @@ class Walking:
                 x_min = x0
             else:
                 x_max = np.full(self._dimx, cs.inf) # do not bound state
+                #x_max = np.concatenate([[0.15], [0.1], [0.1], np.full(6, cs.inf)])
                 x_min = -x_max 
 
             Xu.append(x_max)
@@ -300,7 +305,7 @@ class Walking:
         # -------- state trajectory interpolation ------------
 
         # intermediate points between two knots --> time interval * resolution
-        n = int(self._dt * resol)
+        self._n = int(self._dt * resol)
 
         x_old = solution['x'][0:9, 0]  # initial state
         x_all = []  # list to append all states
@@ -310,7 +315,7 @@ class Walking:
             # control input to change in every knot
             u_old = solution['u'][0:3, ii]
 
-            for j in range(n):     # loop for interpolation points
+            for j in range(self._n):     # loop for interpolation points
 
                 x_all.append(x_old)  # storing state in the list 600x9
 
@@ -319,10 +324,10 @@ class Walking:
 
         # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]     # primary dimension = number of state components
-        t = [(ii*delta_t) for ii in range(self._N * n)]
+        self._t = [(ii*delta_t) for ii in range(self._N * self._n)]
 
         for i in range(self._dimx): # loop for every component of the state vector
-            for j in range(self._N * n):    # loop for every point of interpolation
+            for j in range(self._N * self._n):    # loop for every point of interpolation
 
                 # append the value of x_i component on j point of interpolation
                 # in the element i of the list int_state
@@ -340,76 +345,18 @@ class Walking:
 
             # store the interpolation points for each force component in the i element of the list int_force
             # primary dimension = number of force components
-            int_force[i] = force_func[i][0](t)
+            int_force[i] = force_func[i][0](self._t)
 
         # ----------- swing leg trajectory interpolation --------------
 
-        # list of first and last point of swing phase
-        '''sw_points = [sw_curr] + [sw_tgt]
+        # swing trajectory with intemediate point
+        #sw_interpl = self.swing_trj_triangle(sw_curr, sw_tgt, 0.1, sw_t, t_tot, resol)
 
-        # list of the two points of swing phase for each coordinate
-        sw_x = [sw_points[0][0], sw_points[1][0]]
-        sw_y = [sw_points[0][1], sw_points[1][1]]
-        sw_z = [sw_points[0][2], sw_points[1][2]]
-
-        # conditions, initial point of swing phase
-        init_x = [sw_x[0], 0, 0]
-        init_y = [sw_y[0], 0, 0]
-        init_z = [sw_z[0], 0, 0]
-
-        # conditions, final point of swing phase
-        fin_x = [sw_x[1], 0, 0]
-        fin_y = [sw_y[1], 0, 0]
-        fin_z = [sw_z[1], 0, 0]
-
-        # save polynomial coefficients in one list for each coordinate
-        sw_cx = self.splines(sw_t, init_x, fin_x)
-        sw_cy = self.splines(sw_t, init_y, fin_y)
-        sw_cz = self.splines(sw_t, init_z, fin_z)
-
-        # convert to polynomial functions
-        sw_px = np.polynomial.polynomial.Polynomial(sw_cx)
-        sw_py = np.polynomial.polynomial.Polynomial(sw_cy)
-        sw_pz = np.polynomial.polynomial.Polynomial(sw_cz)
-
-        # construct list of interpolated points according to specified resolution
-        sw_dt = sw_t[1] - sw_t[0]
-        sw_interpl_t = np.linspace(sw_t[0], sw_t[1], int(resol * sw_dt))
-        sw_interpl_x = sw_px(sw_interpl_t)
-        sw_interpl_y = sw_py(sw_interpl_t)
-        sw_interpl_z = sw_pz(sw_interpl_t)
-
-        # number of interpolation points in non swing phases
-        sw_n1 = int(resol * (sw_t[0] - t_start))
-        sw_n2 = int(resol * (t_end - sw_t[1]))
-
-        # append points for non swing phases
-        sw_interpl_x = [sw_curr[0]] * sw_n1 + [sw_interpl_x[i] for i in range(len(sw_interpl_x))] + [sw_tgt[0]] * sw_n2
-        sw_interpl_y = [sw_curr[1]] * sw_n1 + [sw_interpl_y[i] for i in range(len(sw_interpl_y))] + [sw_tgt[1]] * sw_n2
-        sw_interpl_z = [sw_curr[2]] * sw_n1 + [sw_interpl_z[i] for i in range(len(sw_interpl_z))] + [sw_tgt[2]] * sw_n2
-
-        # define bell function to adjust trajectory of z coordinate
-        mean = 0.48 * (sw_t[0] + sw_t[1])   # center of normal distribution
-        std = 0.14 * (sw_t[1] - sw_t[0])    # standard deviation
-        sw_bellz = norm(loc=mean, scale=std)
-
-        # weight of the bell function
-        bell_w = 0.08
-
-        # list of points generated by the bell
-        bell_trj = [bell_w * sw_bellz.pdf(t[i]) for i in range(self._N * n)]
-
-        # sum bell with z trajectory
-        sw_interpl_z = list(map(add, bell_trj, sw_interpl_z))
-
-
-        # include all coordinates in a single list
-        sw_interpl = [sw_interpl_x, sw_interpl_y, sw_interpl_z]'''
-
-        sw_interpl = self.swing_trj_triangle(sw_curr, sw_tgt, 0.05, sw_t, t_tot, resol)
+        # swing trajectory with gaussian function
+        sw_interpl = self.swing_trj_gaussian(sw_curr, sw_tgt, sw_t, t_tot, resol)
 
         return {
-            't': t,
+            't': self._t,
             'x': int_state,
             'f': int_force,
             'sw': sw_interpl
@@ -417,7 +364,7 @@ class Walking:
 
     def swing_trj_gaussian(self, sw_curr, sw_tgt, sw_t, total_t, resol):
         '''
-        This function interpolates current and target foot position with a 5th order
+        Interpolates current and target foot position with a 5th order
         polynomial and superimposes a gaussian bell function to achieve clearance
         Args:
             sw_curr: current swing foot position
@@ -483,7 +430,7 @@ class Walking:
         bell_w = 0.08
 
         # list of points generated by the bell
-        bell_trj = [bell_w * sw_bellz.pdf(t[i]) for i in range(self._N * n)]
+        bell_trj = [bell_w * sw_bellz.pdf(self._t[i]) for i in range(self._N * self._n)]
 
         # sum bell with z trajectory
         sw_interpl_z = list(map(add, bell_trj, sw_interpl_z))
@@ -495,7 +442,8 @@ class Walking:
 
     def swing_trj_triangle(self, sw_curr, sw_tgt, clear, sw_t, total_t, resol):
         '''
-
+        Interpolates current, target foot position and a intermediate point with 5th order
+        polynomials.
         Args:
             sw_curr: current foot position
             sw_tgt: target foot position
@@ -523,8 +471,8 @@ class Walking:
         sw_z = [sw_points[0][2], sw_points[1][2], sw_points[2][2]]
 
         # velocities x and y for the intermediate point
-        vel_x = 3 * (sw_x[2] - sw_x[0]) / (sw_t[1] - sw_t[0])
-        vel_y = 3 * (sw_y[2] - sw_y[0]) / (sw_t[1] - sw_t[0])
+        vel_x = 2 * (sw_x[2] - sw_x[0]) / (sw_t[1] - sw_t[0])
+        vel_y = 2 * (sw_y[2] - sw_y[0]) / (sw_t[1] - sw_t[0])
 
         # conditions, initial point of swing phase
         cond1_x = [sw_x[0], 0, 0]
@@ -714,11 +662,12 @@ class Walking:
 
 if __name__ == "__main__":
 
-    w = Walking(mass=90, N=30, dt=0.1)
+    w = Walking(mass=95, N=50, dt=0.1)
 
     # initial state
     #c0 = np.array([-0.00629, -0.03317, 0.01687])
     c0 = np.array([0.107729, 0.0000907, -0.02118])
+    #c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
     x_init = np.hstack([c0, dc0, ddc0])
@@ -735,16 +684,16 @@ if __name__ == "__main__":
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.2
-    dy = 0.2
+    dx = 0.1
+    dy = 0.0
     dz = 0.0
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     #swing_time = (1.5, 3.0)
-    swing_time = (0.5, 2.5)
+    swing_time = (3.0, 5.0)
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=50)
+    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=100)
     # debug
     print("X0 is:", x_init)
     print("contacts is:", foot_contacts)
