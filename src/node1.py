@@ -24,7 +24,7 @@ def casannis(pub_freq):
     """
 
     # Construct the class the optimization problem
-    walk = Walking(mass=90, N=30, dt=0.1)
+    walk = Walking(mass=90, N=50, dt=0.1)
 
     rospy.init_node('casannis', anonymous=True)
 
@@ -79,7 +79,7 @@ def casannis(pub_freq):
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=50)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
 
     # debug
     '''print("X0 is:", x0)
