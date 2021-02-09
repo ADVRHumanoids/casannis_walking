@@ -108,8 +108,8 @@ def casannis(pub_freq):
     i = 0
 
     # contact detection
-    window = 10
-    thres = 15.0
+    window = 5
+    thres = 10.0
 
     # early contact detection
     t_early = 0.5 * (swing_t[0] + swing_t[1])

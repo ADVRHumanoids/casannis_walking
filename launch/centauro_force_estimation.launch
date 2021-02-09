@@ -53,7 +53,7 @@
 	    <param name="wheel_3/dofs" type="yaml" value="[0, 1, 2]"/>
         <param name="wheel_4/dofs" type="yaml" value="[0, 1, 2]"/-->
 
-		<param name="rate" value="100.0"/>
+		<param name="rate" value="200.0"/>
         
     </node>
 
