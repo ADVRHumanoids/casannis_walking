@@ -184,10 +184,15 @@ class Walking:
             if k == 0:
                 x_max = x0 
                 x_min = x0
+
+            # mine addition - com not moving during swing motion
+            elif k >= swing_t[0] / self._dt:
+                x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])
+                x_min = -x_max
             else:
                 x_max = np.full(self._dimx, cs.inf) # do not bound state
-                #x_max = np.concatenate([[0.15], [0.1], [0.1], np.full(6, cs.inf)])
-                x_min = -x_max 
+                x_max = np.concatenate([[0.15], [0.1], [0.1], np.full(6, cs.inf)])
+                x_min = -x_max
 
             Xu.append(x_max)
             Xl.append(x_min)
@@ -680,7 +685,7 @@ if __name__ == "__main__":
     ]
 
     # swing id from 0 to 3
-    #sw_id = 3
+    #sw_id = 2
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
