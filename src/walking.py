@@ -13,7 +13,7 @@ class Walking:
 
     Dynamics:
       1) input is com jerk
-      2) dyamics is a triple integrator of com jerk
+      2) dynamics is a triple integrator of com jerk
       3) there must be contact forces that
         - realize the motion
         - fulfil contact constraints (i.e. unilateral constraint)
@@ -110,11 +110,13 @@ class Walking:
             P.append(p_k)
 
             # cost  function
-            r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
-            R = np.diag(r)
-            j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)
-            #j_k = 1e3 * cs.sumsqr(x_k[0:9]) + 0.5e1 * cs.sumsqr(u_k) # 1/2 |u_k|^2
+            #r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
+            #R = np.diag(r)
+            distances = [(np.sqrt(cs.sumsqr(x_k[0:3]-p_k[3*i:3*(i+1)])) - 0.8097) for i in range(4)]
+            j_k = 1e-2 * sum(distances) + 1e-3 * cs.sumsqr(u_k)
+            #j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)
             #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
+
             J.append(j_k)
 
             # newton
@@ -185,14 +187,16 @@ class Walking:
                 x_max = x0 
                 x_min = x0
 
-            # mine addition - com not moving during swing motion
-            elif k >= swing_t[0] / self._dt:
-                x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])
-                x_min = -x_max
             else:
                 x_max = np.full(self._dimx, cs.inf) # do not bound state
                 x_max = np.concatenate([[0.15], [0.1], [0.1], np.full(6, cs.inf)])
                 x_min = -x_max
+
+            '''# com not moving during swing motion
+            elif k >= swing_t[0] / self._dt:
+                x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])
+                x_min = -x_max'''
+
 
             Xu.append(x_max)
             Xl.append(x_min)
