@@ -25,6 +25,7 @@
             pkg="rviz"
             args="-d $(find cartesian_interface)/examples/rviz/disp.rviz"
             output="screen"/>
+    <!--args="-d $(find casannis-walking)/rviz_frame.rviz"-->
 
 <include file="$(find casannis-walking)/launch/centauro_force_estimation.launch"/>
 </launch>

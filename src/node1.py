@@ -77,6 +77,9 @@ def casannis(pub_freq):
     swing_t = swing_t.rstrip(']').lstrip('[').split(',')
     swing_t = [float(i) for i in swing_t]
 
+    # Construct the class the optimization problem
+    walk = Walking(mass=90, N=50, dt=0.1)
+
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
@@ -140,10 +143,10 @@ def casannis(pub_freq):
             if cont_detection and t_early < interpl['t'][counter]:
 
                 # receive force in z direction of the swing leg
-                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/ankle2_" + str(swing_id), WrenchStamped)
+                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/extra_frame_" + str(swing_id), WrenchStamped)
 
                 # force threshold to consider as contact
-                if fl_force_sub_.wrench.force.z < - thres:
+                if fl_force_sub_.wrench.force.z > thres:
 
                     # count the threshold violations
                     i = i + 1
@@ -157,7 +160,7 @@ def casannis(pub_freq):
                     #f_msg.pose.position.z = interpl['sw'][2][counter-10] + R
 
                 # the 5 threshold violations must be consecutive, otherwise counter is set to zero again
-                elif fl_force_sub_.wrench.force.z >= - thres and i != 0:
+                elif fl_force_sub_.wrench.force.z <= thres and i != 0:
                     i = 0
                     #print("Cont. counter set zero")
 
@@ -178,10 +181,10 @@ def casannis(pub_freq):
         # check the force on the foot until 5 consecutive threshold violations
         while i < window:
             # receive force in z direction of the swing leg
-            fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/ankle2_" + str(swing_id), WrenchStamped)
+            fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/extra_frame_" + str(swing_id), WrenchStamped)
 
             # force threshold to consider as contact
-            if fl_force_sub_.wrench.force.z < - thres:
+            if fl_force_sub_.wrench.force.z > thres:
 
                 # count the threshold violations
                 i = i + 1
@@ -190,7 +193,7 @@ def casannis(pub_freq):
                 # f_msg.pose.position.z = interpl['sw'][2][counter-10] + R
 
             # the 5 threshold violations must be consecutive, otherwise counter is set to zero again
-            elif fl_force_sub_.wrench.force.z >= - thres and i != 0:
+            elif fl_force_sub_.wrench.force.z <= thres and i != 0:
                 i = 0
                 # print("Cont. counter set zero")
 

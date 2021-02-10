@@ -1,0 +1,636 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Grid1
+        - /RobotModel1
+        - /RobotModel1/Links1
+        - /InteractiveMarkers1
+        - /TF1
+        - /TF1/Frames1
+      Splitter Ratio: 0.5
+    Tree Height: 727
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: ""
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: ci/l_sole
+      Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: false
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        ankle1_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ankle1_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: false
+        ankle1_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ankle1_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ankle2_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ankle2_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: false
+        ankle2_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ankle2_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm1_8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        arm2_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm2_8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ball1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ball1_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ball2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ball2_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        extra_frame_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        extra_frame_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        extra_frame_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        extra_frame_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ft_arm1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ft_arm2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hip1_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip1_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip1_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip1_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip2_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip2_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip2_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hip2_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        knee_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        knee_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        knee_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        knee_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        neck_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        neck_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        neck_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pelvis:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        torso_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ci
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /left_hand_cartesian_marker_server/update
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        ci/ankle1_1:
+          Value: false
+        ci/ankle1_2:
+          Value: false
+        ci/ankle1_3:
+          Value: false
+        ci/ankle1_4:
+          Value: false
+        ci/ankle2_1:
+          Value: false
+        ci/ankle2_2:
+          Value: true
+        ci/ankle2_3:
+          Value: false
+        ci/ankle2_4:
+          Value: false
+        ci/arm1_1:
+          Value: false
+        ci/arm1_2:
+          Value: false
+        ci/arm1_3:
+          Value: false
+        ci/arm1_4:
+          Value: false
+        ci/arm1_5:
+          Value: false
+        ci/arm1_6:
+          Value: false
+        ci/arm1_7:
+          Value: false
+        ci/arm1_8:
+          Value: false
+        ci/arm2_1:
+          Value: false
+        ci/arm2_2:
+          Value: false
+        ci/arm2_3:
+          Value: false
+        ci/arm2_4:
+          Value: false
+        ci/arm2_5:
+          Value: false
+        ci/arm2_6:
+          Value: false
+        ci/arm2_7:
+          Value: false
+        ci/arm2_8:
+          Value: false
+        ci/ball1:
+          Value: false
+        ci/ball1_tip:
+          Value: false
+        ci/ball2:
+          Value: false
+        ci/ball2_tip:
+          Value: false
+        ci/base_link:
+          Value: false
+        ci/com:
+          Value: false
+        ci/extra_frame_1:
+          Value: false
+        ci/extra_frame_2:
+          Value: true
+        ci/extra_frame_3:
+          Value: false
+        ci/extra_frame_4:
+          Value: false
+        ci/ft_arm1:
+          Value: false
+        ci/ft_arm2:
+          Value: false
+        ci/hip1_1:
+          Value: false
+        ci/hip1_2:
+          Value: false
+        ci/hip1_3:
+          Value: false
+        ci/hip1_4:
+          Value: false
+        ci/hip2_1:
+          Value: false
+        ci/hip2_2:
+          Value: false
+        ci/hip2_3:
+          Value: false
+        ci/hip2_4:
+          Value: false
+        ci/imu_link:
+          Value: false
+        ci/knee_1:
+          Value: false
+        ci/knee_2:
+          Value: false
+        ci/knee_3:
+          Value: false
+        ci/knee_4:
+          Value: false
+        ci/neck_1:
+          Value: false
+        ci/neck_2:
+          Value: false
+        ci/neck_3:
+          Value: false
+        ci/pelvis:
+          Value: false
+        ci/torso_2:
+          Value: false
+        ci/wheel_1:
+          Value: false
+        ci/wheel_2:
+          Value: false
+        ci/wheel_3:
+          Value: false
+        ci/wheel_4:
+          Value: false
+        ci/world:
+          Value: false
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        ci/world:
+          ci/com:
+            {}
+          ci/pelvis:
+            ci/base_link:
+              {}
+            ci/hip1_1:
+              ci/hip2_1:
+                ci/knee_1:
+                  ci/ankle1_1:
+                    ci/ankle2_1:
+                      ci/extra_frame_1:
+                        {}
+                      ci/wheel_1:
+                        {}
+            ci/hip1_2:
+              ci/hip2_2:
+                ci/knee_2:
+                  ci/ankle1_2:
+                    ci/ankle2_2:
+                      ci/extra_frame_2:
+                        {}
+                      ci/wheel_2:
+                        {}
+            ci/hip1_3:
+              ci/hip2_3:
+                ci/knee_3:
+                  ci/ankle1_3:
+                    ci/ankle2_3:
+                      ci/extra_frame_3:
+                        {}
+                      ci/wheel_3:
+                        {}
+            ci/hip1_4:
+              ci/hip2_4:
+                ci/knee_4:
+                  ci/ankle1_4:
+                    ci/ankle2_4:
+                      ci/extra_frame_4:
+                        {}
+                      ci/wheel_4:
+                        {}
+            ci/imu_link:
+              {}
+            ci/torso_2:
+              ci/arm1_1:
+                ci/arm1_2:
+                  ci/arm1_3:
+                    ci/arm1_4:
+                      ci/arm1_5:
+                        ci/arm1_6:
+                          ci/arm1_7:
+                            ci/ball1:
+                              ci/arm1_8:
+                                {}
+                              ci/ball1_tip:
+                                {}
+                            ci/ft_arm1:
+                              {}
+              ci/arm2_1:
+                ci/arm2_2:
+                  ci/arm2_3:
+                    ci/arm2_4:
+                      ci/arm2_5:
+                        ci/arm2_6:
+                          ci/arm2_7:
+                            ci/ball2:
+                              ci/arm2_8:
+                                {}
+                              ci/ball2_tip:
+                                {}
+                            ci/ft_arm2:
+                              {}
+              ci/neck_1:
+                ci/neck_2:
+                  {}
+              ci/neck_3:
+                {}
+      Update Interval: 0
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 220; 220; 220
+    Default Light: true
+    Fixed Frame: ci/world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
+      Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 2.126868486404419
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: -0.4802965521812439
+        Y: 0.26923173666000366
+        Z: -0.7069957852363586
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.26980042457580566
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 5.6681671142578125
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1025
+  Hide Left Dock: false
+  Hide Right Dock: true
+  QMainWindow State: 000000ff00000000fd0000000400000000000001c800000362fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000362000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000012005200760069007a00500061006e0065006c00000002c4000000f90000000000000000fb0000001e0043006100720074006500730069006f005200760069007a0047007500690100000305000000b80000000000000000000000010000010f00000379fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000002800000379000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007470000003ffc0100000002fb0000000800540069006d0065010000000000000747000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000005790000036200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: true
+  Width: 1863
+  X: 57
+  Y: 91
