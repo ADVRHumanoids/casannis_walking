@@ -23,9 +23,6 @@ def casannis(pub_freq):
 
     """
 
-    # Construct the class the optimization problem
-    walk = Walking(mass=90, N=50, dt=0.1)
-
     rospy.init_node('casannis', anonymous=True)
 
     # Publishers for com in the cartesian space
