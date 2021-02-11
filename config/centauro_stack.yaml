@@ -1,6 +1,6 @@
 solver_options:
     regularization: 1e-3
-    back_end: "osqp"
+    back_end: "qpoases"
 
 stack:
     - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY"]
@@ -20,24 +20,28 @@ Wheel1:
     type: "Cartesian"
     name: "FL_wheel"
     distal_link: "wheel_1"
+    lambda: 0.1
     
 
 Wheel2:
     type: "Cartesian"
     name: "FR_wheel"
     distal_link: "wheel_2"
+    lambda: 0.1
     
 
 Wheel3:
     type: "Cartesian"
     name: "HL_wheel"
     distal_link: "wheel_3"
+    lambda: 0.1
     
 
 Wheel4:
     type: "Cartesian"
     name: "HR_wheel"
     distal_link: "wheel_4"
+    lambda: 0.1
     
 
 LeftArm:
