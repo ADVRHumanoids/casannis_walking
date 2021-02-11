@@ -1,48 +1,50 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
  <tabbed_widget parent="main_window" name="Main Window">
-  <Tab tab_name="tab1" containers="1">
+  <Tab containers="1" tab_name="forces">
    <Container>
-    <DockSplitter orientation="-" count="2" sizes="0.5;0.5">
-     <DockSplitter orientation="|" count="2" sizes="0.502217;0.497783">
-      <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range left="1.399750" top="319.671043" right="6.395000" bottom="-18.302689"/>
-        <limitY/>
-        <curve color="#1f77b4" name="/cartesian/force_estimation/extra_frame_1/wrench/force/x"/>
-        <curve color="#d62728" name="/cartesian/force_estimation/extra_frame_1/wrench/force/y"/>
-        <curve color="#1ac938" name="/cartesian/force_estimation/extra_frame_1/wrench/force/z"/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range left="1.399750" top="320.547295" right="6.395000" bottom="-18.451111"/>
-        <limitY/>
-        <curve color="#ff7f0e" name="/cartesian/force_estimation/extra_frame_2/wrench/force/x"/>
-        <curve color="#f14cc1" name="/cartesian/force_estimation/extra_frame_2/wrench/force/y"/>
-        <curve color="#9467bd" name="/cartesian/force_estimation/extra_frame_2/wrench/force/z"/>
-       </plot>
-      </DockArea>
-     </DockSplitter>
-     <DockSplitter orientation="|" count="2" sizes="0.502217;0.497783">
-      <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range left="1.399750" top="169.923957" right="6.395000" bottom="-20.089589"/>
-        <limitY/>
-        <curve color="#17becf" name="/cartesian/force_estimation/extra_frame_3/wrench/force/x"/>
-        <curve color="#bcbd22" name="/cartesian/force_estimation/extra_frame_3/wrench/force/y"/>
-        <curve color="#1f77b4" name="/cartesian/force_estimation/extra_frame_3/wrench/force/z"/>
-       </plot>
-      </DockArea>
-      <DockArea name="...">
-       <plot mode="TimeSeries" style="Lines">
-        <range left="1.399750" top="169.608961" right="6.395000" bottom="-20.031579"/>
-        <limitY/>
-        <curve color="#d62728" name="/cartesian/force_estimation/extra_frame_4/wrench/force/x"/>
-        <curve color="#1ac938" name="/cartesian/force_estimation/extra_frame_4/wrench/force/y"/>
-        <curve color="#ff7f0e" name="/cartesian/force_estimation/extra_frame_4/wrench/force/z"/>
-       </plot>
-      </DockArea>
+    <DockSplitter sizes="1" count="1" orientation="-">
+     <DockSplitter sizes="0.5;0.5" count="2" orientation="|">
+      <DockSplitter sizes="0.500479;0.499521" count="2" orientation="-">
+       <DockArea name="...">
+        <plot mode="TimeSeries" style="Lines">
+         <range bottom="-36.046495" left="100.409983" top="1.940259" right="114.450124"/>
+         <limitY/>
+         <curve name="/cartesian/force_estimation/contact_1/wrench/force/x" color="#1f77b4"/>
+         <curve name="/cartesian/force_estimation/contact_1/wrench/force/y" color="#d62728"/>
+         <curve name="/cartesian/force_estimation/contact_1/wrench/force/z" color="#1ac938"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot mode="TimeSeries" style="Lines">
+         <range bottom="-5.357043" left="100.410003" top="10.854999" right="114.450145"/>
+         <limitY/>
+         <curve name="/cartesian/force_estimation/contact_3/wrench/force/x" color="#17becf"/>
+         <curve name="/cartesian/force_estimation/contact_3/wrench/force/y" color="#bcbd22"/>
+         <curve name="/cartesian/force_estimation/contact_3/wrench/force/z" color="#1f77b4"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
+      <DockSplitter sizes="0.500479;0.499521" count="2" orientation="-">
+       <DockArea name="...">
+        <plot mode="TimeSeries" style="Lines">
+         <range bottom="-12.399002" left="100.409997" top="20.245074" right="114.450138"/>
+         <limitY/>
+         <curve name="/cartesian/force_estimation/contact_2/wrench/force/x" color="#ff7f0e"/>
+         <curve name="/cartesian/force_estimation/contact_2/wrench/force/y" color="#f14cc1"/>
+         <curve name="/cartesian/force_estimation/contact_2/wrench/force/z" color="#9467bd"/>
+        </plot>
+       </DockArea>
+       <DockArea name="...">
+        <plot mode="TimeSeries" style="Lines">
+         <range bottom="-21.114335" left="100.410009" top="10.805076" right="114.450152"/>
+         <limitY/>
+         <curve name="/cartesian/force_estimation/contact_4/wrench/force/x" color="#d62728"/>
+         <curve name="/cartesian/force_estimation/contact_4/wrench/force/y" color="#1ac938"/>
+         <curve name="/cartesian/force_estimation/contact_4/wrench/force/z" color="#ff7f0e"/>
+        </plot>
+       </DockArea>
+      </DockSplitter>
      </DockSplitter>
     </DockSplitter>
    </Container>
@@ -74,8 +76,8 @@
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
   <plugin ID="ZMQ Subscriber"/>
-  <plugin status="idle" ID="ROS /rosout Visualization"/>
-  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>
