@@ -31,7 +31,7 @@
         <param name="model_type" value="RBDL"/>
         
         <!--param name="links" type="yaml" value="[ankle2_1, ankle2_2, ankle2_3, ankle2_4]"/-->
-        <param name="links" type="yaml" value="[extra_frame_1, extra_frame_2, extra_frame_3, extra_frame_4]"/>
+        <param name="links" type="yaml" value="[contact_1, contact_2, contact_3, contact_4]"/>
         <!--param name="links" type="yaml" value="[wheel_1, wheel_2, wheel_3, wheel_4]"/-->
 
         <param name="chains" type="yaml" value="[front_left_leg, front_right_leg, rear_right_leg, rear_left_leg]"/>
@@ -39,10 +39,10 @@
         <param name="arm1_8/dofs" type="yaml" value="[0, 1, 2]"/>
         <param name="arm2_8/dofs" type="yaml" value="[0, 1, 2]"/>
 
-        <param name="extra_frame_1/dofs" type="yaml" value="[0, 1, 2]"/>
-        <param name="extra_frame_2/dofs" type="yaml" value="[0, 1, 2]"/>
-	    <param name="extra_frame_3/dofs" type="yaml" value="[0, 1, 2]"/>
-        <param name="extra_frame_4/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="contact_1/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="contact_2/dofs" type="yaml" value="[0, 1, 2]"/>
+	    <param name="contact_3/dofs" type="yaml" value="[0, 1, 2]"/>
+        <param name="contact_4/dofs" type="yaml" value="[0, 1, 2]"/>
 
 	    <!--param name="ankle2_1/dofs" type="yaml" value="[0, 1, 2]"/>
         <param name="ankle2_2/dofs" type="yaml" value="[0, 1, 2]"/>

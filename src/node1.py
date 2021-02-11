@@ -140,7 +140,7 @@ def casannis(pub_freq):
             if cont_detection and t_early < interpl['t'][counter]:
 
                 # receive force in z direction of the swing leg
-                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/extra_frame_" + str(swing_id), WrenchStamped)
+                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/contact_" + str(swing_id), WrenchStamped)
 
                 # force threshold to consider as contact
                 if fl_force_sub_.wrench.force.z > thres:
@@ -178,7 +178,7 @@ def casannis(pub_freq):
         # check the force on the foot until 5 consecutive threshold violations
         while i < window:
             # receive force in z direction of the swing leg
-            fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/extra_frame_" + str(swing_id), WrenchStamped)
+            fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/contact_" + str(swing_id), WrenchStamped)
 
             # force threshold to consider as contact
             if fl_force_sub_.wrench.force.z > thres:
