@@ -5,9 +5,9 @@
     <arg name="target_dx" default="0.0"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
-    <arg name="swing_t" default="[0.5, 2.5]"/>
+    <arg name="swing_t" default="[1.0, 3.0]"/>
     <arg name="contact_det" default="False"/>
-
+    <arg name="plots" default="False"/>
 
     <node name="casannis" pkg="casannis-walking" type="node1.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
@@ -16,5 +16,6 @@
         <param name="tgt_dz" value="$(arg target_dz)"/>
         <param name="sw_t" value="$(arg swing_t)"/>
         <param name="cont_det" value="$(arg contact_det)"/>
+        <param name="plots" value="$(arg plots)"/>
     </node>
 </launch>
