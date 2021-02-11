@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root version="2.3.8">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab tab_name="tab1" containers="1">
+   <Container>
+    <DockSplitter count="2" orientation="-" sizes="0.5;0.5">
+     <DockSplitter count="2" orientation="|" sizes="0.500317;0.499683">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range left="3.510250" top="305.396385" right="8.505000" bottom="287.916457"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/cartesian/force_estimation/contact_1/wrench/force/x"/>
+        <curve color="#d62728" name="/cartesian/force_estimation/contact_1/wrench/force/y"/>
+        <curve color="#1ac938" name="/cartesian/force_estimation/contact_1/wrench/force/z"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range left="3.510250" top="308.578519" right="8.505000" bottom="289.579535"/>
+        <limitY/>
+        <curve color="#ff7f0e" name="/cartesian/force_estimation/contact_2/wrench/force/x"/>
+        <curve color="#f14cc1" name="/cartesian/force_estimation/contact_2/wrench/force/y"/>
+        <curve color="#9467bd" name="/cartesian/force_estimation/contact_2/wrench/force/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+     <DockSplitter count="2" orientation="|" sizes="0.500317;0.499683">
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range left="3.510250" top="163.450506" right="8.505000" bottom="143.874862"/>
+        <limitY/>
+        <curve color="#17becf" name="/cartesian/force_estimation/contact_3/wrench/force/x"/>
+        <curve color="#bcbd22" name="/cartesian/force_estimation/contact_3/wrench/force/y"/>
+        <curve color="#1f77b4" name="/cartesian/force_estimation/contact_3/wrench/force/z"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot mode="TimeSeries" style="Lines">
+        <range left="3.510250" top="163.857305" right="8.505000" bottom="145.707261"/>
+        <limitY/>
+        <curve color="#d62728" name="/cartesian/force_estimation/contact_4/wrench/force/x"/>
+        <curve color="#1ac938" name="/cartesian/force_estimation/contact_4/wrench/force/y"/>
+        <curve color="#ff7f0e" name="/cartesian/force_estimation/contact_4/wrench/force/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <default time_axis=""/>
+  </plugin>
+  <plugin ID="DataLoad ROS bags">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="LSL Subscriber"/>
+  <plugin ID="MQTT Subscriber"/>
+  <plugin ID="ROS Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <use_renaming_rules value="true"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="ROS /rosout Visualization" status="idle"/>
+  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+
