@@ -113,7 +113,7 @@ class Walking:
             #r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
             #R = np.diag(r)
             distances = [(np.sqrt(cs.sumsqr(x_k[0:3]-p_k[3*i:3*(i+1)])) - 0.8097) for i in range(4)]
-            j_k = 1e-2 * sum(distances) + 1e-3 * cs.sumsqr(u_k)
+            j_k = 1e-2 * sum(distances) + 1e-2 * cs.sumsqr(u_k) #+ 1e-6 * cs.sumsqr(f_k)
             #j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)
             #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
 
@@ -188,8 +188,8 @@ class Walking:
                 x_min = x0
 
             else:
-                x_max = np.full(self._dimx, cs.inf) # do not bound state
-                x_max = np.concatenate([[0.15], [0.1], [0.1], np.full(6, cs.inf)])
+                #x_max = np.full(self._dimx, cs.inf) # do not bound state
+                x_max = np.concatenate([[cs.inf], [cs.inf], [0.4], np.full(6, cs.inf)])
                 x_min = -x_max
 
             '''# com not moving during swing motion
@@ -215,7 +215,7 @@ class Walking:
             is_swing = k >= swing_t[0]/self._dt and k <= swing_t[1]/self._dt
             if is_swing:
                 # we are in swing phase
-                f_max[3*swing_id:3*(swing_id+1)] = np.zeros(self._dimf) # overwrite forces for the lifted leg
+                f_max[3*swing_id:3*(swing_id+1)] = np.zeros(self._dimf) # overwrite forces for the swing leg
                 f_min[3*swing_id:3*(swing_id+1)] = np.zeros(self._dimf)
             Fl.append(f_min)
             Fu.append(f_max)
