@@ -79,7 +79,7 @@ def casannis(pub_freq):
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id-1, swing_tgt=swing_tgt, swing_t=swing_t, min_f=50)
 
     # debug
     '''print("X0 is:", x0)
@@ -109,7 +109,7 @@ def casannis(pub_freq):
 
     # contact detection
     window = 5
-    thres = 10.0
+    thres = 50.0
 
     # early contact detection
     t_early = 0.5 * (swing_t[0] + swing_t[1])
