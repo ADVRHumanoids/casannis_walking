@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import WrenchStamped
 from walking import Walking
 import numpy as np
+from std_msgs.msg import Bool
 
 # radius of centauro wheels
 R = 0.078
@@ -73,9 +74,10 @@ def casannis(pub_freq):
     # apply or no contact detection
     cont_detection = rospy.get_param("~cont_det")  # from command line as contact_det:=True/False
 
-    # Publishers for the swing foot and com in the cartesian space
+    # Publishers for the swing foot, com in the cartesian space and contact flag
     f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id-1] + '_wheel/reference', PoseStamped, queue_size=10)
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
+    contact_ = rospy.Publisher('/contacts', Bool, queue_size=10)
 
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()
@@ -105,7 +107,8 @@ def casannis(pub_freq):
     N_total = int(walk._N * walk._dt * pub_freq)  # total points --> total time * frequency
 
     # contact detection
-    early_contact = False   # contact flag
+    early_contact = Bool()   # contact flag
+    early_contact.data = False   # default
     i = 0   # counter i for contact detection
     window = 5
     thres = 20.0
@@ -142,7 +145,7 @@ def casannis(pub_freq):
                 f_pub_.publish(f_msg)
 
             # Activated contact detection, not detected early contact
-            elif not early_contact:
+            elif not early_contact.data:
 
                 # receive force in z direction of the swing leg
                 fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/contact_" + str(swing_id), WrenchStamped)
@@ -154,7 +157,7 @@ def casannis(pub_freq):
 
                     # force exceeds threshold for a time window
                     if i >= window:
-                        early_contact = True  # stop swing trajectory
+                        early_contact.data = True  # stop swing trajectory
                         print("Early contact detected. Trj Counter is:", counter, "out of total", N_total)
 
                     # force exceeds threshold less than a time window
@@ -171,6 +174,9 @@ def casannis(pub_freq):
                     f_msg.header.stamp = rospy.Time.now()
                     f_pub_.publish(f_msg)
 
+        # publish contact flag
+        contact_.stamp = rospy.Time.now()
+        contact_.publish(early_contact)
         rate.sleep()
 
     # Late contact detection if no early contact detected
