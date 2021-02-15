@@ -9,7 +9,7 @@
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
 
-    <node name="casannis" pkg="casannis-walking" type="node1.py" output="screen">
+    <node name="casannis" pkg="casannis_walking" type="node1.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
         <param name="tgt_dx" value="$(arg target_dx)"/>
         <param name="tgt_dy" value="$(arg target_dy)"/>

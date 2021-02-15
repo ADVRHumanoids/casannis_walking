@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(casannis-walking)
+project(casannis_walking)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   geometry_msgs
+  message_generation
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,11 +49,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files( DIRECTORY msg
+    FILES
+    Four_contacts.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -68,10 +69,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -103,9 +104,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+#    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-  CATKIN_DEPENDS roscpp rospy geometry_msgs
+    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -116,12 +117,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
+    {std_msgs_INCLUDE_DIRS}
 )
 
 # ----------added by me------------
+
 catkin_install_python(PROGRAMS src/node1.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+catkin_install_python(PROGRAMS src/foot_contacts.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -134,6 +141,7 @@ catkin_install_python(PROGRAMS src/node1.py
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(foot_contacts.py ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
