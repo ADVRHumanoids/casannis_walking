@@ -58,7 +58,7 @@
         
     </node>
 
-    <node name="feet_contact_state" pkg="casannis_walking" type="foot_contacts.py" output="screen">
+    <node name="feet_contact_state" pkg="casannis_walking" type="feet_contacts.py" output="screen">
         <param name="contact_threshold" value="20"/>
     </node>
 
