@@ -158,7 +158,8 @@ def casannis(pub_freq):
                     # force exceeds threshold for a time window
                     if i >= window:
                         early_contact.data = True  # stop swing trajectory
-                        print("Early contact detected. Trj Counter is:", counter, "out of total", N_total)
+
+                        executed_trj = counter
 
                     # force exceeds threshold less than a time window
                     else:
@@ -210,8 +211,10 @@ def casannis(pub_freq):
             rate.sleep()
 
     # print the nominal trajectories
+    print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total)
+
     if rospy.get_param("~plots"):
-        walk.print(interpl, pub_freq)
+        walk.print_trj(interpl, pub_freq, executed_trj)
 
 
 if __name__ == '__main__':

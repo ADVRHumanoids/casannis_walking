@@ -612,14 +612,15 @@ class Walking:
 
         return coeffs
 
-    def print(self, results, publish_freq):
+    def print_trj(self, results, publish_freq, t_exec=0):
         '''
 
         Args:
+            t_exec: time that trj execution stopped (because of early contact or other)
             results: results from interpolation
             publish_freq: frequency of interpolation and publish
 
-        Returns: prints the interpolated trajectories
+        Returns: prints the nominal interpolated trajectories
 
         '''
 
@@ -656,15 +657,19 @@ class Walking:
         plt.figure()
         for i, name in enumerate(coord_labels):
             plt.subplot(3, 1, i + 1)
-            plt.plot(s, results['sw'][i])
+            plt.plot(s, results['sw'][i])   # nominal trj
+            plt.plot(s[0:t_exec], results['sw'][i][0:t_exec])   # executed trj
             plt.grid()
+            plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
         plt.xlabel('Time [s]')
 
         # plot swing trajectory in two dimensions Z- X
         plt.figure()
-        plt.plot(results['sw'][0], results['sw'][2])
+        plt.plot(results['sw'][0], results['sw'][2])    # nominal trj
+        plt.plot(results['sw'][0][0:t_exec], results['sw'][2][0:t_exec])    # real trj
         plt.grid()
+        plt.legend(['nominal', 'real'])
         plt.title('Trajectory Z- X')
         plt.xlabel('X [m]')
         plt.ylabel('Z [m]')
@@ -717,6 +722,6 @@ if __name__ == "__main__":
     interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, swing_time, res)
 
     # print the results
-    w.print(interpl, res)
+    w.print_trj(interpl, res)
 
 
