@@ -8,7 +8,7 @@ import time
 # contacts flag
 window = 5
 #contacts_window = [[True] * window for i in range(4)]
-contacts_window = [[True,True,True,True,True],[True,True,True,True,True],[True,True,True,True,True],[True,True,True,True,True],]
+contacts_window = [[True, True, True, True, True],[True, True, True, True, True],[True,True,True,True,True],[True,True,True,True,True],]
 #contacts_flag = [True] * 4
 contacts_flag = [True,True,True,True]
 
@@ -53,7 +53,8 @@ def callback(msg, i):
         # set all window to True
         contacts_window[i - 1] = [True] * window
         contacts_flag[i - 1] = True
-        #rospy.sleep(0.0033)
+        rospy.sleep(0.002)
+
 
 def contacts(pub_freq):
 
@@ -97,7 +98,7 @@ def contacts(pub_freq):
 if __name__ == '__main__':
 
     # desired publish frequency
-    freq = 10
+    freq = 100
 
     try:
         contacts(freq)
