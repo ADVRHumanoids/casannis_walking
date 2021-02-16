@@ -128,7 +128,7 @@ catkin_install_python(PROGRAMS src/node1.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS src/foot_contacts.py
+catkin_install_python(PROGRAMS src/feet_contacts.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
