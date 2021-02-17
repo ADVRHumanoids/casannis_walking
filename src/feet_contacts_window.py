@@ -29,14 +29,21 @@ def callback(msg, i):
     print("----------------------")
     print(contacts_window[i-1].reverse())
     print("Force is :", msg.wrench.force.z)
-    # if force in z direction is below a threshold
-    if msg.wrench.force.z < contact_threshold:
 
+    # if force in z direction is above a threshold
+    if msg.wrench.force.z >= contact_threshold:
+
+        # set all window to True
+        contacts_window[i - 1] = [True] * window
+        contacts_flag[i - 1] = True
+        rospy.sleep(0.002)
+
+    # force below a threshold
+    else:
         # find the index of the window to set to False
         print(contacts_window[i - 1])
         try:
             violation_level = 4 - contacts_window[i - 1][::-1].index(False, 0, window) + 1
-
         except:
             violation_level = 0
 
@@ -48,12 +55,6 @@ def callback(msg, i):
             # assign false value
             contacts_window[i - 1][violation_level] = False
             contacts_flag[i - 1] = True
-    # force above a threshold
-    else:
-        # set all window to True
-        contacts_window[i - 1] = [True] * window
-        contacts_flag[i - 1] = True
-        rospy.sleep(0.002)
 
 
 def contacts(pub_freq):
@@ -98,7 +99,7 @@ def contacts(pub_freq):
 if __name__ == '__main__':
 
     # desired publish frequency
-    freq = 100
+    freq = 300
 
     try:
         contacts(freq)
