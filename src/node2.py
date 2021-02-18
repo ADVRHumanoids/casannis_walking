@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import WrenchStamped
 from walking import Walking
 import numpy as np
+from centauro_contact_detection.msg import contacts as contacts_msg
 from std_msgs.msg import Bool
 
 # radius of centauro wheels
@@ -57,6 +58,7 @@ def casannis(pub_freq):
 
     # map swing id to a string for publishing to the corresponding topic
     id_name = ['FL', 'FR', 'HL', 'HR']
+    id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
 
     # Target position of the foot wrt to the current position
     tgt_dx = rospy.get_param("~tgt_dx")  # get from command line as target_dx
@@ -77,7 +79,6 @@ def casannis(pub_freq):
     # Publishers for the swing foot, com in the cartesian space and contact flag
     f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id-1] + '_wheel/reference', PoseStamped, queue_size=10)
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
-    contact_ = rospy.Publisher('/contacts_python', Bool, queue_size=10)
 
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()
@@ -107,14 +108,13 @@ def casannis(pub_freq):
     N_total = int(walk._N * walk._dt * pub_freq)  # total points --> total time * frequency
 
     # contact detection
-    early_contact = Bool()   # contact flag
-    early_contact.data = False   # default
     i = 0   # counter i for contact detection
-    window = 5
-    thres = 20.0
+    early_contact = False
 
     # time starting contact detection
     t_early = 0.5 * (swing_t[0] + swing_t[1])
+
+
 
     rate = rospy.Rate(pub_freq)  # Frequency trj publishing
     # loop interpolation points to publish on a specified frequency
@@ -144,44 +144,30 @@ def casannis(pub_freq):
                 f_msg.header.stamp = rospy.Time.now()
                 f_pub_.publish(f_msg)
 
-            # Activated contact detection, not detected early contact
-            elif not early_contact.data:
+            # If no early contact detected
+            elif not early_contact:
 
-                # receive force in z direction of the swing leg
-                fl_force_sub_ = rospy.wait_for_message("/cartesian/force_estimation/contact_" + str(swing_id), WrenchStamped)
+                # receive contact flag of the swing leg
+                sw_contact_sub = rospy.wait_for_message("/contacts", contacts_msg)
 
-                # force beyond the threshold
-                if fl_force_sub_.wrench.force.z > thres:
-                    # count threshold violations
-                    i = i + 1
+                # if there is contact
+                if getattr(getattr(sw_contact_sub, id_contact_name[swing_id-1]), 'data'):
 
-                    # force exceeds threshold for a time window
-                    if i >= window:
-                        early_contact.data = True  # stop swing trajectory
+                    early_contact = True  # stop swing trajectory
 
-                        executed_trj = counter
+                    executed_trj = counter
 
-                    # force exceeds threshold less than a time window
-                    else:
-                        # publish swing trajectory
-                        f_msg.header.stamp = rospy.Time.now()
-                        f_pub_.publish(f_msg)
-
-                # force does not exceed threshold
+                # if no contact
                 else:
-                    i = 0   # erase history of threshold violations
 
                     # publish swing trajectory
                     f_msg.header.stamp = rospy.Time.now()
                     f_pub_.publish(f_msg)
 
-        # publish contact flag
-        contact_.stamp = rospy.Time.now()
-        contact_.publish(early_contact)
         rate.sleep()
 
     # Late contact detection if no early contact detected
-    if cont_detection and i != window:
+    '''if cont_detection and i != window:
 
         # velocity of the foot
         vel = 0.3
@@ -208,9 +194,9 @@ def casannis(pub_freq):
             f_msg.pose.position.z = f_msg.pose.position.z - vel/pub_freq
             f_pub_.publish(f_msg)
 
-            rate.sleep()
+            rate.sleep()'''
 
-    # print the nominal trajectories
+    # print the trajectories
     if not cont_detection:
         executed_trj = counter
     print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total)
@@ -222,7 +208,7 @@ def casannis(pub_freq):
 if __name__ == '__main__':
 
     # desired publish frequency
-    freq = 300
+    freq = 500
 
     try:
         casannis(freq)

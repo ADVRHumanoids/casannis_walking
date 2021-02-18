@@ -112,8 +112,8 @@ class Walking:
             # cost  function
 
             distances = [(cs.sumsqr(x_k[0:3] - p_k[3*i:3*(i+1)]) - 0.8097**2)**2 for i in range(4)]
-            #j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) + 1e1 * cs.sumsqr(x_k[2] + 0.05)
-            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
+            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) + 1e3 * cs.sumsqr(x_k[2] + 0.05)
+            #j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
 
             '''r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
             R = np.diag(r)
@@ -197,8 +197,8 @@ class Walking:
                 '''x_max = np.concatenate([[0.3], [0.12], [0.0], [0.1], [0.1], [0.1],  [0.1], [0.1], [0.1]])
                 x_min = - np.concatenate([[0.13], [0.12], [0.15], [0.1], [0.1], [0.1], [0.1], [0.1], [0.1]])
                 '''
-                x_max = np.concatenate([[cs.inf], [cs.inf], [0.4], np.full(6, cs.inf)])
-                x_min = -x_max
+                x_max = np.concatenate([[cs.inf], [cs.inf], [0.0], np.full(6, cs.inf)])
+                x_min = -np.concatenate([[cs.inf], [cs.inf], [0.15], np.full(6, cs.inf)])
             # com not moving during swing motion
             '''elif k >= swing_t[0] / self._dt:
                 x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])

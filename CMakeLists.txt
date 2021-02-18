@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   std_msgs
+  centauro_contact_detection
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +107,7 @@ generate_messages(
 catkin_package(
 #    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs message_runtime
+    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs centauro_contact_detection message_runtime
 #  DEPENDS system_lib
 )
 
