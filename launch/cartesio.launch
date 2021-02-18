@@ -27,5 +27,9 @@
             output="screen"/>
     <!--args="-d $(find casannis_walking)/rviz_frame.rviz"-->
 
-<include file="$(find casannis_walking)/launch/centauro_force_estimation.launch"/>
+    <arg name="frequency" default="300"/>
+    <arg name="threshold" default="20"/>
+    <!--arg name="time_window" default="5"/-->
+
+    <include file="$(find casannis_walking)/launch/centauro_force_estimation.launch" pass_all_args="true"/>
 </launch>
