@@ -110,14 +110,16 @@ class Walking:
             P.append(p_k)
 
             # cost  function
-            #r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
-            #R = np.diag(r)
-            distances = [(cs.sumsqr(x_k[0:3] - p_k[3*i:3*(i+1)]) - 0.8097**2)**2 for i in range(4)]
-            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) #+ 1e-6 * cs.sumsqr(f_k)
-            #j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)
-            #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
 
-            # 
+            distances = [(cs.sumsqr(x_k[0:3] - p_k[3*i:3*(i+1)]) - 0.8097**2)**2 for i in range(4)]
+            #j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) + 1e1 * cs.sumsqr(x_k[2] + 0.05)
+            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
+
+            '''r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
+            R = np.diag(r)
+            j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)'''
+
+            #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
 
             J.append(j_k)
 
@@ -191,9 +193,12 @@ class Walking:
 
             else:
                 #x_max = np.full(self._dimx, cs.inf) # do not bound state
+                # constraining com z coordinate
+                '''x_max = np.concatenate([[0.3], [0.12], [0.0], [0.1], [0.1], [0.1],  [0.1], [0.1], [0.1]])
+                x_min = - np.concatenate([[0.13], [0.12], [0.15], [0.1], [0.1], [0.1], [0.1], [0.1], [0.1]])
+                '''
                 x_max = np.concatenate([[cs.inf], [cs.inf], [0.4], np.full(6, cs.inf)])
                 x_min = -x_max
-
             # com not moving during swing motion
             '''elif k >= swing_t[0] / self._dt:
                 x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])
@@ -700,9 +705,9 @@ if __name__ == "__main__":
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.0
     dy = 0.0
-    dz = 0.0
+    dz = -0.05
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     #swing_time = (1.5, 3.0)
