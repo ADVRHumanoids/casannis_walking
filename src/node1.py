@@ -77,7 +77,7 @@ def casannis(pub_freq):
     # Publishers for the swing foot, com in the cartesian space and contact flag
     f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id-1] + '_wheel/reference', PoseStamped, queue_size=10)
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
-    contact_ = rospy.Publisher('/contacts', Bool, queue_size=10)
+    contact_ = rospy.Publisher('/contacts_python', Bool, queue_size=10)
 
     # Messages to be published for com and swing foot
     com_msg = PoseStamped()

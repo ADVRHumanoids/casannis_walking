@@ -7,10 +7,10 @@ import time
 
 # contacts flag
 window = 5
-#contacts_window = [[True] * window for i in range(4)]
-contacts_window = [[True, True, True, True, True],[True, True, True, True, True],[True,True,True,True,True],[True,True,True,True,True],]
-#contacts_flag = [True] * 4
-contacts_flag = [True,True,True,True]
+contacts_window = [[True] * window for i in range(4)]
+#contacts_window = [[True, True, True, True, True],[True, True, True, True, True],[True,True,True,True,True],[True,True,True,True,True],]
+contacts_flag = [True] * 4
+#contacts_flag = [True,True,True,True]
 
 
 def callback(msg, i):
@@ -58,6 +58,16 @@ def callback(msg, i):
 
 
 def contacts(pub_freq):
+    '''
+
+    Args:
+        pub_freq: frequency to publish contact flags
+
+    Returns:
+        This node is a prototype for contact detection based on a force threshold and a time window.
+        An improved version of this can be found at the repo "centauro_contact_detection", the current should only be
+        used for testing purposes.
+    '''
 
     # Feet contact state publisher
     contacts_pub_ = rospy.Publisher('/feet_contact_state', Four_contacts, queue_size=10)
