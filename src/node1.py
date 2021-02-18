@@ -211,6 +211,8 @@ def casannis(pub_freq):
             rate.sleep()
 
     # print the nominal trajectories
+    if cont_detection:
+        executed_trj = counter
     print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total)
 
     if rospy.get_param("~plots"):
