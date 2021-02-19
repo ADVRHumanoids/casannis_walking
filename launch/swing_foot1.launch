@@ -8,6 +8,8 @@
     <arg name="swing_t" default="[1.0, 4.0]"/>
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
+    <arg name="clearance" default="0.1"/>
+    <arg name="swing_vel" default="0.03"/>
 
     <node name="casannis" pkg="casannis_walking" type="node2.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
@@ -17,5 +19,7 @@
         <param name="sw_t" value="$(arg swing_t)"/>
         <param name="cont_det" value="$(arg contact_det)"/>
         <param name="plots" value="$(arg plots)"/>
+        <param name="clear" value="$(arg clearance)"/>
+        <param name="sw_vel" value="$(arg swing_vel)"/>
     </node>
 </launch>
