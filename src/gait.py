@@ -216,30 +216,17 @@ class Gait:
             f_min = np.array([-cs.inf, -cs.inf, min_f] * self._ncontacts)   # bound only the z component
 
             # swing phases
-            is_swing1 = k >= swing_t[0][0]/self._dt and k <= swing_t[0][1]/self._dt
-            is_swing2 = k >= swing_t[1][0] / self._dt and k <= swing_t[1][1]/self._dt
-            is_swing3 = k >= swing_t[2][0] / self._dt and k <= swing_t[2][1] / self._dt
-            is_swing4 = k >= swing_t[3][0] / self._dt and k <= swing_t[3][1] / self._dt
+            is_swing = []
 
-            if is_swing1:
-                # we are in swing phase
-                f_max[3*swing_id[0]:3*(swing_id[0]+1)] = np.zeros(self._dimf)   # overwrite forces for the swing leg
-                f_min[3*swing_id[0]:3*(swing_id[0]+1)] = np.zeros(self._dimf)
+            for i in range(len(swing_id)):
+                is_swing.append(k >= swing_t[i][0]/self._dt and k <= swing_t[i][1]/self._dt)
 
-            elif is_swing2:
-                # we are in swing phase
-                f_max[3 * swing_id[1]:3 * (swing_id[1] + 1)] = np.zeros(self._dimf) # overwrite forces for the swing leg
-                f_min[3 * swing_id[1]:3 * (swing_id[1] + 1)] = np.zeros(self._dimf)
-
-            elif is_swing3:
-                # we are in swing phase
-                f_max[3 * swing_id[2]:3 * (swing_id[2] + 1)] = np.zeros(self._dimf) # overwrite forces for the swing leg
-                f_min[3 * swing_id[2]:3 * (swing_id[2] + 1)] = np.zeros(self._dimf)
-
-            elif is_swing4:
-                # we are in swing phase
-                f_max[3 * swing_id[3]:3 * (swing_id[3] + 1)] = np.zeros(self._dimf) # overwrite forces for the swing leg
-                f_min[3 * swing_id[3]:3 * (swing_id[3] + 1)] = np.zeros(self._dimf)
+            for i in range(len(swing_id)):
+                if is_swing[i]:
+                    # we are in swing phase
+                    f_max[3*swing_id[i]:3*(swing_id[i]+1)] = np.zeros(self._dimf)   # overwrite forces for the swing leg
+                    f_min[3*swing_id[i]:3*(swing_id[i]+1)] = np.zeros(self._dimf)
+                    break
 
             Fl.append(f_min)
             Fu.append(f_max)
