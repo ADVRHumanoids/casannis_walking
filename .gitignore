@@ -20,3 +20,5 @@ CMakeFiles/3.10.2/CMakeDetermineCompilerABI_C.bin
 CMakeFiles/3.10.2/CMakeDetermineCompilerABI_CXX.bin
 
 CMakeLists.txt.user
+
+src/__pycache__/gait.cpython-36.pyc
