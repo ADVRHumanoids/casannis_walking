@@ -111,14 +111,19 @@ class Walking:
 
             # cost  function
 
-            distances = [(cs.sumsqr(x_k[0:3] - p_k[3*i:3*(i+1)]) - 0.8097**2)**2 for i in range(4)]
-            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) + 1e3 * cs.sumsqr(x_k[2] + 0.05)
-            #j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
+            # horizontal distance of CoM from each foot
+            distances = [(cs.sumsqr(x_k[0:2] - p_k[3*i:(3*i+2)]) - 0.495 ** 2) ** 2 for i in range(4)]   # xy
 
+            # vertical distance between CoM and mean of feet
+            h_nom = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.68
+
+            j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) + 1e3 * cs.sumsqr(h_nom)
+
+            # trials
+            #j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
             '''r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
             R = np.diag(r)
             j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)'''
-
             #j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
 
             J.append(j_k)
