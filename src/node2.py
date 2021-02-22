@@ -19,6 +19,7 @@ def contacts_callback (msg):
     global sw_contact_msg
     sw_contact_msg = msg
 
+
 def casannis(int_freq):
 
     """
@@ -208,7 +209,8 @@ def casannis(int_freq):
             rate.sleep()'''
 
     # print the trajectories
-    print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total)
+    if early_contact:
+        print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
 
     if rospy.get_param("~plots"):
         walk.print_trj(interpl, int_freq, freq, executed_trj)
