@@ -130,9 +130,6 @@ def casannis(int_freq):
     # publish freq wrt the desired swing velocity
     freq = swing_vel * N_swing_total / tgt_ds
 
-    # publish freq wrt the desired swing velocity
-    freq = swing_vel * N_swing_total / tgt_ds
-
     rate = rospy.Rate(freq)  # Frequency trj publishing
     # loop interpolation points to publish on a specified frequency
     for counter in range(N_total):
@@ -221,7 +218,7 @@ def casannis(int_freq):
 if __name__ == '__main__':
 
     # desired interpolation frequency
-    interpolation_freq = 300
+    interpolation_freq = 500
 
     try:
         casannis(interpolation_freq)
