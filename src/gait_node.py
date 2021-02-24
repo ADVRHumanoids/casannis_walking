@@ -128,15 +128,18 @@ def casannis(int_freq):
     # All points to be published
     N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpl. frequency
 
-    # default value for executed trj points
+    # executed trj points default value
     executed_trj = N_total - 1
 
-    # early contact detection default value
-    early_contact = False
+    # early contact flags default values
+    early_contact = [False, False, False, False]
 
-    # time activating contact detection
-    t_early = 0.5 * (swing_t[0][0] + swing_t[0][1])
-
+    # times activating contact detection
+    t_early = [0.5 * (swing_t[i][0] + swing_t[i][1]) for i in range(step_num)]
+    print(t_early)
+    # time intervals that we apply early contact detection
+    delta_t_early = [[t_early[i], swing_t[i][1]] for i in range(step_num)]
+    print(delta_t_early)
     # trj points during all swing phases
     N_swing_total = int(int_freq * sum([swing_t[i][1] - swing_t[i][0] for i in range(step_num)]))
 
@@ -152,6 +155,16 @@ def casannis(int_freq):
 
         if not rospy.is_shutdown():
 
+            # check if time is within early contact detection time intervals
+            for i in range(step_num):
+
+                if delta_t_early[i][0] <= interpl['t'][counter] <= delta_t_early[i][1]:
+                    early_check = i+1     # capture the time interval
+                    break
+
+                else:
+                    early_check = 0
+            print(early_check)
             # com trajectory
             com_msg.pose.position.x = interpl['x'][0][counter]
             com_msg.pose.position.y = interpl['x'][1][counter]
@@ -164,13 +177,42 @@ def casannis(int_freq):
                 # add radius as origin of the wheel frame is in the center
                 f_msg[i].pose.position.z = interpl['sw'][i]['z'][counter] + R
 
-                # publish swing trajectory
-                f_msg[i].header.stamp = rospy.Time.now()
-                f_pub_[i].publish(f_msg[i])
-
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
+
+            # do not check for early contact
+            if not cont_detection or not early_check:
+
+                for i in range(step_num):
+                    # publish swing trajectories
+                    f_msg[i].header.stamp = rospy.Time.now()
+                    f_pub_[i].publish(f_msg[i])
+
+            # If no early contact detected
+            elif not early_contact:
+
+                # if there is contact
+                if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[early_check-1] - 1]), 'data'):
+
+                    early_contact[early_check-1] = True  # stop swing trajectory of this foot
+
+                    for i in range(step_num):
+
+                        if i != early_check-1:
+                            # publish swing trajectories
+                            f_msg[i].header.stamp = rospy.Time.now()
+                            f_pub_[i].publish(f_msg[i])
+
+                    executed_trj = counter
+                    print("early contact detected", executed_trj)
+
+                # if no contact
+                else:
+                    for i in range(step_num):
+                        # publish swing trajectories
+                        f_msg[i].header.stamp = rospy.Time.now()
+                        f_pub_[i].publish(f_msg[i])
 
         rate.sleep()
 
@@ -185,7 +227,7 @@ def casannis(int_freq):
 if __name__ == '__main__':
 
     # desired interpolation frequency
-    interpolation_freq = 300
+    interpolation_freq = 500
 
     try:
         casannis(interpolation_freq)
