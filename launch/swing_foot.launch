@@ -11,7 +11,7 @@
     <arg name="clearance" default="0.1"/>
     <arg name="swing_vel" default="0.03"/>
 
-    <node name="casannis" pkg="casannis_walking" type="node2.py" output="screen">
+    <node name="casannis" pkg="casannis_walking" type="step.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
         <param name="tgt_dx" value="$(arg target_dx)"/>
         <param name="tgt_dy" value="$(arg target_dy)"/>

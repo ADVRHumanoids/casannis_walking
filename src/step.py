@@ -77,9 +77,6 @@ def casannis(int_freq):
     # Swing velocity
     swing_vel = rospy.get_param("~sw_vel")
 
-    # approximate distance covered during swing
-    tgt_ds = math.sqrt(tgt_dx**2 + tgt_dy**2 + (tgt_dy + 2*0.1)**2)
-
     # target position as array
     swing_tgt = np.array([contacts[swing_id - 1][0] + tgt_dx, contacts[swing_id - 1][1] + tgt_dy, contacts[swing_id - 1][2] + tgt_dz])
 
@@ -127,6 +124,12 @@ def casannis(int_freq):
     # trj points during swing phase
     N_swing_total = int((swing_t[1] - swing_t[0]) * int_freq)
 
+    # approximate distance covered during swing
+    tgt_ds = interpl['sw']['s']
+
+    # publish freq wrt the desired swing velocity
+    freq = swing_vel * N_swing_total / tgt_ds
+
     # publish freq wrt the desired swing velocity
     freq = swing_vel * N_swing_total / tgt_ds
 
@@ -142,10 +145,10 @@ def casannis(int_freq):
             com_msg.pose.position.z = interpl['x'][2][counter]
 
             # swing foot trajectory
-            f_msg.pose.position.x = interpl['sw'][0][counter]
-            f_msg.pose.position.y = interpl['sw'][1][counter]
+            f_msg.pose.position.x = interpl['sw']['x'][counter]
+            f_msg.pose.position.y = interpl['sw']['y'][counter]
             # add radius as origin of the wheel frame is in the center
-            f_msg.pose.position.z = interpl['sw'][2][counter] + R
+            f_msg.pose.position.z = interpl['sw']['z'][counter] + R
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
