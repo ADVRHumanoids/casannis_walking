@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import norm
 from operator import add
+import math
 
 class Walking:
     """
@@ -545,9 +546,20 @@ class Walking:
         sw_interpl_y = [sw_curr[1]] * sw_n1 + [sw_interpl_y[i] for i in range(len(sw_interpl_y))] + [sw_tgt[1]] * sw_n2
         sw_interpl_z = [sw_curr[2]] * sw_n1 + [sw_interpl_z[i] for i in range(len(sw_interpl_z))] + [sw_tgt[2]] * sw_n2
 
-        sw_interpol = [sw_interpl_x, sw_interpl_y, sw_interpl_z]
+        # compute arc length of swing trj
+        sw_interpl_s = 0.0
+        for i in range(len(sw_interpl_x) - 1):
+            sw_interpl_ds = math.sqrt(
+                (sw_interpl_x[i + 1] - sw_interpl_x[i]) ** 2 + (sw_interpl_y[i + 1] - sw_interpl_y[i]) ** 2 + (
+                            sw_interpl_z[i + 1] - sw_interpl_z[i]) ** 2)
+            sw_interpl_s += sw_interpl_ds
 
-        return sw_interpol
+        return {
+            'x': sw_interpl_x,
+            'y': sw_interpl_y,
+            'z': sw_interpl_z,
+            's': sw_interpl_s
+        }
 
     def splines(self, dt, init_cond, fin_cond):
         """
@@ -668,8 +680,8 @@ class Walking:
         plt.figure()
         for i, name in enumerate(coord_labels):
             plt.subplot(3, 1, i + 1)
-            plt.plot([i * time_scale for i in s], results['sw'][i])   # nominal trj
-            plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][i][0:t_exec])   # executed trj
+            plt.plot([i * time_scale for i in s], results['sw'][name])   # nominal trj
+            plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][name][0:t_exec])   # executed trj
             plt.grid()
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
@@ -677,8 +689,8 @@ class Walking:
 
         # plot swing trajectory in two dimensions Z- X
         plt.figure()
-        plt.plot(results['sw'][0], results['sw'][2])    # nominal trj
-        plt.plot(results['sw'][0][0:t_exec], results['sw'][2][0:t_exec])    # real trj
+        plt.plot(results['sw']['x'], results['sw']['z'])    # nominal trj
+        plt.plot(results['sw']['x'][0:t_exec], results['sw']['z'][0:t_exec])    # real trj
         plt.grid()
         plt.legend(['nominal', 'real'])
         plt.title('Trajectory Z- X')

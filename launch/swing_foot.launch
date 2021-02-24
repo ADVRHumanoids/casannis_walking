@@ -9,7 +9,7 @@
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.1"/>
-    <arg name="swing_vel" default="0.03"/>
+    <arg name="swing_vel" default="0.085"/>
 
     <node name="casannis" pkg="casannis_walking" type="step.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
