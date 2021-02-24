@@ -134,7 +134,7 @@ def casannis(int_freq):
     f_msg4.pose.orientation = f_init[swing_id[3] - 1].pose.orientation
 
     # Construct the class the optimization problem
-    walk = Gait(mass=90, N=int(swing_t4[1]/0.1), dt=0.1)
+    walk = Gait(mass=90, N=int(swing_t4[1]/0.1+10), dt=0.1)
 
     # call the solver of the optimization problem
     swing_ids = [swing_id[0]-1, swing_id[1]-1, swing_id[2]-1, swing_id[3]-1]
