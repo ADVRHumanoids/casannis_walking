@@ -17,14 +17,6 @@ class Walking:
       3) there must be contact forces that
         - realize the motion
         - fulfil contact constraints (i.e. unilateral constraint)
-
-    TODO:
-      0) play around, change cost, etc
-      1) interpolate motion to a higher frequency (small dt)
-      2) swing leg trajectory (at least continuous acceleration)
-      3) send to cartesio for ik (using ros topics)
-      4) gazebo simulation
-      5) contact detection
     """
 
     def __init__(self, mass, N, dt):

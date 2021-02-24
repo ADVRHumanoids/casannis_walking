@@ -7,7 +7,6 @@ from walking import Walking
 import numpy as np
 import math
 from centauro_contact_detection.msg import contacts as contacts_msg
-from std_msgs.msg import Bool
 
 # radius of centauro wheels
 R = 0.078
