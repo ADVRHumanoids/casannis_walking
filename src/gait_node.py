@@ -12,7 +12,7 @@ from gait import Gait
 R = 0.078
 
 
-def contacts_callback (msg):
+def contacts_callback(msg):
 
     # pass to global scope
     global sw_contact_msg
@@ -33,23 +33,23 @@ def casannis(int_freq):
 
     rospy.init_node('casannis', anonymous=True)
 
+    # map feet to a string for publishing to the corresponding topic
+    id_name = ['FL', 'FR', 'HL', 'HR']
+    id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
+
     # accept one message for com and feet initial position
     com_init = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
-    fl_init = rospy.wait_for_message("/cartesian/FL_wheel/current_reference", PoseStamped, timeout=None)
-    fr_init = rospy.wait_for_message("/cartesian/FR_wheel/current_reference", PoseStamped, timeout=None)
-    hl_init = rospy.wait_for_message("/cartesian/HL_wheel/current_reference", PoseStamped, timeout=None)
-    hr_init = rospy.wait_for_message("/cartesian/HR_wheel/current_reference", PoseStamped, timeout=None)
 
-    # all current feet info in a list to be used after selecting the swing leg
-    f_init = [fl_init, fr_init, hl_init, hr_init]
+    f_init = []     # position of wheel frames
+    f_cont = []     # position of contact frames
 
-    # define contacts, take into account the radius of the wheels
-    fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z - R]
-    fr_cont = [fr_init.pose.position.x, fr_init.pose.position.y, fr_init.pose.position.z - R]
-    hl_cont = [hl_init.pose.position.x, hl_init.pose.position.y, hl_init.pose.position.z - R]
-    hr_cont = [hr_init.pose.position.x, hr_init.pose.position.y, hr_init.pose.position.z - R]
+    # loop for all feet
+    for i in range(len(id_name)):
+        f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference", PoseStamped, timeout=None))
+        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z - R])
 
-    contacts = [np.array(fl_cont), np.array(fr_cont), np.array(hl_cont), np.array(hr_cont)]
+    # contact points as array
+    contacts = [np.array(x) for x in f_cont]
 
     # state vector
     c0 = np.array([com_init.pose.position.x, com_init.pose.position.y, com_init.pose.position.z])
@@ -64,9 +64,8 @@ def casannis(int_freq):
     swing_id = swing_id.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
     swing_id = [int(i) for i in swing_id]
 
-    # map swing id to a string for publishing to the corresponding topic
-    id_name = ['FL', 'FR', 'HL', 'HR']
-    id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
+    # number of steps
+    step_num = len(swing_id)
 
     # Target position of the foot wrt to the current position
     tgt_dx = rospy.get_param("~tgt_dx")  # get from command line as target_dx
@@ -79,84 +78,70 @@ def casannis(int_freq):
     # Swing velocity
     swing_vel = rospy.get_param("~sw_vel")
 
-    # approximate distance covered during swing
-    tgt_ds = len(swing_id) * math.sqrt(tgt_dx**2 + tgt_dy**2 + (tgt_dy + 2*0.1)**2)
-
-    # target position as array
-    swing_tgt = np.array([[contacts[swing_id[0] - 1][0] + tgt_dx, contacts[swing_id[0] - 1][1] + tgt_dy, contacts[swing_id[0] - 1][2] + tgt_dz],\
-                          [contacts[swing_id[1] - 1][0] + tgt_dx, contacts[swing_id[1] - 1][1] + tgt_dy, contacts[swing_id[1] - 1][2] + tgt_dz],\
-                          [contacts[swing_id[2] - 1][0] + tgt_dx, contacts[swing_id[2] - 1][1] + tgt_dy, contacts[swing_id[2] - 1][2] + tgt_dz],\
-                          [contacts[swing_id[3] - 1][0] + tgt_dx, contacts[swing_id[3] - 1][1] + tgt_dy, contacts[swing_id[3] - 1][2] + tgt_dz]])
-
-    # time period of the swing phase
-    swing_t1 = rospy.get_param("~sw_t1")  # from command line as swing_t:="[a,b]"
-    swing_t1 = swing_t1.rstrip(']').lstrip('[').split(',')    # convert swing_t from "[a, b]" to [a,b]
-    swing_t1 = [float(i) for i in swing_t1]
-
-    swing_t2 = rospy.get_param("~sw_t2")
-    swing_t2 = swing_t2.rstrip(']').lstrip('[').split(',')
-    swing_t2 = [float(i) for i in swing_t2]
-
-    swing_t3 = rospy.get_param("~sw_t3")
-    swing_t3 = swing_t3.rstrip(']').lstrip('[').split(',')
-    swing_t3 = [float(i) for i in swing_t3]
-
-    swing_t4 = rospy.get_param("~sw_t4")
-    swing_t4 = swing_t4.rstrip(']').lstrip('[').split(',')
-    swing_t4 = [float(i) for i in swing_t4]
-
-    swing_t = [swing_t1, swing_t2, swing_t3, swing_t4]
-
     # apply or no contact detection
     cont_detection = rospy.get_param("~cont_det")  # from command line as contact_det:=True/False
 
-    # Publishers for the swing foot, com in the cartesian space
-    f_pub1_ = rospy.Publisher('/cartesian/' + id_name[swing_id[0]-1] + '_wheel/reference', PoseStamped, queue_size=10)
-    f_pub2_ = rospy.Publisher('/cartesian/' + id_name[swing_id[1] - 1] + '_wheel/reference', PoseStamped, queue_size=10)
-    f_pub3_ = rospy.Publisher('/cartesian/' + id_name[swing_id[2] - 1] + '_wheel/reference', PoseStamped, queue_size=10)
-    f_pub4_ = rospy.Publisher('/cartesian/' + id_name[swing_id[3] - 1] + '_wheel/reference', PoseStamped, queue_size=10)
+    # variables to loop for swing legs
+    swing_tgt = []  # target positions as list
+    swing_t = []    # time periods of the swing phases
+    f_pub_ = []     # list of publishers for the swing foot
+    com_msg = PoseStamped()     # message to be published for com
+    f_msg = []                  # list of messages to be published for swing feet
+    swing_contacts = []         # contact positions of the swing feet
+
+    for i in range(step_num):
+        # targets
+        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx, contacts[swing_id[i] - 1][1] + tgt_dy, contacts[swing_id[i] - 1][2] + tgt_dz])
+
+        # swing phases
+        swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
+        swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
+        swing_t[i] = [float(i) for i in swing_t[i]]
+
+        # swing feet trj publishers
+        f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference', PoseStamped, queue_size=10))
+
+        # feet trj messages
+        f_msg.append(PoseStamped())
+
+        # keep same orientation
+        f_msg[i].pose.orientation = f_init[swing_id[i] - 1].pose.orientation
+
+        swing_contacts.append(contacts[swing_id[i] - 1])
+
+    # CoM trj publisher
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
     # Subscriber for contact flags
     rospy.Subscriber('/contacts', contacts_msg, contacts_callback)
 
-    # Messages to be published for com and swing foot
-    com_msg = PoseStamped()
-    f_msg1 = PoseStamped()
-    f_msg2 = PoseStamped()
-    f_msg3 = PoseStamped()
-    f_msg4 = PoseStamped()
-
-    # keep the same orientation of the swinging foot
-    f_msg1.pose.orientation = f_init[swing_id[0]-1].pose.orientation
-    f_msg2.pose.orientation = f_init[swing_id[1] - 1].pose.orientation
-    f_msg3.pose.orientation = f_init[swing_id[2] - 1].pose.orientation
-    f_msg4.pose.orientation = f_init[swing_id[3] - 1].pose.orientation
-
-    # Construct the class the optimization problem
-    walk = Gait(mass=90, N=int(swing_t4[1]/0.1+10), dt=0.1)
+    # object class of the optimization problem
+    walk = Gait(mass=90, N=int((swing_t[-1][1] + 1.0) / 0.1), dt=0.1)
 
     # call the solver of the optimization problem
-    swing_ids = [swing_id[0]-1, swing_id[1]-1, swing_id[2]-1, swing_id[3]-1]
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_ids, swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=[x-1 for x in swing_id], swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
 
-    # interpolate the values, pass solution values and interpolation freq. (= publish freq.)
-    swing_contacts = [contacts[swing_id[0]-1], contacts[swing_id[1]-1], contacts[swing_id[2]-1], contacts[swing_id[3]-1]]
+    # interpolate the trj, pass solution values and interpolation frequency
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
     # All points to be published
     N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpl. frequency
+
+    # default value for executed trj points
     executed_trj = N_total - 1
 
-    # contact detection
+    # early contact detection default value
     early_contact = False
 
-    # time starting contact detection
+    # time activating contact detection
     t_early = 0.5 * (swing_t[0][0] + swing_t[0][1])
 
-    # trj points during swing phase
-    N_swing_total = int((swing_t[0][1] - swing_t[0][0] + swing_t[1][1] - swing_t[1][0] + swing_t[2][1] - swing_t[2][0] + swing_t[3][1] - swing_t[3][0]) * int_freq)
+    # trj points during all swing phases
+    N_swing_total = int(int_freq * sum([swing_t[i][1] - swing_t[i][0] for i in range(step_num)]))
+
+    # approximate distance covered during swing
+    tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
 
     # publish freq wrt the desired swing velocity
     freq = swing_vel * N_swing_total / tgt_ds
@@ -172,46 +157,20 @@ def casannis(int_freq):
             com_msg.pose.position.y = interpl['x'][1][counter]
             com_msg.pose.position.z = interpl['x'][2][counter]
 
-            # swing foot trajectory 1
-            f_msg1.pose.position.x = interpl['sw'][0][0][counter]
-            f_msg1.pose.position.y = interpl['sw'][0][1][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg1.pose.position.z = interpl['sw'][0][2][counter] + R
+            # swing feet
+            for i in range(step_num):
+                f_msg[i].pose.position.x = interpl['sw'][i]['x'][counter]
+                f_msg[i].pose.position.y = interpl['sw'][i]['y'][counter]
+                # add radius as origin of the wheel frame is in the center
+                f_msg[i].pose.position.z = interpl['sw'][i]['z'][counter] + R
 
-            # swing foot trajectory 2
-            f_msg2.pose.position.x = interpl['sw'][1][0][counter]
-            f_msg2.pose.position.y = interpl['sw'][1][1][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg2.pose.position.z = interpl['sw'][1][2][counter] + R
-
-            # swing foot trajectory 3
-            f_msg3.pose.position.x = interpl['sw'][2][0][counter]
-            f_msg3.pose.position.y = interpl['sw'][2][1][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg3.pose.position.z = interpl['sw'][2][2][counter] + R
-
-            # swing foot trajectory 4
-            f_msg4.pose.position.x = interpl['sw'][3][0][counter]
-            f_msg4.pose.position.y = interpl['sw'][3][1][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg4.pose.position.z = interpl['sw'][3][2][counter] + R
+                # publish swing trajectory
+                f_msg[i].header.stamp = rospy.Time.now()
+                f_pub_[i].publish(f_msg[i])
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
-
-            # publish swing trajectory
-            f_msg1.header.stamp = rospy.Time.now()
-            f_pub1_.publish(f_msg1)
-
-            f_msg2.header.stamp = rospy.Time.now()
-            f_pub2_.publish(f_msg2)
-
-            f_msg3.header.stamp = rospy.Time.now()
-            f_pub3_.publish(f_msg3)
-
-            f_msg4.header.stamp = rospy.Time.now()
-            f_pub4_.publish(f_msg4)
 
         rate.sleep()
 

@@ -1,8 +1,7 @@
 import casadi as cs 
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.stats import norm
-from operator import add
+import math
 
 
 class Gait:
@@ -373,11 +372,10 @@ class Gait:
 
         # ----------- swing leg trajectory interpolation --------------
 
-        # swing trajectory with intemediate point
+        # swing trajectories with one intemediate point
         sw_interpl = []
         for i in range(len(sw_curr)):
             sw_interpl.append(self.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
-
 
         return {
             't': self._t,
@@ -475,9 +473,18 @@ class Gait:
         sw_interpl_y = [sw_curr[1]] * sw_n1 + [sw_interpl_y[i] for i in range(len(sw_interpl_y))] + [sw_tgt[1]] * sw_n2
         sw_interpl_z = [sw_curr[2]] * sw_n1 + [sw_interpl_z[i] for i in range(len(sw_interpl_z))] + [sw_tgt[2]] * sw_n2
 
-        sw_interpol = [sw_interpl_x, sw_interpl_y, sw_interpl_z]
+        # compute arc length of swing trj
+        sw_interpl_s = 0.0
+        for i in range(len(sw_interpl_x) - 1):
+            sw_interpl_ds = math.sqrt((sw_interpl_x[i + 1] - sw_interpl_x[i])**2 + (sw_interpl_y[i + 1] - sw_interpl_y[i])**2 + (sw_interpl_z[i + 1] - sw_interpl_z[i])**2)
+            sw_interpl_s += sw_interpl_ds
 
-        return sw_interpol
+        return {
+            'x': sw_interpl_x,
+            'y': sw_interpl_y,
+            'z': sw_interpl_z,
+            's': sw_interpl_s
+        }
 
     def splines(self, dt, init_cond, fin_cond):
         """
@@ -599,8 +606,8 @@ class Gait:
             plt.figure()
             for i, name in enumerate(coord_labels):
                 plt.subplot(3, 1, i + 1)
-                plt.plot([i * time_scale for i in s], results['sw'][j][i])   # nominal trj
-                plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][j][i][0:t_exec])   # executed trj
+                plt.plot([i * time_scale for i in s], results['sw'][j][name])   # nominal trj
+                plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][j][name][0:t_exec])   # executed trj
                 plt.grid()
                 plt.legend(['nominal', 'real'])
                 plt.title('Trajectory ' + name)
@@ -608,8 +615,8 @@ class Gait:
 
             # plot swing trajectory in two dimensions Z - X
             plt.figure()
-            plt.plot(results['sw'][j][0], results['sw'][j][2])    # nominal trj
-            plt.plot(results['sw'][j][0][0:t_exec], results['sw'][j][2][0:t_exec])    # real trj
+            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])    # nominal trj
+            plt.plot(results['sw'][j]['x'][0:t_exec], results['sw'][j]['z'][0:t_exec])    # real trj
             plt.grid()
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory Z- X')
@@ -642,7 +649,7 @@ if __name__ == "__main__":
     sw_id = [0, 1]
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.0
+    dx = 0.1
     dy = 0.0
     dz = -0.05
     swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[1]][2] + dz]\
