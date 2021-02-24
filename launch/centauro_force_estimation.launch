@@ -54,17 +54,13 @@
 	    <param name="wheel_3/dofs" type="yaml" value="[0, 1, 2]"/>
         <param name="wheel_4/dofs" type="yaml" value="[0, 1, 2]"/-->
 
-		<param name="rate" value="300.0"/>
+		<param name="rate" value="800.0"/>
         
     </node>
 
-    <arg name="frequency" default="300"/>
-    <arg name="threshold" default="20"/>
-    <!--arg name="time_window" default="5"/-->
-
     <node name="feet_contacts_node" pkg="centauro_contact_detection" type="contact_detection_time_window" output="screen">
-        <param name="pub_freq" value="$(arg frequency)"/>
-        <param name="force_thold" value="$(arg threshold)"/>
+        <param name="pub_freq" value="800"/>
+        <param name="force_thold" value="20"/>
         <!--param name="window" value="$(arg time_window)"/-->
     </node>
 
