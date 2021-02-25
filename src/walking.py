@@ -658,6 +658,7 @@ class Walking:
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
         plt.xlabel('Time [s]')
+        plt.savefig('../plots/step_state_trj.png')
 
         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
@@ -671,6 +672,7 @@ class Walking:
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
+        plt.savefig('../plots/step_forces.png')
 
         # plot swing trajectory
         # All points to be published
@@ -686,6 +688,7 @@ class Walking:
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
         plt.xlabel('Time [s]')
+        plt.savefig('../plots/step_swing.png')
 
         # plot swing trajectory in two dimensions Z- X
         plt.figure()
@@ -696,6 +699,7 @@ class Walking:
         plt.title('Trajectory Z- X')
         plt.xlabel('X [m]')
         plt.ylabel('Z [m]')
+        plt.savefig('../plots/step_swing_zx.png')
         plt.show()
 
 

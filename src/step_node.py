@@ -2,10 +2,9 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import WrenchStamped
 from walking import Walking
 import numpy as np
-import math
+import rosbag
 from centauro_contact_detection.msg import contacts as contacts_msg
 
 # radius of centauro wheels
