@@ -557,11 +557,11 @@ class Gait:
 
         return coeffs
 
-    def print_trj(self, results, resol, publish_freq, t_exec=0):
+    def print_trj(self, results, resol, publish_freq, t_exec=[0, 0, 0, 0]):
         '''
 
         Args:
-            t_exec: time that trj execution stopped (because of early contact or other)
+            t_exec: list of last trj points that were executed (because of early contact or other)
             results: results from interpolation
             resol: interpolation resol
             publish_freq: publish frequency - applies only when trajectories are interfaced with rostopics,
@@ -609,7 +609,7 @@ class Gait:
             for i, name in enumerate(coord_labels):
                 plt.subplot(3, 1, i + 1)
                 plt.plot([i * time_scale for i in s], results['sw'][j][name])   # nominal trj
-                plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][j][name][0:t_exec])   # executed trj
+                plt.plot([i * time_scale for i in s[0:t_exec[j]]], results['sw'][j][name][0:t_exec[j]])   # executed trj
                 plt.grid()
                 plt.legend(['nominal', 'real'])
                 plt.title('Trajectory ' + name)
@@ -618,7 +618,7 @@ class Gait:
             # plot swing trajectory in two dimensions Z - X
             plt.figure()
             plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])    # nominal trj
-            plt.plot(results['sw'][j]['x'][0:t_exec], results['sw'][j]['z'][0:t_exec])    # real trj
+            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])    # real trj
             plt.grid()
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory Z- X')
