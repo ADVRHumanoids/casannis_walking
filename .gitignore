@@ -22,3 +22,11 @@ CMakeFiles/3.10.2/CMakeDetermineCompilerABI_CXX.bin
 CMakeLists.txt.user
 
 src/__pycache__/gait.cpython-36.pyc
+
+plots/step_swing_zx.png
+
+plots/step_forces.png
+
+plots/step_forces.png
+
+plots/step_forces.png
