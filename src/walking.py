@@ -468,6 +468,7 @@ class Walking:
             sw_t: time interval of swing phase
             total_t: total time of optimization problem
             resol: interpolation resolution (points per sec)
+            clear_loc: location of the achieved maximum clearance as a fraction of the dx an dy to be covered
 
         Returns:
             interpolated swing trajectory
@@ -490,6 +491,7 @@ class Walking:
         # velocities x and y for the intermediate point
         vel_x = 3 * (sw_x[2] - sw_x[0]) / (sw_t[1] - sw_t[0])
         vel_y = 3 * (sw_y[2] - sw_y[0]) / (sw_t[1] - sw_t[0])
+        print("Velocity x swing is :", vel_x)
 
         # conditions, initial point of swing phase
         cond1_x = [sw_x[0], 0, 0]
@@ -499,7 +501,7 @@ class Walking:
         # conditions, second point of swing phase
         cond2_x = [sw_x[1], vel_x, 0]
         cond2_y = [sw_y[1], vel_y, 0]
-        cond2_z = [sw_z[1], 0, 0]
+        cond2_z = [sw_z[1], 0, -0.2]
 
         # conditions, third point of swing phase
         cond3_x = [sw_x[2], 0, 0]
@@ -658,7 +660,7 @@ class Walking:
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
         plt.xlabel('Time [s]')
-        plt.savefig('../plots/step_state_trj.png')
+        #plt.savefig('../plots/step_state_trj.png')
 
         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
@@ -672,7 +674,7 @@ class Walking:
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
-        plt.savefig('../plots/step_forces.png')
+        #plt.savefig('../plots/step_forces.png')
 
         # plot swing trajectory
         # All points to be published
@@ -688,7 +690,7 @@ class Walking:
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
         plt.xlabel('Time [s]')
-        plt.savefig('../plots/step_swing.png')
+        #plt.savefig('../plots/step_swing.png')
 
         # plot swing trajectory in two dimensions Z- X
         plt.figure()
@@ -699,7 +701,7 @@ class Walking:
         plt.title('Trajectory Z- X')
         plt.xlabel('X [m]')
         plt.ylabel('Z [m]')
-        plt.savefig('../plots/step_swing_zx.png')
+        #plt.savefig('../plots/step_swing_zx.png')
         plt.show()
 
 
@@ -727,13 +729,13 @@ if __name__ == "__main__":
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.0
+    dx = 0.1
     dy = 0.0
     dz = -0.05
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     #swing_time = (1.5, 3.0)
-    swing_time = (3.0, 5.0)
+    swing_time = (1.0, 4.0)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=100)

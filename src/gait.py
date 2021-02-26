@@ -585,7 +585,7 @@ class Gait:
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
         plt.xlabel('Time [s]')
-        plt.savefig('../plots/gait_state_trj.png')
+        #plt.savefig('../plots/gait_state_trj.png')
 
         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
@@ -599,7 +599,7 @@ class Gait:
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
-        plt.savefig('../plots/gait_forces.png')
+        #plt.savefig('../plots/gait_forces.png')
 
         # plot swing trajectory
         # All points to be published
@@ -616,7 +616,7 @@ class Gait:
                 plt.legend(['nominal', 'real'])
                 plt.title('Trajectory ' + name)
             plt.xlabel('Time [s]')
-            plt.savefig('../plots/gait_swing.png')
+            #plt.savefig('../plots/gait_swing.png')
 
             # plot swing trajectory in two dimensions Z - X
             plt.figure()
@@ -627,7 +627,7 @@ class Gait:
             plt.title('Trajectory Z- X')
             plt.xlabel('X [m]')
             plt.ylabel('Z [m]')
-            plt.savefig('../plots/gait_swing_zx.png')
+            #plt.savefig('../plots/gait_swing_zx.png')
         plt.show()
 
 
