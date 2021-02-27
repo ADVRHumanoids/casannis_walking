@@ -1,16 +1,35 @@
+import casadi as cs
+import numpy as np
+from scipy.sparse import diags
 
-def f(t, table):
-    a0 = table[0]
-    a1 = table[1]
-    a2 = table[2]
-    a3 = table[3]
-    a4 = table[4]
-    a5 = table[5]
-    value = a0 + a1 * t + a2 * t ** 2 + a3 * t ** 3 + a4 * t ** 4 + a5 * t ** 5
-    deriv = a1 + 2*a2 * t + 3*a3 * t ** 2 + 4*a4 * t ** 3 + 5*a5 * t ** 4
-    return deriv
+def f():
+    sym_t = cs.SX
+    x = sym_t.sym('x', 4)
+    dx = sym_t.sym('dx', 4)
+
+    g = []
+
+    for i in range(4):
+        constraint1 = x[i] - dx[i]
+        g.append(constraint1)
+
+        constraint2 = x[i]
+        g.append(constraint2)
+
+        constraint3 = dx[i]
+        g.append(constraint3)
+
+
+    print(g)
+    print(*g)
+    print(cs.vertcat(*g))
+
+    xx = []
+    for k in range(4):
+        x_k = sym_t.sym('x_' + str(k), 1)
+        xx.append(x_k)
+    print(x, xx)
 
 
 
-coef = [ 0.15078891, -0.1793868,   0.09056,    -0.01559885, -0.00025998,  0.00389672]
-print(f(2, coef))
+f()
