@@ -4,7 +4,7 @@ import numpy as np
 
 class spline_optimization_z:
 
-    def __init__(self, N):
+    def __init__(self, N, timings):
 
         sym_t = cs.SX
         self._N = N
@@ -94,6 +94,12 @@ class spline_optimization_z:
             g.append(eq3)
             g.append(eq4)
 
+            # timings as constraints
+            if not k == self._N-1:
+                spline_time = delta_t[k] - timings[k]
+
+            g.append(spline_time)
+
             # objective function
             j_k = dx[k]**2
 
@@ -102,11 +108,11 @@ class spline_optimization_z:
             # Error g is not dense
             g[0] = 0
             g[3] = 0
-            g[-3] = 0
-            g[-6] = 0
+            g[-4] = 0
+            g[-7] = 0
 
         # QP solver high-level
-        qp = {'x': cs.vertcat(x, dx, ddx, a, b, c, d, delta_t),
+        qp = {'x': cs.vertcat(x, dx, ddx), #cs.vertcat(x, dx, ddx, a, b, c, d, delta_t),
               'f': sum(J),
               'g': cs.vertcat(*g)
               }
@@ -116,7 +122,7 @@ class spline_optimization_z:
         print(h1)
         al = 5
 
-    def solver(self, position, times):
+    def solver(self, position):
 
         Xl = list()  # position lower bounds
         Xu = list()  # position upper bounds
@@ -129,14 +135,14 @@ class spline_optimization_z:
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
 
-        Au = []
+        '''Au = []
         Al = []
         Bu = []
         Bl = []
         Cu = []
         Cl = []
         Du = []
-        Dl = []
+        Dl = []'''
         for k in range(self._N):
 
             # variables
@@ -172,7 +178,7 @@ class spline_optimization_z:
             DDXl.append(ddx_min)
 
             # a,b,c,d
-            a_max = cs.inf
+            '''a_max = cs.inf
             a_min = - a_max
 
             Au.append(a_max)
@@ -194,22 +200,15 @@ class spline_optimization_z:
             d_min = - d_max
 
             Du.append(d_max)
-            Dl.append(d_min)
+            Dl.append(d_min)'''
 
-            # timings
-            delta_t_max = times[k]
-            delta_t_min = times[k]
-
-            Timel.append(delta_t_min)
-            Timeu.append(delta_t_max)
-
-            # constraints vel, acc, equations
-            gl.append(np.concatenate([np.zeros(6)]))
-            gu.append(np.concatenate([np.zeros(6)]))
+            # constraints vel, acc, equations, timings
+            gl.append(np.concatenate([np.zeros(8)]))
+            gu.append(np.concatenate([np.zeros(8)]))
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(*Xl, *DXl, *DDXl, *Al, *Bl, *Cl, *Dl, *Timel)
-        ubv = cs.vertcat(*Xu, *DXu, *DDXu, *Au, *Bu, *Cu, *Du, *Timeu)
+        lbv = cs.vertcat(*Xl, *DXl, *DDXl)
+        ubv = cs.vertcat(*Xu, *DXu, *DDXu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
 
@@ -224,5 +223,6 @@ class spline_optimization_z:
 
 if __name__ == "__main__":
 
-    my_object = spline_optimization_z(5)
-    solution = my_object.solver([0.0, 0.2, 0.22, 0.2, 0.0], [0.0, 2.0, 2.5, 3.0, 4.0])
+    times = [2.0, 0.5, 0.5, 1.0]
+    my_object = spline_optimization_z(5, times)
+    solution = my_object.solver([0.0, 0.2, 0.22, 0.2, 0.0])
