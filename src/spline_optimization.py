@@ -66,12 +66,12 @@ class spline_optimization_z:
         self._h1 = sym_t.zeros(self._N, self._N)
         self._h2 = sym_t.zeros(self._N, self._N)
 
-        for i in range(1, self._N - 1, 1):
+        for i in range(1, self._N - 1):
             self._h1[i, i] = beta[i - 1]
             self._h1[i, i - 1] = alpha[i - 1]
             self._h1[i, i + 1] = alpha[i]
 
-            self._h2[i, i] = eta[i - 1]
+            self._h2[i, i] = -eta[i - 1]
             self._h2[i, i - 1] = -gama[i - 1]
             self._h2[i, i + 1] = gama[i]
 
@@ -138,12 +138,12 @@ class spline_optimization_z:
 
             # velocity bounds
             if k == 0 or k == self._N - 1:
-                dx_max = 0  #cs.inf
-                dx_min = 0
+                dx_max = 0.0
+                dx_min = 0.0
 
-            elif k == 1:
-                dx_max = cs.inf
-                dx_min = - cs.inf
+            elif k == 2:
+                dx_max = 0.0
+                dx_min = 0.0
 
             else:
                 dx_max = cs.inf
@@ -153,9 +153,12 @@ class spline_optimization_z:
             DXl.append(dx_min)
 
             # acceleration bounds
-
             ddx_max = cs.inf
             ddx_min = - cs.inf
+
+            if k == 2:
+                ddx_max = cs.inf
+                ddx_min = -cs.inf
 
             DDXu.append(ddx_max)
             DDXl.append(ddx_min)
@@ -216,7 +219,7 @@ class spline_optimization_z:
             h1[i, i - 1] = alpha[i - 1]
             h1[i, i + 1] = alpha[i]
 
-            h2[i, i] = eta[i - 1]
+            h2[i, i] = -eta[i - 1]
             h2[i, i - 1] = -gama[i - 1]
             h2[i, i + 1] = gama[i]
 
@@ -229,16 +232,29 @@ class spline_optimization_z:
         c = np.matmul(h3, waypoints) + np.matmul(h4, b)
         d = np.matmul(h5, waypoints) + np.matmul(h6, b)
 
-        coeffs = []
-        polynomials = []
+        pos_coeffs = []
+        pos_polynomials = []
+        vel_coeffs = []
+        vel_polynomials = []
+        acc_coeffs = []
+        acc_polynomials = []
 
         for i in range(self._N - 1):
 
-            coeffs.append([a[i], b[i], c[i], d[i]])
+            pos_coeffs.append([a[i], b[i], c[i], d[i]])
+            pos_polynomials.append(np.polynomial.polynomial.Polynomial(pos_coeffs[i]))
 
-            polynomials.append(np.polynomial.polynomial.Polynomial(coeffs[i]))
+            vel_coeffs.append([b[i], 2*c[i], 3*d[i]])
+            vel_polynomials.append(np.polynomial.polynomial.Polynomial(vel_coeffs[i]))
 
-        return polynomials
+            acc_coeffs.append([2*c[i], 6*d[i]])
+            acc_polynomials.append(np.polynomial.polynomial.Polynomial(acc_coeffs[i]))
+
+        return {
+            'pos': pos_polynomials,
+            'vel': vel_polynomials,
+            'acc': acc_polynomials
+        }
 
 
 if __name__ == "__main__":
@@ -262,10 +278,25 @@ if __name__ == "__main__":
     s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
 
     plt.figure()
-    plt.plot(times, solution['x'][0:5])
+    plt.plot(times, solution['x'][0:N])
     for i in range(N-1):
-        plt.plot([x + times[i] for x in s[i]], splines[i](s[i]))
+        plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
     plt.grid()
     plt.xlabel('time [s]')
     plt.ylabel('z position [m]')
+
+    plt.figure()
+    for i in range(N - 1):
+        plt.plot([x + times[i] for x in s[i]], splines['vel'][i](s[i]))
+    plt.grid()
+    plt.xlabel('time [s]')
+    plt.ylabel('z velocity [m/s]')
+
+    plt.figure()
+    for i in range(N - 1):
+        plt.plot([x + times[i] for x in s[i]], splines['acc'][i](s[i]))
+    plt.grid()
+    plt.xlabel('time [s]')
+    plt.ylabel('z acceleration [m/s^2]')
+
     plt.show()
