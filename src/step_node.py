@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from walking import Walking
 import numpy as np
-from centauro_contact_detection.msg import contacts as contacts_msg
+from centauro_contact_detection.msg import Contacts as contacts_msg
 
 # radius of centauro wheels
 R = 0.078
