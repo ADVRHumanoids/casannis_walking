@@ -6,6 +6,8 @@ def f():
     sym_t = cs.SX
     x = sym_t.sym('x', 4)
     dx = sym_t.sym('dx', 4)
+    ddx = sym_t.sym('ddx', 4)
+    qp = cs.vertcat(*x, *dx, *ddx)
 
     g = []
 

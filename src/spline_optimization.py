@@ -15,6 +15,19 @@ class spline_optimization_z:
         dx = sym_t.sym('dx', self._N)
         ddx = sym_t.sym('ddx', self._N)
 
+        '''x = []
+        dx = []
+        ddx = []
+        for k in range(self._N):
+            # variables
+            x_k = sym_t.sym('x_' + str(k), 1)
+            dx_k = sym_t.sym('dx_' + str(k), 1)
+            ddx_k = sym_t.sym('ddx_' + str(k), 1)
+
+            x.append(x_k)
+            dx.append(dx_k)
+            ddx.append(ddx_k)'''
+
         # time periods between waypoints
         delta_t = timings
 
@@ -75,6 +88,7 @@ class spline_optimization_z:
             # velocity at waypoints
             velocity = cs.mtimes(self._h1[k, :], dx) - cs.mtimes(self._h2[k, :], x)
             #velocity = cs.mtimes(prod_12[k, :], x)
+
             g.append(velocity)
 
             # acceleration at waypoints
@@ -84,12 +98,12 @@ class spline_optimization_z:
             g.append(acceleration)
 
             # objective function
-            j_k = dx[k]**2+ 1e-10*ddx[k]**2
+            j_k = dx[k]**2
 
             J.append(j_k)
 
         # QP solver high-level
-        qp = {'x': cs.vertcat(x, dx, ddx), #cs.vertcat(x, dx, ddx, a, b, c, d, delta_t),
+        qp = {'x': cs.vertcat(x, dx, ddx),
               'f': sum(J),
               'g': cs.vertcat(*g)
               }
@@ -117,19 +131,20 @@ class spline_optimization_z:
 
             else:
                 x_max = position[k] + 0.1
-                x_min = position[k] + 0.02
+                x_min = position[k] + 0.05
 
             Xu.append(x_max)
             Xl.append(x_min)
 
             # velocity bounds
             if k == 0 or k == self._N - 1:
-                dx_max = 0#cs.inf
+                dx_max = 0  #cs.inf
                 dx_min = 0
 
-            elif k == 2:
-                dx_max = 0
-                dx_min = 0
+            elif k == 1:
+                dx_max = cs.inf
+                dx_min = - cs.inf
+
             else:
                 dx_max = cs.inf
                 dx_min = - dx_max
@@ -138,12 +153,9 @@ class spline_optimization_z:
             DXl.append(dx_min)
 
             # acceleration bounds
-            if k == 2:
-                ddx_max = cs.inf
-                ddx_min = - cs.inf
-            else:
-                ddx_max = cs.inf
-                ddx_min = - cs.inf
+
+            ddx_max = cs.inf
+            ddx_min = - cs.inf
 
             DDXu.append(ddx_max)
             DDXl.append(ddx_min)
