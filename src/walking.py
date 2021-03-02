@@ -729,9 +729,9 @@ if __name__ == "__main__":
     sw_id = 0
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.15
     dy = 0.0
-    dz = -0.05
+    dz = -0.0
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     #swing_time = (1.5, 3.0)

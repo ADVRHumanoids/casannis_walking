@@ -75,9 +75,6 @@ def casannis(int_freq):
     # Swing velocity
     swing_vel = rospy.get_param("~sw_vel")
 
-    # velocity to slow down
-    sl_down_vel = 0.01
-
     # target position as array
     swing_tgt = np.array([contacts[swing_id - 1][0] + tgt_dx, contacts[swing_id - 1][1] + tgt_dy, contacts[swing_id - 1][2] + tgt_dz])
 
@@ -175,12 +172,6 @@ def casannis(int_freq):
                     # publish swing trajectory
                     f_msg.header.stamp = rospy.Time.now()
                     f_pub_.publish(f_msg)
-
-        # slow down
-        '''if counter == N_total - 0.4 * N_total:
-            # slow down frequency
-            sl_down_freq = sl_down_vel * N_swing_total / tgt_ds
-            rate.__init__(sl_down_freq)'''
 
         rate.sleep()
 
