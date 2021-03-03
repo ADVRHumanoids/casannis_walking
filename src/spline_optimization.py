@@ -18,7 +18,7 @@ class spline_optimization_z:
         # time periods between waypoints
         delta_t = timings
 
-        # matrices
+        # matrices (CasADi type)
         self._h3 = sym_t.zeros(self._N, self._N)
         self._h4 = sym_t.zeros(self._N, self._N)
         self._h5 = sym_t.zeros(self._N, self._N)
@@ -62,9 +62,14 @@ class spline_optimization_z:
             self._h2[i, i - 1] = -gama[i - 1]
             self._h2[i, i + 1] = gama[i]
 
-        # inverse of h1
-        self._inv_h1 = cs.solve(self._h1, sym_t.eye(self._h1.size1()))
-        prod_12 = cs.times(self._inv_h1, self._h2)
+        # matrices for intermediate points
+
+        delta_t_midpoint = [0.5 * x for x in delta_t]
+
+        #self._g1 = sym_t.ones(self._N) + self._h3 * delta
+        #self._g2 =
+        #self._g3 =
+        #self._g4 =
 
         # constraints
         g = []  # list of constraint expressions
@@ -88,12 +93,12 @@ class spline_optimization_z:
             J.append(j_k)
 
         # QP solver high-level
-        qp = {'x': cs.vertcat(x, dx, ddx),
+        self._qp = {'x': cs.vertcat(x, dx, ddx),
               'f': sum(J),
               'g': cs.vertcat(*g)
               }
 
-        self._solver = cs.qpsol('solver', 'qpoases', qp)
+        self._solver = cs.qpsol('solver', 'qpoases', self._qp)
 
     def solver(self, position, ramps, obst):
 
@@ -218,64 +223,30 @@ class spline_optimization_z:
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
 
-        sol = self._solver(lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg)
+        # call solver
+        self._sol = self._solver(lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg)
 
-        return sol
+        return self._sol
 
     def get_splines(self, optimal_knots, delta_t):
 
         # matrices
-        h3 = np.zeros((self._N, self._N))
-        h4 = np.zeros((self._N, self._N))
-        h5 = np.zeros((self._N, self._N))
-        h6 = np.zeros((self._N, self._N))
 
-        for i in range(self._N - 1):
-            h3[i, i] = -3 / (delta_t[i] ** 2)
-            h3[i, i + 1] = 3 / (delta_t[i] ** 2)
+        # numerically evaluate matrices
+        self._h1 = self.evaluate(self._sol['x'], self._h1)
+        self._h2 = self.evaluate(self._sol['x'], self._h2)
+        self._h3 = self.evaluate(self._sol['x'], self._h3)
+        self._h4 = self.evaluate(self._sol['x'], self._h4)
+        self._h5 = self.evaluate(self._sol['x'], self._h5)
+        self._h6 = self.evaluate(self._sol['x'], self._h6)
 
-            h4[i, i] = -2 / delta_t[i]
-            h4[i, i + 1] = -1 / delta_t[i]
-
-            h5[i, i] = 2 / (delta_t[i] ** 3)
-            h5[i, i + 1] = -2 / (delta_t[i] ** 3)
-
-            h6[i, i] = 1 / (delta_t[i] ** 2)
-            h6[i, i + 1] = 1 / (delta_t[i] ** 2)
-
-        alpha = []
-        beta = []
-        gama = []
-        eta = []
-
-        for i in range(self._N - 1):
-            alpha.append(2 / delta_t[i])
-            gama.append(6 / (delta_t[i] ** 2))
-
-        for i in range(self._N - 2):
-            beta.append(4 / delta_t[i] + 4 / delta_t[i + 1])
-            eta.append(-6 / (delta_t[i + 1] ** 2) + 6 / (delta_t[i] ** 2))
-
-        h1 = np.zeros((self._N, self._N))
-        h2 = np.zeros((self._N, self._N))
-
-        for i in range(1, self._N - 1, 1):
-            h1[i, i] = beta[i - 1]
-            h1[i, i - 1] = alpha[i - 1]
-            h1[i, i + 1] = alpha[i]
-
-            h2[i, i] = eta[i - 1]
-            h2[i, i - 1] = -gama[i - 1]
-            h2[i, i + 1] = gama[i]
-
-        #print(np.linalg.det(h1))
-        # pseudo - inverse
-        inv_h1 = np.linalg.pinv(h1)
+        # pseudo-inverse
+        inv_h1 = np.linalg.pinv(self._h1)
 
         a = optimal_knots
-        b = np.matmul(inv_h1, np.matmul(h2, optimal_knots))
-        c = np.matmul(h3, optimal_knots) + np.matmul(h4, b)
-        d = np.matmul(h5, optimal_knots) + np.matmul(h6, b)
+        b = np.matmul(inv_h1, np.matmul(self._h2, optimal_knots))
+        c = np.matmul(self._h3, optimal_knots) + np.matmul(self._h4, b)
+        d = np.matmul(self._h5, optimal_knots) + np.matmul(self._h6, b)
 
         pos_coeffs = []
         pos_polynomials = []
@@ -302,6 +273,24 @@ class spline_optimization_z:
             'acc': acc_polynomials
         }
 
+    def evaluate(self, solution, expr):
+        """ Evaluate a given expression
+
+        Args:
+            solution: given solution
+            expr: expression to be evaluated
+
+        Returns:
+            Numerical value of the given expression
+
+        """
+
+        # casadi function that symbolically maps the _nlp to the given expression
+        expr_fun = cs.Function('expr_fun', [self._qp['x']], [expr], ['v'], ['expr'])
+
+        expr_value = expr_fun(v=solution)['expr'].toarray()
+
+        return expr_value
 
 if __name__ == "__main__":
 
