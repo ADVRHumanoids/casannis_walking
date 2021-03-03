@@ -3,9 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time
 
+
 class spline_optimization_z:
 
-    def __init__(self, N, timings):
+    def __init__(self, N, delta_t):
 
         sym_t = cs.SX
         self._N = N
@@ -15,10 +16,15 @@ class spline_optimization_z:
         dx = sym_t.sym('dx', self._N)
         ddx = sym_t.sym('ddx', self._N)
 
-        # time periods between waypoints
-        delta_t = timings
+        # position, vel at midpoints
+        x_mid = sym_t.sym('x_mid', self._N - 1)
+        dx_mid = sym_t.sym('dx_mid', self._N - 1)
+
+        # time intervals for midpoints
+        delta_t_midpoint = [0.5 * x for x in delta_t]
 
         # matrices (CasADi type)
+        # hi matrices are derived from the cubic polynomials and their conditions
         self._h3 = sym_t.zeros(self._N, self._N)
         self._h4 = sym_t.zeros(self._N, self._N)
         self._h5 = sym_t.zeros(self._N, self._N)
@@ -37,6 +43,8 @@ class spline_optimization_z:
             self._h6[i, i] = 1 / (delta_t[i] ** 2)
             self._h6[i, i + 1] = 1 / (delta_t[i] ** 2)
 
+        self._h1 = sym_t.zeros(self._N, self._N)
+        self._h2 = sym_t.zeros(self._N, self._N)
         alpha = []
         beta = []
         gama = []
@@ -50,9 +58,6 @@ class spline_optimization_z:
             beta.append(4 / delta_t[i] + 4 / delta_t[i + 1])
             eta.append(-6 / (delta_t[i + 1] ** 2) + 6 / (delta_t[i] ** 2))
 
-        self._h1 = sym_t.zeros(self._N, self._N)
-        self._h2 = sym_t.zeros(self._N, self._N)
-
         for i in range(1, self._N - 1):
             self._h1[i, i] = beta[i - 1]
             self._h1[i, i - 1] = alpha[i - 1]
@@ -63,51 +68,87 @@ class spline_optimization_z:
             self._h2[i, i + 1] = gama[i]
 
         # matrices for intermediate points
+        # gi matrices are derived from cubic polynomials of midpoints combined with waypoints
+        g_terms = {
+            'g1': [sym_t.zeros(self._N - 1, self._N - 1) for i in range(3)],
+            'g2': [sym_t.zeros(self._N - 1, self._N - 1) for i in range(3)],
+            'g3': [sym_t.zeros(self._N - 1, self._N - 1) for i in range(2)],
+            'g4': [sym_t.zeros(self._N - 1, self._N - 1) for i in range(3)],
+        }
 
-        delta_t_midpoint = [0.5 * x for x in delta_t]
+        for i in range(self._N-1):
+            g_terms['g1'][0][i, :] = self._h3[i, : -1] * (delta_t_midpoint[i] ** 2)
+            g_terms['g1'][1][i, :] = self._h5[i, : -1] * (delta_t_midpoint[i] ** 3)
+            g_terms['g1'][2][i, i] = 1
 
-        #self._g1 = sym_t.ones(self._N) + self._h3 * delta
-        #self._g2 =
-        #self._g3 =
-        #self._g4 =
+            g_terms['g2'][0][i, i] = delta_t_midpoint[i]
+            g_terms['g2'][1][i, :] = self._h4[i, : -1] * (delta_t_midpoint[i] ** 2)
+            g_terms['g2'][2][i, :] = self._h6[i, : -1] * (delta_t_midpoint[i] ** 3)
 
-        # constraints
+            g_terms['g3'][0][i, :] = self._h3[i, : -1] * 2 * delta_t_midpoint[i]
+            g_terms['g3'][1][i, :] = self._h5[i, : -1] * 3 * (delta_t_midpoint[i] ** 2)
+
+            g_terms['g4'][0][i, :] = self._h4[i, : -1] * 2 * delta_t_midpoint[i]
+            g_terms['g4'][1][i, :] = self._h6[i, : -1] * 3 * (delta_t_midpoint[i] ** 2)
+            g_terms['g4'][2][i, i] = 1
+
+        # all 4 matrices in one list
+        self._g = [sum(g_terms[x]) for x in g_terms]
+
+        # constraints - objective function
         g = []  # list of constraint expressions
         J = []  # list of cost function expressions
 
+        # loop over waypoints
         for k in range(self._N):
 
             # velocity at waypoints
-            velocity_con = cs.mtimes(self._h1[k, :], dx) - cs.mtimes(self._h2[k, :], x)
-
-            g.append(velocity_con)
+            vel_waypoints = cs.mtimes(self._h1[k, :], dx) - cs.mtimes(self._h2[k, :], x)
+            g.append(vel_waypoints)
 
             # acceleration at waypoints
-            acceleration_con = ddx[k] - 2.0 * (cs.mtimes(self._h3[k, :], x) + cs.mtimes(self._h4[k, :], dx))
+            accel_waypoints = ddx[k] - 2.0 * (cs.mtimes(self._h3[k, :], x) + cs.mtimes(self._h4[k, :], dx))
+            g.append(accel_waypoints)
 
-            g.append(acceleration_con)
+            # loop over midpoints
+            if not k == self._N - 1:
+
+                # position at midpoints
+                pos_midpoints = x_mid[k] - cs.mtimes(self._g[0][k, :], x[: -1]) - cs.mtimes(self._g[1][k, :], dx[: -1])
+                g.append(pos_midpoints)
+
+                # velocity at midpoints
+                vel_midpoints = dx_mid[k] - cs.mtimes(self._g[2][k, :], x[: -1]) - cs.mtimes(self._g[3][k, :], dx[: -1])
+                g.append(vel_midpoints)
 
             # objective function
-            j_k = dx[k]**2 #+ ddx[k]**2
-
+            j_k = dx[k] ** 2  # + ddx[k]**2
             J.append(j_k)
 
-        # QP solver high-level
-        self._qp = {'x': cs.vertcat(x, dx, ddx),
-              'f': sum(J),
-              'g': cs.vertcat(*g)
-              }
+        # QP solver
+        self._qp = {'x': cs.vertcat(x, dx, ddx, x_mid, dx_mid),
+                    'f': sum(J),
+                    'g': cs.vertcat(*g)
+                    }
 
         self._solver = cs.qpsol('solver', 'qpoases', self._qp)
 
     def solver(self, position, ramps, obst):
 
+        # waypoints
         Xl = []  # position lower bounds
         Xu = []  # position upper bounds
         DXl = []  # velocity lower bounds
         DXu = []  # velocity upper bounds
         DDXl = []  # acceleration lower bounds
         DDXu = []  # acceleration upper bounds
+
+        # midpoints
+        X_mid_u = []
+        X_mid_l = []
+        DX_mid_u = []
+        DX_mid_l = []
+
         gl = []  # constraint lower bounds
         gu = []  # constraint upper bounds
 
@@ -213,13 +254,30 @@ class spline_optimization_z:
             DDXu.append(ddx_max)
             DDXl.append(ddx_min)
 
-            # constraints vel, acc, equations, timings
+            # midpoints - variable constraints
+            if not k == self._N - 1:
+                x_mid_max = cs.inf
+                x_mid_min = - cs.inf
+
+                X_mid_u.append(x_mid_max)
+                X_mid_l.append(x_mid_min)
+
+                dx_mid_max = cs.inf
+                dx_mid_min = - cs.inf
+
+                DX_mid_u.append(dx_mid_max)
+                DX_mid_l.append(dx_mid_min)
+
+                gl.append(np.zeros(2))
+                gu.append(np.zeros(2))
+
+            # constraints pos, vel, acc at waypoints
             gl.append(np.zeros(2))
             gu.append(np.zeros(2))
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(*Xl, *DXl, *DDXl)
-        ubv = cs.vertcat(*Xu, *DXu, *DDXu)
+        lbv = cs.vertcat(*Xl, *DXl, *DDXl, *X_mid_l, *DX_mid_l)
+        ubv = cs.vertcat(*Xu, *DXu, *DDXu, *X_mid_u, *DX_mid_u)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
 
@@ -230,23 +288,21 @@ class spline_optimization_z:
 
     def get_splines(self, optimal_knots, delta_t):
 
-        # matrices
-
         # numerically evaluate matrices
-        self._h1 = self.evaluate(self._sol['x'], self._h1)
-        self._h2 = self.evaluate(self._sol['x'], self._h2)
-        self._h3 = self.evaluate(self._sol['x'], self._h3)
-        self._h4 = self.evaluate(self._sol['x'], self._h4)
-        self._h5 = self.evaluate(self._sol['x'], self._h5)
-        self._h6 = self.evaluate(self._sol['x'], self._h6)
+        h1 = self.evaluate(self._sol['x'], self._h1)
+        h2 = self.evaluate(self._sol['x'], self._h2)
+        h3 = self.evaluate(self._sol['x'], self._h3)
+        h4 = self.evaluate(self._sol['x'], self._h4)
+        h5 = self.evaluate(self._sol['x'], self._h5)
+        h6 = self.evaluate(self._sol['x'], self._h6)
 
         # pseudo-inverse
-        inv_h1 = np.linalg.pinv(self._h1)
+        inv_h1 = np.linalg.pinv(h1)
 
         a = optimal_knots
-        b = np.matmul(inv_h1, np.matmul(self._h2, optimal_knots))
-        c = np.matmul(self._h3, optimal_knots) + np.matmul(self._h4, b)
-        d = np.matmul(self._h5, optimal_knots) + np.matmul(self._h6, b)
+        b = np.matmul(inv_h1, np.matmul(h2, optimal_knots))
+        c = np.matmul(h3, optimal_knots) + np.matmul(h4, b)
+        d = np.matmul(h5, optimal_knots) + np.matmul(h6, b)
 
         pos_coeffs = []
         pos_polynomials = []
@@ -318,6 +374,8 @@ if __name__ == "__main__":
     N = len(times)
     dt = [times[i + 1] - times[i] for i in range(N - 1)]
 
+    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N-1)]
+
     # Construct waypoints
     waypoints = []
 
@@ -350,27 +408,33 @@ if __name__ == "__main__":
     print('Velocities:', solution['x'][N:2 * N])
     print('Accelerations:', solution['x'][2 * N:3 * N])
     print('Computation time:', 100*(end-start), 'ms')
+
     # print results
     s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
 
     plt.figure()
     plt.plot(times, solution['x'][0:N], "o")
+    plt.plot(time_midpoints, solution['x'][3 * N:(4 * N - 1)], ".")
     plt.plot(times, waypoints, "x")
     for i in range(N-1):
         plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
     plt.grid()
+    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
     plt.xlabel('time [s]')
     plt.ylabel('z position [m]')
 
     plt.figure()
+    plt.plot(times, solution['x'][N:2 * N], "o")
+    plt.plot(time_midpoints, solution['x'][(4 * N - 1):(5 * N - 2)], ".")
     for i in range(N - 1):
         plt.plot([x + times[i] for x in s[i]], splines['vel'][i](s[i]))
-    plt.plot(times, solution['x'][N:2*N], "o")
+    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
     plt.grid()
     plt.xlabel('time [s]')
     plt.ylabel('z velocity [m/s]')
 
     plt.figure()
+    plt.plot(times, solution['x'][2 * N:3 * N], "o")
     for i in range(N - 1):
         plt.plot([x + times[i] for x in s[i]], splines['acc'][i](s[i]))
     plt.plot(times, solution['x'][2 * N:3 * N], "o")
