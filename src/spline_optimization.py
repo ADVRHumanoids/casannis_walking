@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import time
 
 
-class spline_optimization_z:
+class Spline_optimization_z:
 
     def __init__(self, N, delta_t):
 
@@ -121,8 +121,11 @@ class spline_optimization_z:
                 vel_midpoints = dx_mid[k] - cs.mtimes(self._g[2][k, :], x[: -1]) - cs.mtimes(self._g[3][k, :], dx[: -1])
                 g.append(vel_midpoints)
 
-            # objective function
-            j_k = dx[k] ** 2  # + ddx[k]**2
+                # objective function
+                j_k = dx[k] ** 2 + dx_mid[k]**2
+
+            else:
+                j_k = dx[k] ** 2
             J.append(j_k)
 
         # QP solver
@@ -192,7 +195,7 @@ class spline_optimization_z:
 
                 print('landing', k)
                 x_max = cs.inf #position[k] + 0.02
-                x_min = target_pos #position[k+1]
+                x_min = position[-1] #position[k+1]
 
             else:
                 x_max = cs.inf
@@ -348,15 +351,16 @@ class spline_optimization_z:
 
         return expr_value
 
+
 if __name__ == "__main__":
 
     initial_pos = 0.0
     target_pos = 0.05
     terrain_conf = 0.05
     swing_time = [0.0, 6.0]
-    N = 12  # number of waypoints
+    N = 18  # number of waypoints
 
-    ramp_points = 3
+    ramp_points = 5
     ramp_step = 0.01
 
     obstacle_points = 3
@@ -396,7 +400,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    my_object = spline_optimization_z(N, dt)
+    my_object = Spline_optimization_z(N, dt)
 
     solution = my_object.solver(waypoints, ramp_points, obstacle_points)
 
