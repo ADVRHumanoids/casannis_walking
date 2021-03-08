@@ -73,7 +73,7 @@ def casannis(int_freq):
     swing_clear = rospy.get_param("~clear")  # get from command line as target_dx
 
     # Swing velocity
-    swing_vel = rospy.get_param("~sw_vel")
+    #swing_vel = rospy.get_param("~sw_vel")
 
     # target position as array
     swing_tgt = np.array([contacts[swing_id - 1][0] + tgt_dx, contacts[swing_id - 1][1] + tgt_dy, contacts[swing_id - 1][2] + tgt_dz])
@@ -101,7 +101,7 @@ def casannis(int_freq):
     f_msg.pose.orientation = f_init[swing_id-1].pose.orientation
 
     # Construct the class the optimization problem
-    walk = Walking(mass=90, N=50, dt=0.1)
+    walk = Walking(mass=95, N=40, dt=0.2)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
@@ -113,6 +113,7 @@ def casannis(int_freq):
     # All points to be published
     N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpl. frequency
     executed_trj = N_total - 1
+
     # contact detection
     early_contact = False
 
@@ -125,10 +126,14 @@ def casannis(int_freq):
     # approximate distance covered during swing
     tgt_ds = interpl['sw']['s']
 
-    # publish freq wrt the desired swing velocity
-    freq = swing_vel * N_swing_total / tgt_ds
+    # publish freq wrt the desired swing velocity - this is to publish in a different frequency which is not right
+    #freq = swing_vel * N_swing_total / tgt_ds
 
-    rate = rospy.Rate(freq)  # Frequency trj publishing
+    # mean velocity of the swing foot
+    mean_foot_velocity = tgt_ds / (swing_t[1] - swing_t[0])
+    print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
+
+    rate = rospy.Rate(int_freq)  # Frequency trj publishing
     # loop interpolation points to publish on a specified frequency
     for counter in range(N_total):
 
@@ -210,13 +215,13 @@ def casannis(int_freq):
         print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
 
     if rospy.get_param("~plots"):
-        walk.print_trj(interpl, int_freq, freq, executed_trj)
+        walk.print_trj(interpl, int_freq, int_freq, executed_trj)
 
 
 if __name__ == '__main__':
 
     # desired interpolation frequency
-    interpolation_freq = 500
+    interpolation_freq = 300
 
     try:
         casannis(interpolation_freq)

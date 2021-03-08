@@ -5,7 +5,7 @@
     <arg name="target_dx" default="0.0"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
-    <arg name="swing_t" default="[1.0, 4.0]"/>
+    <arg name="swing_t" default="[2.0, 6.0]"/>
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.1"/>

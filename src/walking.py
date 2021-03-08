@@ -110,7 +110,7 @@ class Walking:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e1 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(
+            j_k = 1e1 * cs.sumsqr(h_horz) + 1e2 * cs.sumsqr(h_vert) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(
                 f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
 
             # debug trials
@@ -491,7 +491,6 @@ class Walking:
         # velocities x and y for the intermediate point
         vel_x = 3 * (sw_x[2] - sw_x[0]) / (sw_t[1] - sw_t[0])
         vel_y = 3 * (sw_y[2] - sw_y[0]) / (sw_t[1] - sw_t[0])
-        print("Velocity x swing is :", vel_x)
 
         # conditions, initial point of swing phase
         cond1_x = [sw_x[0], 0, 0]
@@ -707,12 +706,10 @@ class Walking:
 
 if __name__ == "__main__":
 
-    w = Walking(mass=95, N=50, dt=0.1)
+    w = Walking(mass=95, N=50, dt=0.2)
 
-    # initial state
-    #c0 = np.array([-0.00629, -0.03317, 0.01687])
+    # initial state =
     c0 = np.array([0.107729, 0.0000907, -0.02118])
-    #c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
     x_init = np.hstack([c0, dc0, ddc0])
@@ -725,26 +722,27 @@ if __name__ == "__main__":
     ]
 
     # swing id from 0 to 3
-    #sw_id = 2
     sw_id = 0
 
-    #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.15
+    # swing_target = np.array([-0.35, -0.35, -0.719])
+    dx = 0.0
     dy = 0.0
     dz = -0.0
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
-    #swing_time = (1.5, 3.0)
-    swing_time = (1.0, 4.0)
+    # swing_time = (1.5, 3.0)
+    swing_time = [4.0, 9.0]
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=100)
+
     # debug
     print("X0 is:", x_init)
     print("contacts is:", foot_contacts)
     print("swing id is:", sw_id)
     print("swing target is:", swing_target)
     print("swing time:", swing_time)
+
     # interpolate the values, pass values and interpolation resolution
     res = 300
     step_clear = 0.1
