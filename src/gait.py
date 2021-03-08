@@ -109,7 +109,9 @@ class Gait:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e1 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
+            j_k = 1e1 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
+                  1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
+                  1e-3 * cs.sumsqr(f_k[1::3])
 
             # debug trials
             # horizontal distance of CoM from each foot
@@ -192,16 +194,10 @@ class Gait:
 
             else:
                 #x_max = np.full(self._dimx, cs.inf) # do not bound state
+
                 # constraining com z coordinate
-                '''x_max = np.concatenate([[0.3], [0.12], [0.0], [0.1], [0.1], [0.1],  [0.1], [0.1], [0.1]])
-                x_min = - np.concatenate([[0.13], [0.12], [0.15], [0.1], [0.1], [0.1], [0.1], [0.1], [0.1]])
-                '''
-                x_max = np.concatenate([[cs.inf], [cs.inf], [0.0], np.full(6, cs.inf)])
-                x_min = -np.concatenate([[cs.inf], [cs.inf], [0.15], np.full(6, cs.inf)])
-            # com not moving during swing motion
-            '''elif k >= swing_t[0] / self._dt:
-                x_max = np.concatenate([np.full(3, cs.inf), np.zeros(6)])
-                x_min = -x_max'''
+                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
+                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
 
             Xu.append(x_max)
             Xl.append(x_min)
