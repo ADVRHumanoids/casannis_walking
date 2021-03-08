@@ -5,10 +5,10 @@
     <arg name="target_dx" default="0.1"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
-    <arg name="swing_t1" default="[1.0, 4.0]"/>
-    <arg name="swing_t2" default="[5.0, 8.0]"/>
-    <arg name="swing_t3" default="[9.0, 12.0]"/>
-    <arg name="swing_t4" default="[13.0, 16.0]"/>
+    <arg name="swing_t1" default="[2.0, 6.0]"/>
+    <arg name="swing_t2" default="[7.0, 11.0]"/>
+    <arg name="swing_t3" default="[12.0, 16.0]"/>
+    <arg name="swing_t4" default="[17.0, 21.0]"/>
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.1"/>

@@ -428,7 +428,7 @@ class Gait:
         # conditions, second point of swing phase
         cond2_x = [sw_x[1], vel_x, 0]
         cond2_y = [sw_y[1], vel_y, 0]
-        cond2_z = [sw_z[1], 0, 0]
+        cond2_z = [sw_z[1], 0, -0.2]
 
         # conditions, third point of swing phase
         cond3_x = [sw_x[2], 0, 0]

@@ -43,7 +43,9 @@ def casannis(int_freq):
 
     # loop for all feet
     for i in range(len(id_name)):
-        f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference", PoseStamped, timeout=None))
+        f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
+                                             PoseStamped,
+                                             timeout=None))
         f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z - R])
 
     # contact points as array
@@ -97,7 +99,9 @@ def casannis(int_freq):
         swing_t[i] = [float(i) for i in swing_t[i]]
 
         # swing feet trj publishers
-        f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference', PoseStamped, queue_size=10))
+        f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
+                                      PoseStamped,
+                                      queue_size=10))
 
         # feet trj messages
         f_msg.append(PoseStamped())
@@ -114,7 +118,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = Gait(mass=95, N=int((swing_t[-1][1] + 1.0) / 0.1), dt=0.1)
+    walk = Gait(mass=95, N=int((swing_t[-1][1] + 2.0) / 0.2), dt=0.2)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
@@ -124,7 +128,7 @@ def casannis(int_freq):
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
     # All points to be published
-    N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpl. frequency
+    N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpolation frequency
 
     # executed trj points
     executed_trj = []
@@ -145,9 +149,13 @@ def casannis(int_freq):
     tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
 
     # publish freq wrt the desired swing velocity
-    freq = swing_vel * N_swing_total / tgt_ds
+    #freq = swing_vel * N_swing_total / tgt_ds
 
-    rate = rospy.Rate(freq)  # Frequency trj publishing
+    # mean velocity of the swing foot
+    mean_foot_velocity = tgt_ds / step_num * (swing_t[0][1] - swing_t[0][0])
+    print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
+
+    rate = rospy.Rate(int_freq)  # Frequency trj publishing
     # loop interpolation points to publish on a specified frequency
     for counter in range(N_total):
 
@@ -223,18 +231,18 @@ def casannis(int_freq):
             print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
 
             if rospy.get_param("~plots"):
-                walk.print_trj(interpl, int_freq, freq, executed_trj)
+                walk.print_trj(interpl, int_freq, int_freq, executed_trj)
     except:
         print("No early contact detected")
 
         if rospy.get_param("~plots"):
-            walk.print_trj(interpl, int_freq, freq, [N_total-1, N_total-1, N_total-1, N_total-1])
+            walk.print_trj(interpl, int_freq, int_freq, [N_total-1, N_total-1, N_total-1, N_total-1])
 
 
 if __name__ == '__main__':
 
     # desired interpolation frequency
-    interpolation_freq = 500
+    interpolation_freq = 300
 
     try:
         casannis(interpolation_freq)
