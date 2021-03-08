@@ -121,7 +121,7 @@ def casannis(int_freq):
     t_early = 0.5 * (swing_t[0] + swing_t[1])
 
     # trj points during swing phase
-    N_swing_total = int((swing_t[1] - swing_t[0]) * int_freq)
+    #N_swing_total = int((swing_t[1] - swing_t[0]) * int_freq)
 
     # approximate distance covered during swing
     tgt_ds = interpl['sw']['s']
