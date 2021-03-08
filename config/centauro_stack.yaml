@@ -3,11 +3,18 @@ solver_options:
     back_end: "qpoases"
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY"]
+    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY", "PelvisRPY"]
     - ["LeftArm", "RightArm"]
     - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
+
+PelvisRPY:
+    type: "Cartesian"
+    lambda: 0.1
+    indices: [3, 4, 5]
+    name: "Pelvis"
+    distal_link: "pelvis"
 
 ComXY:
     type: "Com"
