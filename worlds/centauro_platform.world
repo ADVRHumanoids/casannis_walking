@@ -46,7 +46,7 @@
   </model>
 
   <model name='unit_box'>
-      <pose frame=''>1.5 0.5 0.10 0 -0 0</pose>
+      <pose frame=''>2.0 -0.5 0.10 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1000</mass>
@@ -62,7 +62,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>1 1 0.20</size>
+              <size>2 1 0.20</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -82,7 +82,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1 1 0.2</size>
+              <size>2 1 0.2</size>
             </box>
           </geometry>
           <material>
