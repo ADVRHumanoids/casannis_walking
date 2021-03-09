@@ -1,0 +1,186 @@
+solver_options:
+    regularization: 0
+    back_end: "qpoases"
+    front_end: "nhqp"
+    nhqp_min_sv_ratio: 0.05
+
+stack:
+    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Steering1", "Steering2", "Steering3", "Steering4"]
+    - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4"]
+    - ["Postural", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
+
+constraints: ["JointLimits", "VelocityLimits"]
+
+params:
+ - &wh_indices [0, 1, 2]
+ - &wh_base_link world
+ - &cont_base_link world
+ - &cont_indices [3, 4]
+
+Cont1RP:
+   type: "Cartesian"
+   name: "contact1_rp"
+   distal_link: "contact_1"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+
+Cont2RP:
+   type: "Cartesian"
+   name: "contact2_rp"
+   distal_link: "contact_2"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+
+Cont3RP:
+   type: "Cartesian"
+   name: "contact3_rp"
+   distal_link: "contact_3"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+
+Cont4RP:
+   type: "Cartesian"
+   name: "contact4_rp"
+   distal_link: "contact_4"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+
+ComXY:
+    type: "Com"
+    lambda: 0.1
+    indices: [0, 1, 2]
+    weight: 10
+    active: true
+
+Waist:
+    type: Cartesian
+    distal_link: pelvis
+    lambda: 0.1
+    weight: 10
+    active: false
+
+Wheel1:
+    type: "Cartesian"
+    name: "FL_wheel"
+    distal_link: "contact_1"
+    base_link: *wh_base_link
+    indices: *wh_indices
+    lambda: 0.1
+    
+Wheel2:
+    type: "Cartesian"
+    name: "FR_wheel"
+    distal_link: "wheel_2"
+    base_link: *wh_base_link
+    indices: *wh_indices
+    lambda: 0.1
+    
+
+Wheel3:
+    type: "Cartesian"
+    name: "HL_wheel"
+    distal_link: "wheel_3"
+    base_link: *wh_base_link
+    indices: *wh_indices
+    lambda: 0.1
+    
+
+Wheel4:
+    type: "Cartesian"
+    name: "HR_wheel"
+    distal_link: "wheel_4"
+    base_link: *wh_base_link
+    indices: *wh_indices
+    lambda: 0.1
+
+
+Steering1:
+    type: "CentauroSteering"
+    wheel_name: "wheel_1"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering2:
+    type: "CentauroSteering"
+    wheel_name: "wheel_2"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering3:
+    type: "CentauroSteering"
+    wheel_name: "wheel_3"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering4:
+    type: "CentauroSteering"
+    wheel_name: "wheel_4"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Rolling1:
+    type: "WheelRolling"
+    wheel_name: "wheel_1"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: 1000.0
+
+Rolling2:
+    type: "WheelRolling"
+    wheel_name: "wheel_2"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: 1000.0
+
+Rolling3:
+    type: "WheelRolling"
+    wheel_name: "wheel_3"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: 1000.0
+
+Rolling4:
+    type: "WheelRolling"
+    wheel_name: "wheel_4"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: 1000.0
+
+
+LeftArm:
+    type: "Cartesian"
+    name: "left_hand"
+    distal_link: "arm1_8"
+    lambda: 0.1
+    base_link: "pelvis"
+
+RightArm:
+    type: "Cartesian"
+    name: "right_hand"
+    distal_link: "arm2_8"
+    lambda: 0.1
+    base_link: "pelvis"
+    
+Postural:
+    type: "Postural"
+    lambda: 0.01
+    weight:
+        VIRTUALJOINT_1: 0.0
+        VIRTUALJOINT_2: 0.0
+        VIRTUALJOINT_3: 0.0
+        VIRTUALJOINT_4: 0.0
+        VIRTUALJOINT_5: 0.0
+        VIRTUALJOINT_6: 0.0
+
+
+
+JointLimits:
+    type: "JointLimits"
+
+
+VelocityLimits:
+    type: "VelocityLimits"
