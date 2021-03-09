@@ -110,7 +110,7 @@ class Walking:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e1 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
+            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
                   1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
                   1e-3 * cs.sumsqr(f_k[1::3])
 
@@ -495,7 +495,7 @@ class Walking:
         # conditions, second point of swing phase
         cond2_x = [sw_x[1], vel_x, 0]
         cond2_y = [sw_y[1], vel_y, 0]
-        cond2_z = [sw_z[1], 0, -0.2]
+        cond2_z = [sw_z[1], 0, -0.0]
 
         # conditions, third point of swing phase
         cond3_x = [sw_x[2], 0, 0]
