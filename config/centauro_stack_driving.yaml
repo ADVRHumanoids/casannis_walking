@@ -1,10 +1,12 @@
 solver_options:
-    regularization: 1e-3
+    regularization: 0
     back_end: "qpoases"
+    front_end: "nhqp"
+    nhqp_min_sv_ratio: 0.05
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Waist", "Steering1"]
-    - ["LeftArm", "RightArm", "Rolling1"]
+    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Waist", "Steering1", "Steering2", "Steering3", "Steering4"]
+    - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4"]
     - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
@@ -24,6 +26,7 @@ ComXY:
 Waist:
     type: Cartesian
     distal_link: pelvis
+    base_link: world
     lambda: 0.1
     weight: 10
 
@@ -34,7 +37,7 @@ Wheel1:
     base_link: *wh_base_link
     indices: *wh_indices
     lambda: 0.1
-    
+
 Wheel2:
     type: "Cartesian"
     name: "FR_wheel"
@@ -42,7 +45,7 @@ Wheel2:
     base_link: *wh_base_link
     indices: *wh_indices
     lambda: 0.1
-    
+
 
 Wheel3:
     type: "Cartesian"
@@ -51,7 +54,7 @@ Wheel3:
     base_link: *wh_base_link
     indices: *wh_indices
     lambda: 0.1
-    
+
 
 Wheel4:
     type: "Cartesian"
@@ -113,7 +116,6 @@ Rolling4:
     lib_name: "libcentauro_cartesio_addon.so"
     wheel_radius: 0.078
     weight: 1000.0
-    
 
 LeftArm:
     type: "Cartesian"
@@ -128,7 +130,7 @@ RightArm:
     distal_link: "arm2_8"
     lambda: 0.1
     base_link: "pelvis"
-    
+
 Postural:
     type: "Postural"
     lambda: 0.01
@@ -139,8 +141,6 @@ Postural:
         VIRTUALJOINT_4: 0.0
         VIRTUALJOINT_5: 0.0
         VIRTUALJOINT_6: 0.0
-
-
 
 JointLimits:
     type: "JointLimits"
