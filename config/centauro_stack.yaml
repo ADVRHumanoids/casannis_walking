@@ -3,9 +3,9 @@ solver_options:
     back_end: "qpoases"
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY", "PelvisRPY"]
+    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY"]
     - ["LeftArm", "RightArm"]
-    - ["Postural"]
+    - ["Postural", "PelvisRPY"]
 
 constraints: ["JointLimits", "VelocityLimits"]
 
@@ -22,34 +22,29 @@ ComXY:
     indices: [0, 1, 2]
     weight: 10
 
-
 Wheel1:
     type: "Cartesian"
     name: "FL_wheel"
     distal_link: "wheel_1"
     lambda: 0.1
-    
 
 Wheel2:
     type: "Cartesian"
     name: "FR_wheel"
     distal_link: "wheel_2"
     lambda: 0.1
-    
 
 Wheel3:
     type: "Cartesian"
     name: "HL_wheel"
     distal_link: "wheel_3"
     lambda: 0.1
-    
 
 Wheel4:
     type: "Cartesian"
     name: "HR_wheel"
     distal_link: "wheel_4"
     lambda: 0.1
-    
 
 LeftArm:
     type: "Cartesian"
@@ -76,11 +71,8 @@ Postural:
         VIRTUALJOINT_5: 0.0
         VIRTUALJOINT_6: 0.0
 
-
-
 JointLimits:
     type: "JointLimits"
-
 
 VelocityLimits:
     type: "VelocityLimits"
