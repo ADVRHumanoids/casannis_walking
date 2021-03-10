@@ -1,0 +1,4352 @@
+<sdf version='1.6'>
+  <world name='default'>
+    <plugin name='xbot2_clock' filename='libxbot2_gz_clock.so'/>
+    <gravity>0 0 -9.81</gravity>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='unit_box'>
+      <pose frame=''>2 -0.5 0.1 0 -0 0</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1000</mass>
+          <inertia>
+            <ixx>100</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>100</iyy>
+            <iyz>0</iyz>
+            <izz>166</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>2 1 0.2</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>2 1 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>1</kinematic>
+      </link>
+    </model>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose frame=''>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>3.88665 -9.99296 3.31445 0 0.015643 1.94821</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    <physics name='update_rate' default='0' type='ode'>
+      <real_time_update_rate>4000</real_time_update_rate>
+      <max_step_size>0.00025</max_step_size>
+      <max_contacts>5</max_contacts>
+      <bullet>
+        <solver>
+          <iters>100</iters>
+          <sor>1.55</sor>
+          <type>sequential_impulse</type>
+        </solver>
+        <constraints>
+          <contact_surface_layer>0.2</contact_surface_layer>
+          <cfm>0.005</cfm>
+          <erp>0.2</erp>
+          <split_impulse>1</split_impulse>
+          <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+        </constraints>
+      </bullet>
+      <ode>
+        <solver>
+          <iters>50</iters>
+          <sor>1.2</sor>
+          <type>quick</type>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <contact_surface_layer>0.0002</contact_surface_layer>
+          <contact_max_correcting_vel>500</contact_max_correcting_vel>
+          <cfm>1e-06</cfm>
+          <erp>0.3</erp>
+        </constraints>
+      </ode>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <audio>
+      <device>default</device>
+    </audio>
+    <wind/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <model name='centauro'>
+      <link name='pelvis'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.001389 -0.001599 0.063101 0 -0 0</pose>
+          <mass>16.0976</mass>
+          <inertia>
+            <ixx>0.239126</ixx>
+            <ixy>-0.00505413</ixy>
+            <ixz>-0.0197461</ixz>
+            <iyy>0.714301</iyy>
+            <iyz>0.00021312</iyz>
+            <izz>0.818704</izz>
+          </inertia>
+        </inertial>
+        <collision name='pelvis_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/pelvis.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='pelvis_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/pelvis.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <sensor name='imu_link' type='imu'>
+          <always_on>1</always_on>
+          <update_rate>500</update_rate>
+          <visualize>1</visualize>
+          <topic>__default_topic__</topic>
+          <imu>
+            <angular_velocity/>
+            <linear_acceleration/>
+          </imu>
+          <pose frame=''>0.248316 0 0.015 0 -0 0</pose>
+        </sensor>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='hip1_1'>
+        <pose frame=''>0.25 0.125 -0.0566 -3.14159 -0 0.461416</pose>
+        <inertial>
+          <pose frame=''>0.010214 -0.018348 0.038091 0 -0 0</pose>
+          <mass>1.91944</mass>
+          <inertia>
+            <ixx>0.00474396</ixx>
+            <ixy>0.000574705</ixy>
+            <ixz>-0.000378414</ixz>
+            <iyy>0.00405519</iyy>
+            <iyz>0.000740751</iyz>
+            <izz>0.00341462</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip1_1_collision'>
+          <pose frame=''>0 0 0 0 -0 -2.21876</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip1_1_visual'>
+          <pose frame=''>0 0 0 0 -0 -2.21876</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_yaw_1' type='revolute'>
+        <child>hip1_1</child>
+        <parent>pelvis</parent>
+        <axis>
+          <xyz>-0 0 -1</xyz>
+          <limit>
+            <lower>-2.03</lower>
+            <upper>2.51</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip2_1'>
+        <pose frame=''>0.25 0.125 -0.1191 -1.5708 0 0</pose>
+        <inertial>
+          <pose frame=''>2.6e-05 0.181027 0.08567 0 -0 0</pose>
+          <mass>2.72645</mass>
+          <inertia>
+            <ixx>0.0485187</ixx>
+            <ixy>-4.11894e-05</ixy>
+            <ixz>-1.68778e-05</ixz>
+            <iyy>0.00424205</iyy>
+            <iyz>0.00322432</iyz>
+            <izz>0.0482558</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip2_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip2_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_pitch_1' type='revolute'>
+        <child>hip2_1</child>
+        <parent>hip1_1</parent>
+        <axis>
+          <xyz>0 1 -0</xyz>
+          <limit>
+            <lower>-2.0226</lower>
+            <upper>2.02748</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='knee_1'>
+        <pose frame=''>0.25 0.1214 -0.4191 -1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.108817 0.000109 -0.022639 0 -0 0</pose>
+          <mass>1.93568</mass>
+          <inertia>
+            <ixx>0.00305342</ixx>
+            <ixy>-4.22079e-05</ixy>
+            <ixz>0.00136793</ixz>
+            <iyy>0.0196033</iyy>
+            <iyz>6.9941e-06</iyz>
+            <izz>0.0198498</izz>
+          </inertia>
+        </inertial>
+        <collision name='knee_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='knee_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='knee_pitch_1' type='revolute'>
+        <child>knee_1</child>
+        <parent>hip2_1</parent>
+        <axis>
+          <xyz>-0 -1 0</xyz>
+          <limit>
+            <lower>-2.4056</lower>
+            <upper>2.3994</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle1_1'>
+        <pose frame=''>0.25 0.22155 -0.6191 1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.032137 9.7e-05 -0.004422 0 -0 0</pose>
+          <mass>1.23807</mass>
+          <inertia>
+            <ixx>0.00156105</ixx>
+            <ixy>3.30597e-05</ixy>
+            <ixz>-0.000131417</ixz>
+            <iyy>0.00374232</iyy>
+            <iyz>-2.12589e-05</iyz>
+            <izz>0.00383124</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle1_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle1_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_pitch_1' type='revolute'>
+        <child>ankle1_1</child>
+        <parent>knee_1</parent>
+        <axis>
+          <xyz>0 1 -0</xyz>
+          <limit>
+            <lower>-2.4056</lower>
+            <upper>2.3184</upper>
+            <effort>147</effort>
+            <velocity>8.1</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle2_1'>
+        <pose frame=''>0.25 0.22155 -0.6191 3.14159 -0 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.000444 0.000439 0.193921 0 -0 0</pose>
+          <mass>1.15659</mass>
+          <inertia>
+            <ixx>0.00490195</ixx>
+            <ixy>4.3032e-06</ixy>
+            <ixz>3.46491e-05</ixz>
+            <iyy>0.00387242</iyy>
+            <iyz>1.7099e-05</iyz>
+            <izz>0.00217832</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle2_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle2_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_yaw_1' type='revolute'>
+        <child>ankle2_1</child>
+        <parent>ankle1_1</parent>
+        <axis>
+          <xyz>0 0 -1</xyz>
+          <limit>
+            <lower>-2.5626</lower>
+            <upper>2.5384</upper>
+            <effort>35</effort>
+            <velocity>20</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='wheel_1'>
+        <pose frame=''>0.25 0.2224 -0.85645 -1.5708 -0 -0</pose>
+        <inertial>
+          <pose frame=''>0 0 0.002427 0 -0 0</pose>
+          <mass>1.7289</mass>
+          <inertia>
+            <ixx>0.00468643</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00467135</iyy>
+            <iyz>0</iyz>
+            <izz>0.0053126</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.078</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.5</mu>
+                <mu2>0.5</mu2>
+              </ode>
+              <bullet>
+                <friction>0.5</friction>
+                <friction2>0.5</friction2>
+              </bullet>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode>
+                <kp>2.1e+06</kp>
+                <kd>1</kd>
+                <max_vel>100</max_vel>
+              </ode>
+              <bullet>
+                <soft_cfm>0.007</soft_cfm>
+                <soft_erp>0.25</soft_erp>
+                <kp>1e+06</kp>
+                <kd>5</kd>
+                <split_impulse>1</split_impulse>
+                <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              </bullet>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='wheel_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_wheel_1' type='revolute'>
+        <child>wheel_1</child>
+        <parent>ankle2_1</parent>
+        <axis>
+          <xyz>0 1 -0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip1_2'>
+        <pose frame=''>0.25 -0.125 -0.0566 -3.14159 -0 -0.461416</pose>
+        <inertial>
+          <pose frame=''>0.010214 0.018348 0.038091 0 -0 0</pose>
+          <mass>1.91944</mass>
+          <inertia>
+            <ixx>0.00474396</ixx>
+            <ixy>-0.000574705</ixy>
+            <ixz>-0.000378414</ixz>
+            <iyy>0.00405519</iyy>
+            <iyz>-0.000740751</iyz>
+            <izz>0.00341462</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip1_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip1_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_yaw_2' type='revolute'>
+        <child>hip1_2</child>
+        <parent>pelvis</parent>
+        <axis>
+          <xyz>0 0 -1</xyz>
+          <limit>
+            <lower>-2.51</lower>
+            <upper>2.03</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip2_2'>
+        <pose frame=''>0.25 -0.125 -0.1191 -1.5708 -0 -3.14159</pose>
+        <inertial>
+          <pose frame=''>2.6e-05 0.181027 0.08567 0 -0 0</pose>
+          <mass>2.72645</mass>
+          <inertia>
+            <ixx>0.0485187</ixx>
+            <ixy>-4.11894e-05</ixy>
+            <ixz>-1.68778e-05</ixz>
+            <iyy>0.00424205</iyy>
+            <iyz>0.00322432</iyz>
+            <izz>0.0482558</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip2_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip2_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_pitch_2' type='revolute'>
+        <child>hip2_2</child>
+        <parent>hip1_2</parent>
+        <axis>
+          <xyz>0 -1 -0</xyz>
+          <limit>
+            <lower>-2.0156</lower>
+            <upper>2.0354</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='knee_2'>
+        <pose frame=''>0.25 -0.1214 -0.4191 1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.108817 0.000109 -0.022639 0 -0 0</pose>
+          <mass>1.93568</mass>
+          <inertia>
+            <ixx>0.00305342</ixx>
+            <ixy>-4.22079e-05</ixy>
+            <ixz>0.00136793</ixz>
+            <iyy>0.0196033</iyy>
+            <iyz>6.9941e-06</iyz>
+            <izz>0.0198498</izz>
+          </inertia>
+        </inertial>
+        <collision name='knee_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='knee_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='knee_pitch_2' type='revolute'>
+        <child>knee_2</child>
+        <parent>hip2_2</parent>
+        <axis>
+          <xyz>-0 1 0</xyz>
+          <limit>
+            <lower>-2.4006</lower>
+            <upper>2.4034</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle1_2'>
+        <pose frame=''>0.25 -0.22155 -0.6191 -1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.032137 9.7e-05 -0.004422 0 -0 0</pose>
+          <mass>1.23807</mass>
+          <inertia>
+            <ixx>0.00156105</ixx>
+            <ixy>3.30597e-05</ixy>
+            <ixz>-0.000131417</ixz>
+            <iyy>0.00374232</iyy>
+            <iyz>-2.12589e-05</iyz>
+            <izz>0.00383124</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle1_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle1_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_pitch_2' type='revolute'>
+        <child>ankle1_2</child>
+        <parent>knee_2</parent>
+        <axis>
+          <xyz>0 -1 -0</xyz>
+          <limit>
+            <lower>-2.3266</lower>
+            <upper>2.3914</upper>
+            <effort>147</effort>
+            <velocity>8.1</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle2_2'>
+        <pose frame=''>0.25 -0.22155 -0.6191 -3.14159 0 0</pose>
+        <inertial>
+          <pose frame=''>0.000444 0.000439 0.193921 0 -0 0</pose>
+          <mass>1.15659</mass>
+          <inertia>
+            <ixx>0.00490195</ixx>
+            <ixy>4.3032e-06</ixy>
+            <ixz>3.46491e-05</ixz>
+            <iyy>0.00387242</iyy>
+            <iyz>1.7099e-05</iyz>
+            <izz>0.00217832</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle2_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle2_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_yaw_2' type='revolute'>
+        <child>ankle2_2</child>
+        <parent>ankle1_2</parent>
+        <axis>
+          <xyz>-0 0 -1</xyz>
+          <limit>
+            <lower>-2.5546</lower>
+            <upper>2.5484</upper>
+            <effort>35</effort>
+            <velocity>20</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='wheel_2'>
+        <pose frame=''>0.25 -0.2224 -0.85645 -1.5708 -0 -3.14159</pose>
+        <inertial>
+          <pose frame=''>0 0 0.002427 0 -0 0</pose>
+          <mass>1.7289</mass>
+          <inertia>
+            <ixx>0.00468643</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00467135</iyy>
+            <iyz>0</iyz>
+            <izz>0.0053126</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.078</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.5</mu>
+                <mu2>0.5</mu2>
+              </ode>
+              <bullet>
+                <friction>0.5</friction>
+                <friction2>0.5</friction2>
+              </bullet>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode>
+                <kp>2.1e+06</kp>
+                <kd>1</kd>
+                <max_vel>100</max_vel>
+              </ode>
+              <bullet>
+                <soft_cfm>0.007</soft_cfm>
+                <soft_erp>0.25</soft_erp>
+                <kp>1e+06</kp>
+                <kd>5</kd>
+                <split_impulse>1</split_impulse>
+                <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              </bullet>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='wheel_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_wheel_2' type='revolute'>
+        <child>wheel_2</child>
+        <parent>ankle2_2</parent>
+        <axis>
+          <xyz>0 -1 -0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip1_3'>
+        <pose frame=''>-0.25 0.125 -0.0566 -3.14159 -0 2.68018</pose>
+        <inertial>
+          <pose frame=''>0.010214 0.018348 0.038091 0 -0 0</pose>
+          <mass>1.91944</mass>
+          <inertia>
+            <ixx>0.00474396</ixx>
+            <ixy>-0.000574705</ixy>
+            <ixz>-0.000378414</ixz>
+            <iyy>0.00405519</iyy>
+            <iyz>-0.000740751</iyz>
+            <izz>0.00341462</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip1_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip1_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_yaw_3' type='revolute'>
+        <child>hip1_3</child>
+        <parent>pelvis</parent>
+        <axis>
+          <xyz>-0 -0 -1</xyz>
+          <limit>
+            <lower>-2.51</lower>
+            <upper>2.03</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip2_3'>
+        <pose frame=''>-0.25 0.125 -0.1191 -1.5708 0 0</pose>
+        <inertial>
+          <pose frame=''>2.6e-05 0.181027 0.08567 0 -0 0</pose>
+          <mass>2.72645</mass>
+          <inertia>
+            <ixx>0.0485187</ixx>
+            <ixy>-4.11894e-05</ixy>
+            <ixz>-1.68778e-05</ixz>
+            <iyy>0.00424205</iyy>
+            <iyz>0.00322432</iyz>
+            <izz>0.0482558</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip2_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip2_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_pitch_3' type='revolute'>
+        <child>hip2_3</child>
+        <parent>hip1_3</parent>
+        <axis>
+          <xyz>-0 1 -0</xyz>
+          <limit>
+            <lower>-2.0126</lower>
+            <upper>2.0384</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='knee_3'>
+        <pose frame=''>-0.25 0.1214 -0.4191 -1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.108817 0.000109 -0.022639 0 -0 0</pose>
+          <mass>1.93568</mass>
+          <inertia>
+            <ixx>0.00305342</ixx>
+            <ixy>-4.22079e-05</ixy>
+            <ixz>0.00136793</ixz>
+            <iyy>0.0196033</iyy>
+            <iyz>6.9941e-06</iyz>
+            <izz>0.0198498</izz>
+          </inertia>
+        </inertial>
+        <collision name='knee_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='knee_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='knee_pitch_3' type='revolute'>
+        <child>knee_3</child>
+        <parent>hip2_3</parent>
+        <axis>
+          <xyz>-0 -1 0</xyz>
+          <limit>
+            <lower>-2.4056</lower>
+            <upper>2.4064</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle1_3'>
+        <pose frame=''>-0.25 0.22155 -0.6191 1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.032137 9.7e-05 -0.004422 0 -0 0</pose>
+          <mass>1.23807</mass>
+          <inertia>
+            <ixx>0.00156105</ixx>
+            <ixy>3.30597e-05</ixy>
+            <ixz>-0.000131417</ixz>
+            <iyy>0.00374232</iyy>
+            <iyz>-2.12589e-05</iyz>
+            <izz>0.00383124</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle1_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle1_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_pitch_3' type='revolute'>
+        <child>ankle1_3</child>
+        <parent>knee_3</parent>
+        <axis>
+          <xyz>0 1 -0</xyz>
+          <limit>
+            <lower>-2.4696</lower>
+            <upper>2.4464</upper>
+            <effort>147</effort>
+            <velocity>8.1</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle2_3'>
+        <pose frame=''>-0.25 0.22155 -0.6191 -3.14159 -0 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.000444 0.000439 0.193921 0 -0 0</pose>
+          <mass>1.15659</mass>
+          <inertia>
+            <ixx>0.00490195</ixx>
+            <ixy>4.3032e-06</ixy>
+            <ixz>3.46491e-05</ixz>
+            <iyy>0.00387242</iyy>
+            <iyz>1.7099e-05</iyz>
+            <izz>0.00217832</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle2_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle2_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_yaw_3' type='revolute'>
+        <child>ankle2_3</child>
+        <parent>ankle1_3</parent>
+        <axis>
+          <xyz>0 -0 -1</xyz>
+          <limit>
+            <lower>-2.5606</lower>
+            <upper>2.5454</upper>
+            <effort>35</effort>
+            <velocity>20</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='wheel_3'>
+        <pose frame=''>-0.25 0.2224 -0.85645 -1.5708 -0 -0</pose>
+        <inertial>
+          <pose frame=''>0 0 0.002427 0 -0 0</pose>
+          <mass>1.7289</mass>
+          <inertia>
+            <ixx>0.00468643</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00467135</iyy>
+            <iyz>0</iyz>
+            <izz>0.0053126</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.078</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.5</mu>
+                <mu2>0.5</mu2>
+              </ode>
+              <bullet>
+                <friction>0.5</friction>
+                <friction2>0.5</friction2>
+              </bullet>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode>
+                <kp>2.1e+06</kp>
+                <kd>1</kd>
+                <max_vel>100</max_vel>
+              </ode>
+              <bullet>
+                <soft_cfm>0.007</soft_cfm>
+                <soft_erp>0.25</soft_erp>
+                <kp>1e+06</kp>
+                <kd>5</kd>
+                <split_impulse>1</split_impulse>
+                <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              </bullet>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='wheel_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_wheel_3' type='revolute'>
+        <child>wheel_3</child>
+        <parent>ankle2_3</parent>
+        <axis>
+          <xyz>0 1 -0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip1_4'>
+        <pose frame=''>-0.25 -0.125 -0.0566 -3.14159 -0 -2.68018</pose>
+        <inertial>
+          <pose frame=''>0.010214 -0.018348 0.038091 0 -0 0</pose>
+          <mass>1.91944</mass>
+          <inertia>
+            <ixx>0.00474396</ixx>
+            <ixy>0.000574705</ixy>
+            <ixz>-0.000378414</ixz>
+            <iyy>0.00405519</iyy>
+            <iyz>0.000740751</iyz>
+            <izz>0.00341462</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip1_4_collision'>
+          <pose frame=''>0 0 0 0 -0 -2.21876</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip1_4_visual'>
+          <pose frame=''>0 0 0 0 -0 -2.21876</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_yaw_4' type='revolute'>
+        <child>hip1_4</child>
+        <parent>pelvis</parent>
+        <axis>
+          <xyz>0 -0 -1</xyz>
+          <limit>
+            <lower>-2.03</lower>
+            <upper>2.51</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='hip2_4'>
+        <pose frame=''>-0.25 -0.125 -0.1191 -1.5708 -0 -3.14159</pose>
+        <inertial>
+          <pose frame=''>2.6e-05 0.181027 0.08567 0 -0 0</pose>
+          <mass>2.72645</mass>
+          <inertia>
+            <ixx>0.0485187</ixx>
+            <ixy>-4.11894e-05</ixy>
+            <ixz>-1.68778e-05</ixz>
+            <iyy>0.00424205</iyy>
+            <iyz>0.00322432</iyz>
+            <izz>0.0482558</izz>
+          </inertia>
+        </inertial>
+        <collision name='hip2_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='hip2_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/hip-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='hip_pitch_4' type='revolute'>
+        <child>hip2_4</child>
+        <parent>hip1_4</parent>
+        <axis>
+          <xyz>0 -1 -0</xyz>
+          <limit>
+            <lower>-2.0326</lower>
+            <upper>2.0524</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='knee_4'>
+        <pose frame=''>-0.25 -0.1214 -0.4191 1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.108817 0.000109 -0.022639 0 -0 0</pose>
+          <mass>1.93568</mass>
+          <inertia>
+            <ixx>0.00305342</ixx>
+            <ixy>-4.22079e-05</ixy>
+            <ixz>0.00136793</ixz>
+            <iyy>0.0196033</iyy>
+            <iyz>6.9941e-06</iyz>
+            <izz>0.0198498</izz>
+          </inertia>
+        </inertial>
+        <collision name='knee_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='knee_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/knee.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='knee_pitch_4' type='revolute'>
+        <child>knee_4</child>
+        <parent>hip2_4</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-2.4176</lower>
+            <upper>2.3884</upper>
+            <effort>304</effort>
+            <velocity>8.8</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle1_4'>
+        <pose frame=''>-0.25 -0.22155 -0.6191 -1.57079 1.57079 3.14159</pose>
+        <inertial>
+          <pose frame=''>0.032137 9.7e-05 -0.004422 0 -0 0</pose>
+          <mass>1.23807</mass>
+          <inertia>
+            <ixx>0.00156105</ixx>
+            <ixy>3.30597e-05</ixy>
+            <ixz>-0.000131417</ixz>
+            <iyy>0.00374232</iyy>
+            <iyz>-2.12589e-05</iyz>
+            <izz>0.00383124</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle1_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle1_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_pitch_4' type='revolute'>
+        <child>ankle1_4</child>
+        <parent>knee_4</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>-2.3426</lower>
+            <upper>2.3934</upper>
+            <effort>147</effort>
+            <velocity>8.1</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='ankle2_4'>
+        <pose frame=''>-0.25 -0.22155 -0.6191 3.14159 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.000444 0.000439 0.193921 0 -0 0</pose>
+          <mass>1.15659</mass>
+          <inertia>
+            <ixx>0.00490195</ixx>
+            <ixy>4.3032e-06</ixy>
+            <ixz>3.46491e-05</ixz>
+            <iyy>0.00387242</iyy>
+            <iyz>1.7099e-05</iyz>
+            <izz>0.00217832</izz>
+          </inertia>
+        </inertial>
+        <collision name='ankle2_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='ankle2_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ankle-yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='ankle_yaw_4' type='revolute'>
+        <child>ankle2_4</child>
+        <parent>ankle1_4</parent>
+        <axis>
+          <xyz>-0 -0 -1</xyz>
+          <limit>
+            <lower>-2.6046</lower>
+            <upper>2.5514</upper>
+            <effort>35</effort>
+            <velocity>20</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='wheel_4'>
+        <pose frame=''>-0.25 -0.2224 -0.85645 -1.5708 -0 3.14159</pose>
+        <inertial>
+          <pose frame=''>0 0 0.002427 0 -0 0</pose>
+          <mass>1.7289</mass>
+          <inertia>
+            <ixx>0.00468643</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00467135</iyy>
+            <iyz>0</iyz>
+            <izz>0.0053126</izz>
+          </inertia>
+        </inertial>
+        <collision name='wheel_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <cylinder>
+              <length>0.06</length>
+              <radius>0.078</radius>
+            </cylinder>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.5</mu>
+                <mu2>0.5</mu2>
+              </ode>
+              <bullet>
+                <friction>0.5</friction>
+                <friction2>0.5</friction2>
+              </bullet>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode>
+                <kp>2.1e+06</kp>
+                <kd>1</kd>
+                <max_vel>100</max_vel>
+              </ode>
+              <bullet>
+                <soft_cfm>0.007</soft_cfm>
+                <soft_erp>0.25</soft_erp>
+                <kp>1e+06</kp>
+                <kd>5</kd>
+                <split_impulse>1</split_impulse>
+                <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              </bullet>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='wheel_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/wheel.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_wheel_4' type='revolute'>
+        <child>wheel_4</child>
+        <parent>ankle2_4</parent>
+        <axis>
+          <xyz>-0 -1 -0</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='torso_2'>
+        <pose frame=''>0.2 0 0.256 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>-0.019498 0.004532 0.137683 0 -0 0</pose>
+          <mass>11.4927</mass>
+          <inertia>
+            <ixx>0.0636434</ixx>
+            <ixy>8.939e-05</ixy>
+            <ixz>-0.00086873</ixz>
+            <iyy>0.0268023</iyy>
+            <iyz>-4.657e-05</iyz>
+            <izz>0.0474301</izz>
+          </inertia>
+        </inertial>
+        <collision name='torso_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/link1.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='torso_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/link1.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='torso_yaw' type='revolute'>
+        <child>torso_2</child>
+        <parent>pelvis</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-2.618</lower>
+            <upper>2.618</upper>
+            <effort>147</effort>
+            <velocity>5.7</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_1'>
+        <pose frame=''>0.245748 0.169137 0.372626 0.174533 -0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.007446 0.034108 0.00011 0 -0 0</pose>
+          <mass>1.96287</mass>
+          <inertia>
+            <ixx>0.00535477</ixx>
+            <ixy>0.000364289</ixy>
+            <ixz>1.50896e-05</ixz>
+            <iyy>0.00339233</iyy>
+            <iyz>5.56923e-05</iyz>
+            <izz>0.00689214</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_1' type='revolute'>
+        <child>arm1_1</child>
+        <parent>torso_2</parent>
+        <axis>
+          <xyz>0.492404 0.852869 0.173648</xyz>
+          <limit>
+            <lower>-3.312</lower>
+            <upper>1.615</upper>
+            <effort>147</effort>
+            <velocity>3.86</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_2'>
+        <pose frame=''>0.198204 0.26709 0.383392 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>0.058142 5.7e-05 -0.077478 0 -0 0</pose>
+          <mass>1.85958</mass>
+          <inertia>
+            <ixx>0.0137766</ixx>
+            <ixy>3.77887e-05</ixy>
+            <ixz>0.00376902</ixz>
+            <iyy>0.0156775</iyy>
+            <iyz>-9.48935e-06</iyz>
+            <izz>0.00463177</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderRoll.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderRoll.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_2' type='revolute'>
+        <child>arm1_2</child>
+        <parent>arm1_1</parent>
+        <axis>
+          <xyz>0.866025 -0.5 -0</xyz>
+          <limit>
+            <lower>0.02</lower>
+            <upper>3.431</upper>
+            <effort>147</effort>
+            <velocity>3.86</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_3'>
+        <pose frame=''>0.276277 0.222015 0.165242 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>0.014625 0.000817 -0.028334 0 -0 0</pose>
+          <mass>1.66781</mass>
+          <inertia>
+            <ixx>0.00644804</ixx>
+            <ixy>-0.000156391</ixy>
+            <ixz>0.00122054</ixz>
+            <iyy>0.00733721</iyy>
+            <iyz>8.99415e-05</iyz>
+            <izz>0.00367384</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_3' type='revolute'>
+        <child>arm1_3</child>
+        <parent>arm1_2</parent>
+        <axis>
+          <xyz>-0 -0 1</xyz>
+          <limit>
+            <lower>-2.552</lower>
+            <upper>2.566</upper>
+            <effort>147</effort>
+            <velocity>6.06</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_4'>
+        <pose frame=''>0.342823 0.247276 0.091242 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.007683 -0.040302 -0.043493 0 -0 0</pose>
+          <mass>1.31573</mass>
+          <inertia>
+            <ixx>0.00433039</ixx>
+            <ixy>-0.000117374</ixy>
+            <ixz>-0.000419232</ixz>
+            <iyy>0.00385399</iyy>
+            <iyz>-0.00079573</iyz>
+            <izz>0.00175947</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/Elbow.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/Elbow.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_4' type='revolute'>
+        <child>arm1_4</child>
+        <parent>arm1_3</parent>
+        <axis>
+          <xyz>0.5 0.866025 0</xyz>
+          <limit>
+            <lower>-2.465</lower>
+            <upper>0.28</upper>
+            <effort>147</effort>
+            <velocity>6.06</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_5'>
+        <pose frame=''>0.302257 0.207015 -0.003758 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.000111 0.011591 -0.07816 0 -0 0</pose>
+          <mass>1.49085</mass>
+          <inertia>
+            <ixx>0.00856921</ixx>
+            <ixy>1.78563e-05</ixy>
+            <ixz>1.93794e-05</ixz>
+            <iyy>0.00774542</iyy>
+            <iyz>-0.000328601</iyz>
+            <izz>0.00274419</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_5_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/Forearm.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_5_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/Forearm.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_5' type='revolute'>
+        <child>arm1_5</child>
+        <parent>arm1_4</parent>
+        <axis>
+          <xyz>-0 -0 1</xyz>
+          <limit>
+            <lower>-2.569</lower>
+            <upper>2.562</upper>
+            <effort>55</effort>
+            <velocity>11.72</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_6'>
+        <pose frame=''>0.326757 0.24945 -0.159758 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>-5e-06 -0.038014 -0.069927 0 -0 0</pose>
+          <mass>1.12636</mass>
+          <inertia>
+            <ixx>0.00518718</ixx>
+            <ixy>2.72444e-05</ixy>
+            <ixz>2.28335e-06</ixz>
+            <iyy>0.00480378</iyy>
+            <iyz>-0.000721657</iyz>
+            <izz>0.00127714</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_6_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ForearmPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_6_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ForearmPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_6' type='revolute'>
+        <child>arm1_6</child>
+        <parent>arm1_5</parent>
+        <axis>
+          <xyz>0.5 0.866025 0</xyz>
+          <limit>
+            <lower>-1.529</lower>
+            <upper>1.509</upper>
+            <effort>55</effort>
+            <velocity>11.72</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm1_7'>
+        <pose frame=''>0.302257 0.207015 -0.333758 0 0 -0.523599</pose>
+        <inertial>
+          <pose frame=''>9e-06 0.000541 0.01433 0 -0 0</pose>
+          <mass>1.92794</mass>
+          <inertia>
+            <ixx>0.00316217</ixx>
+            <ixy>2.68715e-06</ixy>
+            <ixz>-9.8962e-07</ixz>
+            <iyy>0.00313238</iyy>
+            <iyz>6.27992e-05</iyz>
+            <izz>0.00340412</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm1_7_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ForearmYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <collision name='arm1_7_fixed_joint_lump__ball1_collision_1'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/BallHand.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm1_7_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 -0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ForearmYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <visual name='arm1_7_fixed_joint_lump__ball1_visual_1'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/BallHand.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm1_7' type='revolute'>
+        <child>arm1_7</child>
+        <parent>arm1_6</parent>
+        <axis>
+          <xyz>-0 -0 1</xyz>
+          <limit>
+            <lower>-2.565</lower>
+            <upper>2.569</upper>
+            <effort>28.32</effort>
+            <velocity>20.35</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_1'>
+        <pose frame=''>0.245748 -0.169137 0.372626 -0.174533 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.007446 -0.034108 0.00011 0 -0 0</pose>
+          <mass>1.96287</mass>
+          <inertia>
+            <ixx>0.00535477</ixx>
+            <ixy>-0.000364289</ixy>
+            <ixz>1.50896e-05</ixz>
+            <iyy>0.00339233</iyy>
+            <iyz>-5.56923e-05</iyz>
+            <izz>0.00689214</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_1' type='revolute'>
+        <child>arm2_1</child>
+        <parent>torso_2</parent>
+        <axis>
+          <xyz>-0.492404 0.852869 -0.173648</xyz>
+          <limit>
+            <lower>-3.3458</lower>
+            <upper>1.6012</upper>
+            <effort>147</effort>
+            <velocity>3.86</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_2'>
+        <pose frame=''>0.198204 -0.26709 0.383392 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>0.058142 -5.7e-05 -0.077478 0 -0 0</pose>
+          <mass>1.85958</mass>
+          <inertia>
+            <ixx>0.0137766</ixx>
+            <ixy>-3.77887e-05</ixy>
+            <ixz>0.00376902</ixz>
+            <iyy>0.0156775</iyy>
+            <iyz>9.48935e-06</iyz>
+            <izz>0.00463177</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderRoll.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderRoll.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_2' type='revolute'>
+        <child>arm2_2</child>
+        <parent>arm2_1</parent>
+        <axis>
+          <xyz>0.866025 0.5 -0</xyz>
+          <limit>
+            <lower>-3.4258</lower>
+            <upper>-0.0138</upper>
+            <effort>147</effort>
+            <velocity>3.86</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_3'>
+        <pose frame=''>0.276277 -0.222015 0.165242 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>0.014625 -0.000817 -0.028334 0 -0 0</pose>
+          <mass>1.66781</mass>
+          <inertia>
+            <ixx>0.00644804</ixx>
+            <ixy>0.000156391</ixy>
+            <ixz>0.00122054</ixz>
+            <iyy>0.00733721</iyy>
+            <iyz>-8.99415e-05</iyz>
+            <izz>0.00367384</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ShoulderYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ShoulderYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_3' type='revolute'>
+        <child>arm2_3</child>
+        <parent>arm2_2</parent>
+        <axis>
+          <xyz>-0 0 1</xyz>
+          <limit>
+            <lower>-2.5614</lower>
+            <upper>2.5606</upper>
+            <effort>147</effort>
+            <velocity>6.06</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_4'>
+        <pose frame=''>0.342823 -0.247276 0.091242 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.007683 0.040302 -0.043493 0 -0 0</pose>
+          <mass>1.31573</mass>
+          <inertia>
+            <ixx>0.00433039</ixx>
+            <ixy>0.000117374</ixy>
+            <ixz>-0.000419232</ixz>
+            <iyy>0.00385399</iyy>
+            <iyz>0.00079573</iyz>
+            <izz>0.00175947</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_4_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/Elbow.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_4_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/Elbow.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_4' type='revolute'>
+        <child>arm2_4</child>
+        <parent>arm2_3</parent>
+        <axis>
+          <xyz>-0.5 0.866025 -0</xyz>
+          <limit>
+            <lower>-2.4794</lower>
+            <upper>0.2886</upper>
+            <effort>147</effort>
+            <velocity>6.06</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_5'>
+        <pose frame=''>0.302257 -0.207015 -0.003758 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>-0.000111 -0.011591 -0.07816 0 -0 0</pose>
+          <mass>1.49085</mass>
+          <inertia>
+            <ixx>0.00856921</ixx>
+            <ixy>-1.78563e-05</ixy>
+            <ixz>1.93794e-05</ixz>
+            <iyy>0.00774542</iyy>
+            <iyz>0.000328601</iyz>
+            <izz>0.00274419</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_5_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/Forearm.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_5_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/Forearm.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_5' type='revolute'>
+        <child>arm2_5</child>
+        <parent>arm2_4</parent>
+        <axis>
+          <xyz>-0 0 1</xyz>
+          <limit>
+            <lower>-2.5394</lower>
+            <upper>2.5546</upper>
+            <effort>55</effort>
+            <velocity>11.72</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_6'>
+        <pose frame=''>0.326757 -0.24945 -0.159758 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>-5e-06 0.038014 -0.069927 0 -0 0</pose>
+          <mass>1.12636</mass>
+          <inertia>
+            <ixx>0.00518718</ixx>
+            <ixy>-2.72444e-05</ixy>
+            <ixz>2.28335e-06</ixz>
+            <iyy>0.00480378</iyy>
+            <iyz>0.000721657</iyz>
+            <izz>0.00127714</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_6_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ForearmPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_6_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ForearmPitch.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_6' type='revolute'>
+        <child>arm2_6</child>
+        <parent>arm2_5</parent>
+        <axis>
+          <xyz>-0.5 0.866025 -0</xyz>
+          <limit>
+            <lower>-1.5154</lower>
+            <upper>1.5156</upper>
+            <effort>55</effort>
+            <velocity>11.72</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='arm2_7'>
+        <pose frame=''>0.302257 -0.207015 -0.333758 0 -0 0.523599</pose>
+        <inertial>
+          <pose frame=''>9e-06 -0.000492 0.01433 0 -0 0</pose>
+          <mass>1.92794</mass>
+          <inertia>
+            <ixx>0.00316227</ixx>
+            <ixy>-2.10165e-06</ixy>
+            <ixz>-9.8962e-07</ixz>
+            <iyy>0.00313238</iyy>
+            <iyz>-6.1733e-05</iyz>
+            <izz>0.00340422</izz>
+          </inertia>
+        </inertial>
+        <collision name='arm2_7_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/ForearmYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <collision name='arm2_7_fixed_joint_lump__ball2_collision_1'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/BallHand.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <friction>
+              <ode/>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='arm2_7_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/ForearmYaw.STL</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/LightBlueLaser</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <visual name='arm2_7_fixed_joint_lump__ball2_visual_1'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/BallHand.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/BlackTransparent</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay/>
+        <gravity>1</gravity>
+        <velocity_decay/>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='j_arm2_7' type='revolute'>
+        <child>arm2_7</child>
+        <parent>arm2_6</parent>
+        <axis>
+          <xyz>-0 0 1</xyz>
+          <limit>
+            <lower>-2.5554</lower>
+            <upper>2.5686</upper>
+            <effort>28.32</effort>
+            <velocity>20.35</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+        <physics>
+          <provide_feedback>1</provide_feedback>
+          <ode>
+            <provide_feedback>1</provide_feedback>
+            <implicit_spring_damper>1</implicit_spring_damper>
+            <cfm_damping>1</cfm_damping>
+            <limit>
+              <cfm>0</cfm>
+              <erp>0.2</erp>
+            </limit>
+          </ode>
+        </physics>
+      </joint>
+      <link name='neck_3'>
+        <pose frame=''>0.255 0 0.729262 0 0 -1.828</pose>
+        <inertial>
+          <pose frame=''>0.048467 -0.059852 -0.008531 0 -0 0</pose>
+          <mass>0.785269</mass>
+          <inertia>
+            <ixx>0.000468234</ixx>
+            <ixy>-1.05438e-05</ixy>
+            <ixz>7.24398e-05</ixz>
+            <iyy>0.000263525</iyy>
+            <iyz>1.6904e-06</iyz>
+            <izz>0.000376335</izz>
+          </inertia>
+        </inertial>
+        <collision name='neck_3_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/lidar.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='neck_3_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/lidar.stl</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='neck_velodyne' type='revolute'>
+        <child>neck_3</child>
+        <parent>torso_2</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <damping>0.2</damping>
+            <friction>10</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <link name='neck_1'>
+        <pose frame=''>0.2 0 0.5355 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.04048 0.021378 -0.014595 0 -0 0</pose>
+          <mass>0.338787</mass>
+          <inertia>
+            <ixx>0.000371857</ixx>
+            <ixy>-9.42983e-05</ixy>
+            <ixz>-2.80644e-05</ixz>
+            <iyy>0.000188688</iyy>
+            <iyz>-1.54534e-05</iyz>
+            <izz>0.000502344</izz>
+          </inertia>
+        </inertial>
+        <collision name='neck_1_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/neck_yaw.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='neck_1_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/neck_yaw.stl</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='neck_yaw' type='revolute'>
+        <child>neck_1</child>
+        <parent>torso_2</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-0.785398</lower>
+            <upper>0.785398</upper>
+            <effort>35</effort>
+            <velocity>5.7</velocity>
+          </limit>
+          <dynamics>
+            <damping>0</damping>
+            <friction>10</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <link name='neck_2'>
+        <pose frame=''>0.254 0.0596 0.523003 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.048467 -0.059852 -0.008531 0 -0 0</pose>
+          <mass>0.785269</mass>
+          <inertia>
+            <ixx>0.000468234</ixx>
+            <ixy>-1.05438e-05</ixy>
+            <ixz>7.24398e-05</ixz>
+            <iyy>0.000263525</iyy>
+            <iyz>1.6904e-06</iyz>
+            <izz>0.000376335</izz>
+          </inertia>
+        </inertial>
+        <collision name='neck_2_collision'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/simple/neck_pitch.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='neck_2_visual'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>0.001 0.001 0.001</scale>
+              <uri>/home/ioannis/centauro_ws/src/iit-centauro-ros-pkg/centauro_urdf/meshes/neck_pitch.stl</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <joint name='neck_pitch' type='revolute'>
+        <child>neck_2</child>
+        <parent>neck_1</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-0.349066</lower>
+            <upper>0.785398</upper>
+            <effort>35</effort>
+            <velocity>5.7</velocity>
+          </limit>
+          <dynamics>
+            <damping>0</damping>
+            <friction>10</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <static>0</static>
+      <plugin name='xbot2_link_state_sensor' filename='libxbot2_gz_link_state_sensor.so'>
+        <links>
+          <link name='pelvis'/>
+          <link name='wheel_1'/>
+        </links>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+      <plugin name='xbot2_ft_driver' filename='libxbot2_gz_ft_server.so'>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+      <plugin name='xbot2_imu_driver' filename='libxbot2_gz_imu_server.so'>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+      <plugin name='xbot2_joint_driver' filename='libxbot2_gz_joint_server.so'>
+        <pid>
+          <gain d='5' name='lowpwr_mot' p='50'/>
+          <gain d='5' name='small_mot' p='250'/>
+          <gain d='10' name='medium_mot' p='1000'/>
+          <gain d='10' name='big_mot' p='3000'/>
+          <gain d='10' name='wheel_mot' p='0'/>
+          <pid name='neck_yaw' profile='lowpwr_mot'/>
+          <pid name='neck_pitch' profile='lowpwr_mot'/>
+          <pid d='20' name='neck_velodyne' p='0'/>
+          <pid name='j_arm1_1' profile='medium_mot'/>
+          <pid name='j_arm1_2' profile='medium_mot'/>
+          <pid name='j_arm1_3' profile='medium_mot'/>
+          <pid name='j_arm1_4' profile='medium_mot'/>
+          <pid name='j_arm1_5' profile='small_mot'/>
+          <pid name='j_arm1_6' profile='small_mot'/>
+          <pid name='j_arm1_7' profile='small_mot'/>
+          <pid name='j_arm2_1' profile='medium_mot'/>
+          <pid name='j_arm2_2' profile='medium_mot'/>
+          <pid name='j_arm2_3' profile='medium_mot'/>
+          <pid name='j_arm2_4' profile='medium_mot'/>
+          <pid name='j_arm2_5' profile='small_mot'/>
+          <pid name='j_arm2_6' profile='small_mot'/>
+          <pid name='j_arm2_7' profile='small_mot'/>
+          <pid name='torso_yaw' profile='big_mot'/>
+          <pid name='hip_yaw_1' profile='big_mot'/>
+          <pid name='hip_pitch_1' profile='big_mot'/>
+          <pid name='knee_pitch_1' profile='big_mot'/>
+          <pid name='ankle_pitch_1' profile='medium_mot'/>
+          <pid name='ankle_yaw_1' profile='small_mot'/>
+          <pid name='j_wheel_1' profile='wheel_mot'/>
+          <pid name='hip_yaw_2' profile='big_mot'/>
+          <pid name='hip_pitch_2' profile='big_mot'/>
+          <pid name='knee_pitch_2' profile='big_mot'/>
+          <pid name='ankle_pitch_2' profile='medium_mot'/>
+          <pid name='ankle_yaw_2' profile='small_mot'/>
+          <pid name='j_wheel_2' profile='wheel_mot'/>
+          <pid name='hip_yaw_3' profile='big_mot'/>
+          <pid name='hip_pitch_3' profile='big_mot'/>
+          <pid name='knee_pitch_3' profile='big_mot'/>
+          <pid name='ankle_pitch_3' profile='medium_mot'/>
+          <pid name='ankle_yaw_3' profile='small_mot'/>
+          <pid name='j_wheel_3' profile='wheel_mot'/>
+          <pid name='hip_yaw_4' profile='big_mot'/>
+          <pid name='hip_pitch_4' profile='big_mot'/>
+          <pid name='knee_pitch_4' profile='big_mot'/>
+          <pid name='ankle_pitch_4' profile='medium_mot'/>
+          <pid name='ankle_yaw_4' profile='small_mot'/>
+          <pid name='j_wheel_4' profile='wheel_mot'/>
+        </pid>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+      <pose frame=''>0 0 1.2 0 -0 0</pose>
+    </model>
+    <state world_name='default'>
+      <sim_time>88 427000000</sim_time>
+      <real_time>602 418762451</real_time>
+      <wall_time>1615382180 287232065</wall_time>
+      <iterations>353708</iterations>
+      <model name='centauro'>
+        <pose frame=''>0.904254 -0.047709 0.732346 0.012565 -0.190494 -0.003844</pose>
+        <scale>1 1 1</scale>
+        <link name='ankle1_1'>
+          <pose frame=''>1.34496 0.357507 0.310738 -2.2984 1.36103 0.154943</pose>
+          <velocity>0.038565 -0.004688 -0.004216 0.028389 -0.017297 -0.042209</velocity>
+          <acceleration>0.295373 -0.134026 0.302967 2.70998 1.50453 0.250395</acceleration>
+          <wrench>0.365693 -0.165934 0.375094 0 -0 0</wrench>
+        </link>
+        <link name='ankle1_2'>
+          <pose frame=''>1.30615 -0.355336 0.50487 2.02746 1.30543 -0.140517</pose>
+          <velocity>0.184214 -0.101897 -0.269633 0.513992 0.960166 -0.108986</velocity>
+          <acceleration>-0.118098 -0.317469 -0.071971 0.951783 0.018642 2.9922</acceleration>
+          <wrench>-0.146214 -0.393048 -0.089105 0 -0 0</wrench>
+        </link>
+        <link name='ankle1_3'>
+          <pose frame=''>0.703642 0.335811 0.314179 0.213392 1.39357 0.718821</pose>
+          <velocity>0.035038 -0.002817 0.000609 0.01505 -0.009907 0.017474</velocity>
+          <acceleration>-0.337785 -0.111364 -0.069767 -0.617551 1.36982 -2.10957</acceleration>
+          <wrench>-0.418202 -0.137876 -0.086376 0 -0 0</wrench>
+        </link>
+        <link name='ankle1_4'>
+          <pose frame=''>0.66225 -0.383882 0.507719 0.89008 1.33055 0.295775</pose>
+          <velocity>0.049041 -0.001243 -0.107554 -0.061799 0.185335 -0.056692</velocity>
+          <acceleration>4.89326 11.0714 4.05415 -0.795615 -0.611084 -3.08991</acceleration>
+          <wrench>6.0582 13.7071 5.01932 0 -0 0</wrench>
+        </link>
+        <link name='ankle2_1'>
+          <pose frame=''>1.34496 0.357507 0.310738 3.11929 0.2086 -3.09393</pose>
+          <velocity>0.039008 -0.005056 -0.004026 0.018932 -0.018174 0.004321</velocity>
+          <acceleration>-0.042036 -0.051743 0.252322 -3.11026 0.964125 -0.121856</acceleration>
+          <wrench>-0.048619 -0.059846 0.291833 0 -0 0</wrench>
+        </link>
+        <link name='ankle2_2'>
+          <pose frame=''>1.30615 -0.355331 0.504876 3.10118 -0.262342 0.014136</pose>
+          <velocity>0.179183 -0.108601 -0.275961 -0.008306 1.02643 1.83066</velocity>
+          <acceleration>0.185325 -0.106052 0.012063 -0.690173 0.910494 -1.68133</acceleration>
+          <wrench>0.214345 -0.122659 0.013952 0 -0 0</wrench>
+        </link>
+        <link name='ankle2_3'>
+          <pose frame=''>0.703644 0.335812 0.31418 3.03119 0.138909 -3.09793</pose>
+          <velocity>0.034029 -0.003208 0.000426 0.017526 -0.009107 0.00048</velocity>
+          <acceleration>0.381584 -0.02175 0.047429 1.56371 0.203119 -1.37928</acceleration>
+          <wrench>0.441336 -0.025156 0.054856 0 -0 0</wrench>
+        </link>
+        <link name='ankle2_4'>
+          <pose frame=''>0.662253 -0.383886 0.507723 -3.08732 -0.234171 0.065728</pose>
+          <velocity>0.045924 0.002541 -0.112743 0.088732 0.246654 -0.631309</velocity>
+          <acceleration>-0.213371 3.87736 1.91128 -2.97611 -0.014257 -2.75966</acceleration>
+          <wrench>-0.246783 4.48451 2.21057 0 -0 0</wrench>
+        </link>
+        <link name='arm1_1'>
+          <pose frame=''>1.07881 0.115035 1.1475 0.300087 0.351 -0.404964</pose>
+          <velocity>0.02236 -0.00869 0.001371 0.018974 -0.043241 0.042666</velocity>
+          <acceleration>0.708829 0.003984 -0.282234 1.173 1.5219 0.360755</acceleration>
+          <wrench>1.39134 0.00782 -0.553988 0 -0 0</wrench>
+        </link>
+        <link name='arm1_2'>
+          <pose frame=''>1.03013 0.200343 1.1957 0.354719 0.351 -0.404964</pose>
+          <velocity>0.016675 -0.011595 0.000764 0.039043 -0.051758 0.034711</velocity>
+          <acceleration>0.66194 0.112292 -0.378156 2.64188 -0.380041 -1.03509</acceleration>
+          <wrench>1.23093 0.208817 -0.703211 0 -0 0</wrench>
+        </link>
+        <link name='arm1_3'>
+          <pose frame=''>1.07314 0.264344 0.97261 0.445187 0.22105 -0.087465</pose>
+          <velocity>0.026018 -0.00134 0.005448 0.029349 -0.024817 -0.018234</velocity>
+          <acceleration>0.37185 0.187758 -0.391878 2.55892 0.76438 2.05695</acceleration>
+          <wrench>0.620174 0.313145 -0.653579 0 -0 0</wrench>
+        </link>
+        <link name='arm1_4'>
+          <pose frame=''>1.11461 0.342662 0.920752 2.29808 -0.973434 -2.5847</pose>
+          <velocity>0.028702 -0.00056 0.008735 0.037003 0.014839 0.000649</velocity>
+          <acceleration>0.230563 0.154917 -0.349715 -0.893074 1.22278 1.98319</acceleration>
+          <wrench>0.303359 0.203829 -0.46013 0 -0 0</wrench>
+        </link>
+        <link name='arm1_5'>
+          <pose frame=''>1.19407 0.265353 0.920703 2.24285 -0.926498 -2.51682</pose>
+          <velocity>0.028729 -0.000504 0.004687 -0.017386 0.036554 -0.022959</velocity>
+          <acceleration>0.053984 -0.013438 -0.070888 -2.24699 -1.35995 0.721752</acceleration>
+          <wrench>0.080481 -0.020034 -0.105684 0 -0 0</wrench>
+        </link>
+        <link name='arm1_6'>
+          <pose frame=''>1.33548 0.254433 1.00207 2.62593 -0.307188 -3.13493</pose>
+          <velocity>0.031443 -0.002333 -0.000293 -0.021561 0.010966 -0.036757</velocity>
+          <acceleration>0.066697 -0.109983 0.050121 -0.230134 -0.373529 -1.90101</acceleration>
+          <wrench>0.075124 -0.12388 0.056454 0 -0 0</wrench>
+        </link>
+        <link name='arm1_7'>
+          <pose frame=''>1.3748 0.126262 1.12333 2.64143 -0.333209 3.09901</pose>
+          <velocity>0.028055 -0.001161 0.002041 -0.005366 -0.018933 0.013672</velocity>
+          <acceleration>0.223627 -0.110278 -0.001415 2.87924 0.41073 2.28645</acceleration>
+          <wrench>0.43114 -0.212609 -0.002729 0 -0 0</wrench>
+        </link>
+        <link name='arm2_1'>
+          <pose frame=''>1.07115 -0.223107 1.14194 -0.26671 0.327311 0.373841</pose>
+          <velocity>0.039468 -0.008743 -0.009312 0.012441 0.017479 0.040824</velocity>
+          <acceleration>0.197934 0.045996 0.178217 -2.95327 -1.10612 2.5172</acceleration>
+          <wrench>0.388519 0.090285 0.349817 0 -0 0</wrench>
+        </link>
+        <link name='arm2_2'>
+          <pose frame=''>1.01841 -0.30804 1.1864 -0.482615 0.327311 0.373842</pose>
+          <velocity>0.043744 -0.011028 -0.008485 0.0222 0.021767 0.036656</velocity>
+          <acceleration>0.152479 0.150789 0.395745 1.21517 -0.906609 1.12606</acceleration>
+          <wrench>0.283547 0.280405 0.735919 0 -0 0</wrench>
+        </link>
+        <link name='arm2_3'>
+          <pose frame=''>1.07702 -0.393803 0.974437 -0.534901 0.224353 0.182657</pose>
+          <velocity>0.042182 -0.003991 -0.011564 0.016239 -0.012059 -0.015375</velocity>
+          <acceleration>0.062905 0.167997 0.426565 1.3406 1.24595 0.400836</acceleration>
+          <wrench>0.104913 0.280186 0.711429 0 -0 0</wrench>
+        </link>
+        <link name='arm2_4'>
+          <pose frame=''>1.12785 -0.471022 0.929766 -2.15019 -0.934889 2.56729</pose>
+          <velocity>0.04161 -0.003974 -0.012041 0.029824 -0.053062 0.009567</velocity>
+          <acceleration>0.093959 0.139459 0.357066 -1.96513 0.071942 -2.43676</acceleration>
+          <wrench>0.123625 0.183491 0.469803 0 -0 0</wrench>
+        </link>
+        <link name='arm2_5'>
+          <pose frame=''>1.19888 -0.386332 0.92118 -2.28618 -1.05209 2.7292</pose>
+          <velocity>0.041295 -0.003017 -0.005733 -0.000635 -0.070437 -0.002485</velocity>
+          <acceleration>0.243704 0.034802 0.09054 0.413405 -0.142924 -2.45032</acceleration>
+          <wrench>0.363327 0.051885 0.134981 0 -0 0</wrench>
+        </link>
+        <link name='arm2_6'>
+          <pose frame=''>1.34404 -0.356383 0.990243 -2.72304 -0.400826 -2.94071</pose>
+          <velocity>0.036537 -0.003319 0.004475 -0.022393 -0.013725 -0.026908</velocity>
+          <acceleration>0.306756 -0.069291 -0.023311 -2.26071 0.071211 1.56539</acceleration>
+          <wrench>0.345517 -0.078046 -0.026256 0 -0 0</wrench>
+        </link>
+        <link name='arm2_7'>
+          <pose frame=''>1.37416 -0.232388 1.11829 -2.6685 -0.333014 -3.0924</pose>
+          <velocity>0.038137 -0.001254 0.002105 -0.009823 0.008364 0.01254</velocity>
+          <acceleration>0.260946 -0.12588 0.031052 3.04173 -0.898885 0.376709</acceleration>
+          <wrench>0.503088 -0.24269 0.059867 0 -0 0</wrench>
+        </link>
+        <link name='hip1_1'>
+          <pose frame=''>1.16063 0.077008 0.725652 2.95855 -0.054488 1.34713</pose>
+          <velocity>0.032402 0.008369 0.001719 0.048629 -0.024497 -0.043224</velocity>
+          <acceleration>-0.643795 -0.301144 -0.330988 -2.3688 0.849527 -2.30113</acceleration>
+          <wrench>-1.23573 -0.578028 -0.635311 0 -0 0</wrench>
+        </link>
+        <link name='hip1_2'>
+          <pose frame=''>1.16027 -0.172974 0.722568 -2.96965 -0.083444 -1.06071</pose>
+          <velocity>0.042947 0.009476 -0.00769 0.032274 0.026639 -0.174559</velocity>
+          <acceleration>-0.042074 -0.248837 -0.266171 0.148685 -1.15183 2.18762</acceleration>
+          <wrench>-0.080759 -0.477627 -0.510899 0 -0 0</wrench>
+        </link>
+        <link name='hip1_3'>
+          <pose frame=''>0.66968 0.078895 0.63098 2.95075 -0.005455 1.60502</pose>
+          <velocity>0.034295 -0.009184 -0.007527 0.039364 -0.011328 0.020949</velocity>
+          <acceleration>-0.670764 -1.52596 0.022877 1.57017 -0.049634 2.12047</acceleration>
+          <wrench>-1.28749 -2.92899 0.043911 0 -0 0</wrench>
+        </link>
+        <link name='hip1_4'>
+          <pose frame=''>0.669314 -0.171086 0.627898 -2.95441 0.037717 -1.70545</pose>
+          <velocity>0.045633 -0.009274 -0.01928 0.16762 -0.014283 -0.001986</velocity>
+          <acceleration>0.135003 -0.903602 -0.637717 0.669077 -0.470554 -0.561897</acceleration>
+          <wrench>0.25913 -1.73441 -1.22406 0 -0 0</wrench>
+        </link>
+        <link name='hip2_1'>
+          <pose frame=''>1.17247 0.077748 0.664288 -1.83408 -1.00965 1.09592</pose>
+          <velocity>0.033735 0.010612 0.001803 -0.003822 0.014734 -0.049514</velocity>
+          <acceleration>-0.184565 -0.384796 -0.097201 -0.566742 0.558753 -0.968982</acceleration>
+          <wrench>-0.503208 -1.04913 -0.265014 0 -0 0</wrench>
+        </link>
+        <link name='hip2_2'>
+          <pose frame=''>1.1721 -0.172233 0.661203 2.35831 1.40692 0.197511</pose>
+          <velocity>0.041432 0.011186 -0.006263 0.303382 0.545837 -0.11405</velocity>
+          <acceleration>-0.122821 -0.278408 -0.163572 -2.14824 0.09705 2.63377</acceleration>
+          <wrench>-0.334865 -0.759065 -0.445972 0 -0 0</wrench>
+        </link>
+        <link name='hip2_3'>
+          <pose frame=''>0.681516 0.079635 0.569616 -1.04176 1.22243 -0.566189</pose>
+          <velocity>0.035217 -0.006526 -0.007438 0.027906 -0.008336 0.016308</velocity>
+          <acceleration>-0.288577 -1.40221 0.235018 0.630604 -1.29782 -2.0234</acceleration>
+          <wrench>-0.78679 -3.82306 0.640765 0 -0 0</wrench>
+        </link>
+        <link name='hip2_4'>
+          <pose frame=''>0.68115 -0.170348 0.566544 1.14848 -1.19693 1.35844</pose>
+          <velocity>0.0466 -0.004831 -0.030932 0.240778 -0.104258 0.047432</velocity>
+          <acceleration>-0.829811 -1.06005 -2.2986 2.44883 -0.991268 -1.80805</acceleration>
+          <wrench>-2.26244 -2.89016 -6.26702 0 -0 0</wrench>
+        </link>
+        <link name='knee_1'>
+          <pose frame=''>1.35676 0.257859 0.510641 1.18401 1.19486 0.509392</pose>
+          <velocity>0.040267 0.000579 -0.00187 -0.029438 0.035094 -0.052991</velocity>
+          <acceleration>0.070774 -0.476937 0.144755 0.281462 0.906177 -0.131712</acceleration>
+          <wrench>0.136995 -0.923198 0.280199 0 -0 0</wrench>
+        </link>
+        <link name='knee_2'>
+          <pose frame=''>1.42058 -0.336715 0.696149 1.30425 1.11639 2.31778</pose>
+          <velocity>0.039562 -0.027995 -0.186203 -0.585214 -0.777596 -0.341518</velocity>
+          <acceleration>-0.138582 -0.339904 -0.11392 -2.54478 -0.379015 0.679292</acceleration>
+          <wrench>-0.268251 -0.657945 -0.220513 0 -0 0</wrench>
+        </link>
+        <link name='knee_3'>
+          <pose frame=''>0.554184 0.336293 0.480589 2.02114 1.16383 -0.650829</pose>
+          <velocity>0.031952 -0.006374 -0.002289 0.008489 -0.018276 0.015511</velocity>
+          <acceleration>-0.325854 -0.504297 0.03662 0.788378 1.12806 1.1403</acceleration>
+          <wrench>-0.630748 -0.976158 0.070884 0 -0 0</wrench>
+        </link>
+        <link name='knee_4'>
+          <pose frame=''>0.504342 -0.391416 0.66595 -1.87508 1.04746 0.6967</pose>
+          <velocity>0.045818 -0.036681 -0.108697 0.202306 -0.024564 0.015363</velocity>
+          <acceleration>2.87443 6.85228 1.62523 0.14249 -0.407059 -0.638439</acceleration>
+          <wrench>5.56397 13.2638 3.14593 0 -0 0</wrench>
+        </link>
+        <link name='neck_1'>
+          <pose frame=''>0.999223 -0.054804 1.29598 0.020096 -0.189858 -0.043668</pose>
+          <velocity>0.028005 -0.017751 -0.004763 0.033113 -0.017967 0.04992</velocity>
+          <acceleration>0.525394 0.136683 0.186154 1.32909 0.701185 -0.310577</acceleration>
+          <wrench>0.177997 0.046307 0.063067 0 -0 0</wrench>
+        </link>
+        <link name='neck_2'>
+          <pose frame=''>1.05694 0.00257 1.29508 0.020178 0.210046 -0.035668</pose>
+          <velocity>0.025801 -0.014312 -0.001072 0.033896 -0.015364 0.052202</velocity>
+          <acceleration>0.891836 0.372138 0.298913 -0.112034 0.979811 -2.35563</acceleration>
+          <wrench>0.700331 0.292229 0.234727 0 -0 0</wrench>
+        </link>
+        <link name='neck_3'>
+          <pose frame=''>1.01652 -0.058492 1.49662 0.181024 0.060954 -1.82966</pose>
+          <velocity>0.024529 -0.023422 -0.005352 0.034657 -0.018495 0.050851</velocity>
+          <acceleration>0.752947 0.379316 0.053127 -0.357259 1.1934 -0.991254</acceleration>
+          <wrench>0.591266 0.297865 0.041719 0 -0 0</wrench>
+        </link>
+        <link name='pelvis'>
+          <pose frame=''>0.904254 -0.047709 0.732346 0.012565 -0.190494 -0.003844</pose>
+          <velocity>0.037885 -0.002617 -0.007941 0.037111 -0.019235 0.043887</velocity>
+          <acceleration>-0.24355 -0.906107 -0.142825 -2.60347 0.494174 -0.447888</acceleration>
+          <wrench>-3.92056 -14.5861 -2.29914 0 -0 0</wrench>
+        </link>
+        <link name='torso_2'>
+          <pose frame=''>1.05215 -0.051495 1.02156 0.016723 -0.190178 -0.025815</pose>
+          <velocity>0.033087 -0.005794 -0.004586 0.03472 -0.019593 0.05077</velocity>
+          <acceleration>0.38961 0.033352 0.002318 2.91993 0.398654 2.18526</acceleration>
+          <wrench>4.47768 0.383307 0.026641 0 -0 0</wrench>
+        </link>
+        <link name='wheel_1'>
+          <pose frame=''>1.39375 0.365984 0.078609 1.20669 1.50949 2.83041</pose>
+          <velocity>0.043179 -0.00047 -0.002956 0.005778 0.217948 0.00947</velocity>
+          <acceleration>-0.106414 -0.035307 0.239866 -0.012609 0.590535 -1.61064</acceleration>
+          <wrench>-0.183979 -0.061042 0.414704 0 -0 0</wrench>
+        </link>
+        <link name='wheel_2'>
+          <pose frame=''>1.36779 -0.364899 0.275872 1.53174 0.041895 0.002018</pose>
+          <velocity>-0.037905 0.001832 -0.345098 -0.024323 0.301984 1.8501</velocity>
+          <acceleration>0.251067 -0.070593 0.024075 0.375635 0.255166 2.0999</acceleration>
+          <wrench>0.43407 -0.122049 0.041623 0 -0 0</wrench>
+        </link>
+        <link name='wheel_3'>
+          <pose frame=''>0.735085 0.364209 0.08064 0.857449 1.40325 2.49424</pose>
+          <velocity>0.036102 0.000865 0.001216 -0.01157 0.4604 0.051648</velocity>
+          <acceleration>0.515177 -0.005657 0.065738 -0.162067 1.20451 -2.63139</acceleration>
+          <wrench>0.890689 -0.00978 0.113655 0 -0 0</wrench>
+        </link>
+        <link name='wheel_4'>
+          <pose frame=''>0.716348 -0.368273 0.27715 -1.62379 -0.092405 -3.05837</pose>
+          <velocity>-0.001106 -0.010367 -0.129298 0.122737 0.134587 -0.636305</velocity>
+          <acceleration>-1.76829 2.09166 1.26634 1.22694 1.00457 2.05142</acceleration>
+          <wrench>-3.0572 3.61627 2.18938 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='ground_plane'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='unit_box'>
+        <pose frame=''>0.657282 -0.49391 0.1 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0.657282 -0.49391 0.1 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 -0.00981 0 -0 0</acceleration>
+          <wrench>0 0 -9.81 0 -0 0</wrench>
+        </link>
+      </model>
+      <light name='sun'>
+        <pose frame=''>0 0 10 0 -0 0</pose>
+      </light>
+    </state>
+  </world>
+</sdf>
