@@ -4,7 +4,6 @@
     <arg name="swing_id" default="[3, 4]"/>
     <arg name="target_dx" default="0.1"/>
     <arg name="target_dy" default="0.0"/>
-    <arg name="target_dz" default="0.0"/>
     <arg name="swing_t1" default="[0.0, 4.0]"/>
     <arg name="swing_t2" default="[0.0, 4.0]"/>
     <arg name="swing_t3" default="[0.0, 4.0]"/>
@@ -15,7 +14,6 @@
         <param name="sw_id" value="$(arg swing_id)"/>
         <param name="tgt_dx" value="$(arg target_dx)"/>
         <param name="tgt_dy" value="$(arg target_dy)"/>
-        <param name="tgt_dz" value="$(arg target_dz)"/>
         <param name="sw_t1" value="$(arg swing_t1)"/>
         <param name="sw_t2" value="$(arg swing_t2)"/>
         <param name="sw_t3" value="$(arg swing_t3)"/>

@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 import trj_interpolation as interpol
+from shapely.geometry import Polygon
 
 # radius of centauro wheels
 R = 0.078
@@ -50,7 +51,7 @@ def roll_feet(freq):
     # Target position of the foot wrt to the current position
     tgt_dx = rospy.get_param("~tgt_dx")  # get from command line as target_dx
     tgt_dy = rospy.get_param("~tgt_dy")
-    tgt_dz = rospy.get_param("~tgt_dz")
+    tgt_dz = 0.0
 
     # variables to loop for swing legs
     swing_tgt = []  # target positions as list
@@ -58,7 +59,6 @@ def roll_feet(freq):
     f_pub_ = []     # list of publishers for the swing foot
     f_msg = []                  # list of messages to be published for swing feet
     swing_contacts = []         # contact positions of the swing feet
-    interpl_trj = []    # interpolate the trj at a specified interpolation frequency
 
     for i in range(step_num):
         # targets
@@ -82,8 +82,21 @@ def roll_feet(freq):
 
         swing_contacts.append(contacts[swing_id[i] - 1])
 
+        total_time = [swing_t[0][0], swing_t[-1][-1]]
+        interpl_trj = []  # interpolate the trj at a specified interpolation frequency
+
+    for i in range(step_num):
         interpl_trj.append(interpol.swing_trj_triangle(sw_curr=swing_contacts[i], sw_tgt=swing_tgt[i],
-                                                       clear=0, sw_t=swing_t[i], total_t=[0.0, 12.0], resol=freq))
+                                                       clear=0, sw_t=swing_t[i], total_t=total_time,
+                                                       resol=freq))
+
+    # final polygon
+    polygon_points = [[round(x[0] + tgt_dx, 3), round(x[1] + tgt_dy, 3)] for x in contacts]
+    print(polygon_points)
+
+    polygon = Polygon(polygon_points)
+
+    print("polygon centroid is", polygon.centroid.coords[0])
 
     # All points to be published
     N_total = int((swing_t[-1][1] - swing_t[0][0]) * freq)  # total points --> total time * interpolation frequency
