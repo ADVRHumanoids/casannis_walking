@@ -15,6 +15,7 @@ PelvisRPY:
     indices: [3, 4, 5]
     name: "Pelvis"
     distal_link: "pelvis"
+    weight: 0.1
 
 ComXY:
     type: "Com"
