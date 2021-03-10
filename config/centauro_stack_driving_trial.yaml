@@ -6,8 +6,8 @@ solver_options:
 
 stack:
     - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Steering1", "Steering2", "Steering3", "Steering4"]
-    - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4"]
-    - ["Postural", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
+    - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
+    - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
 
@@ -16,6 +16,7 @@ params:
  - &wh_base_link world
  - &cont_base_link world
  - &cont_indices [3, 4]
+ - &cont_weight 1
 
 Cont1RP:
    type: "Cartesian"
@@ -24,6 +25,7 @@ Cont1RP:
    base_link: *cont_base_link
    indices: *cont_indices
    lambda: 0.1
+   weight: *cont_weight
 
 Cont2RP:
    type: "Cartesian"
@@ -32,6 +34,7 @@ Cont2RP:
    base_link: *cont_base_link
    indices: *cont_indices
    lambda: 0.1
+   weight: *cont_weight
 
 Cont3RP:
    type: "Cartesian"
@@ -40,6 +43,7 @@ Cont3RP:
    base_link: *cont_base_link
    indices: *cont_indices
    lambda: 0.1
+   weight: *cont_weight
 
 Cont4RP:
    type: "Cartesian"
@@ -48,6 +52,7 @@ Cont4RP:
    base_link: *cont_base_link
    indices: *cont_indices
    lambda: 0.1
+   weight: *cont_weight
 
 ComXY:
     type: "Com"
@@ -66,7 +71,7 @@ Waist:
 Wheel1:
     type: "Cartesian"
     name: "FL_wheel"
-    distal_link: "contact_1"
+    distal_link: "wheel_1"
     base_link: *wh_base_link
     indices: *wh_indices
     lambda: 0.1
