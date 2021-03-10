@@ -32,3 +32,5 @@ plots/step_forces.png
 plots/step_forces.png
 
 src/__pycache__/spline_optimization.cpython-36.pyc
+
+src/__pycache__/trj_interpolation.cpython-36.pyc
