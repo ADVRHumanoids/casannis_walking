@@ -111,6 +111,7 @@ def casannis(int_freq):
 
         swing_contacts.append(contacts[swing_id[i] - 1])
 
+
     # CoM trj publisher
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
