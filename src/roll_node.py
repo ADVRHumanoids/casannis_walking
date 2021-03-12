@@ -38,6 +38,10 @@ def roll_feet(freq):
     # contact points as array
     contacts = [np.array(x) for x in f_cont]
 
+    # com initial position
+    com_sub = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
+    com_init = [com_sub.pose.position.x, com_sub.pose.position.y, com_sub.pose.position.z]
+
     # Get ROS Parameters
 
     # ID of the foot to be moved, get from parameters
@@ -91,12 +95,28 @@ def roll_feet(freq):
                                                        resol=freq))
 
     # final polygon
-    polygon_points = [[round(x[0] + tgt_dx, 3), round(x[1] + tgt_dy, 3)] for x in contacts]
+    polygon_points = []
+
+    for i in range(4):
+
+        polygon_points.append([round(contacts[i][0], 3), round(contacts[i][1], 3)])
+
+        if i+1 in swing_id:
+            polygon_points[i][0] += tgt_dx
+            polygon_points[i][1] += tgt_dy
+
     print(polygon_points)
-
     polygon = Polygon(polygon_points)
-
     print("polygon centroid is", polygon.centroid.coords[0])
+    com_tgt = [polygon.centroid.coords[0][0], polygon.centroid.coords[0][1]] + [com_init[2]]
+    print("com_tgt is:", com_tgt)
+
+    interpl_trj.append(interpol.swing_trj_triangle(sw_curr=com_init, sw_tgt=com_tgt,
+                                                   clear=0, sw_t=swing_t[0], total_t=total_time,
+                                                   resol=freq))
+
+    com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
+    com_msg = PoseStamped()
 
     # All points to be published
     N_total = int((swing_t[-1][1] - swing_t[0][0]) * freq)  # total points --> total time * interpolation frequency
@@ -124,6 +144,14 @@ def roll_feet(freq):
                 # publish swing trajectory
                 f_msg[i].header.stamp = rospy.Time.now()
                 f_pub_[i].publish(f_msg[i])
+
+            com_msg.pose.position.x = interpl_trj[step_num]['x'][counter]
+            com_msg.pose.position.y = interpl_trj[step_num]['y'][counter]
+            com_msg.pose.position.z = interpl_trj[step_num]['z'][counter]
+
+            # publish swing trajectory
+            com_msg.header.stamp = rospy.Time.now()
+            com_pub_.publish(com_msg)
 
         rate.sleep()
 
