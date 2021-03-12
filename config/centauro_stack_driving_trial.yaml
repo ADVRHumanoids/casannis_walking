@@ -17,6 +17,7 @@ params:
  - &cont_base_link world
  - &cont_indices [3, 4]
  - &cont_weight 1
+ - &roll_weight 1000.0
 
 Cont1RP:
    type: "Cartesian"
@@ -65,7 +66,8 @@ Waist:
     type: Cartesian
     distal_link: pelvis
     lambda: 0.1
-    weight: 10
+    weight: 1
+    indices: [3, 4, 5]
     active: false
 
 Wheel1:
@@ -132,28 +134,28 @@ Rolling1:
     wheel_name: "wheel_1"
     lib_name: "libcentauro_cartesio_addon.so"
     wheel_radius: 0.078
-    weight: 1000.0
+    weight: *roll_weight
 
 Rolling2:
     type: "WheelRolling"
     wheel_name: "wheel_2"
     lib_name: "libcentauro_cartesio_addon.so"
     wheel_radius: 0.078
-    weight: 1000.0
+    weight: *roll_weight
 
 Rolling3:
     type: "WheelRolling"
     wheel_name: "wheel_3"
     lib_name: "libcentauro_cartesio_addon.so"
     wheel_radius: 0.078
-    weight: 1000.0
+    weight: *roll_weight
 
 Rolling4:
     type: "WheelRolling"
     wheel_name: "wheel_4"
     lib_name: "libcentauro_cartesio_addon.so"
     wheel_radius: 0.078
-    weight: 1000.0
+    weight: *roll_weight
 
 
 LeftArm:
