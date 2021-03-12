@@ -233,7 +233,7 @@ class Gait:
 
             # for all swing legs overwrite with target positions
             for i in range(len(swing_id)):
-                if k >= swing_t[i][0]/self._dt:
+                if k >= (0.5 * (swing_t[i][0] + swing_t[i][1]))/self._dt:
                     # after the swing, the swing foot is now at swing_tgt
                     p_k[3*swing_id[i]:3*(swing_id[i]+1)] = swing_tgt[i]
 

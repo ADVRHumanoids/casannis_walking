@@ -224,7 +224,7 @@ class Walking:
 
             # contact positions
             p_k = np.hstack(contacts)  # start with initial contacts (4x3)
-            if k >= swing_t[0]/self._dt:
+            if k >= 0.5 * (swing_t[0] + swing_t[1])/self._dt:
                 # after the swing, the swing foot is now at swing_tgt
                 p_k[3*swing_id:3*(swing_id+1)] = swing_tgt
 
