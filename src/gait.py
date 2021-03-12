@@ -109,7 +109,7 @@ class Gait:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e1 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
+            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
                   1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
                   1e-3 * cs.sumsqr(f_k[1::3])
 
