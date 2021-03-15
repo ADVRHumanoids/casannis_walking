@@ -1,11 +1,9 @@
 solver_options:
-    regularization: 0
-    back_end: "qpoases"
-    front_end: "nhqp"
-    nhqp_min_sv_ratio: 0.05
+    regularization: 1e-3
+    back_end: "osqp"
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Steering1", "Steering2", "Steering3", "Steering4"]
+    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXYZ", "Steering1", "Steering2", "Steering3", "Steering4"]
     - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
     - ["Postural"]
 
@@ -55,7 +53,7 @@ Cont4RP:
    lambda: 0.1
    weight: *cont_weight
 
-ComXY:
+ComXYZ:
     type: "Com"
     lambda: 0.1
     indices: [0, 1, 2]
