@@ -108,7 +108,7 @@ def roll_feet(freq):
     print(polygon_points)
     polygon = Polygon(polygon_points)
     print("polygon centroid is", polygon.centroid.coords[0])
-    com_tgt = [polygon.centroid.coords[0][0], polygon.centroid.coords[0][1]] + [com_init[2]]
+    com_tgt = [polygon.centroid.coords[0][0] + 0.02, polygon.centroid.coords[0][1]] + [com_init[2]]
     print("com_tgt is:", com_tgt)
 
     interpl_trj.append(interpol.swing_trj_triangle(sw_curr=com_init, sw_tgt=com_tgt,
