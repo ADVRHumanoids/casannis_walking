@@ -5,7 +5,7 @@ solver_options:
     nhqp_min_sv_ratio: 0.05
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXY", "Waist", "Steering1", "Steering2", "Steering3", "Steering4"]
+    - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXYZ", "Waist", "Steering1", "Steering2", "Steering3", "Steering4"]
     - ["LeftArm", "RightArm", "Rolling1", "Rolling2", "Rolling3", "Rolling4"]
     - ["Postural"]
 
@@ -16,7 +16,7 @@ params:
  - &wh_base_link pelvis
 
 
-ComXY:
+ComXYZ:
     type: "Com"
     lambda: 0.1
     indices: [0, 1, 2]

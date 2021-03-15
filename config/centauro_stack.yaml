@@ -3,7 +3,7 @@ solver_options:
     back_end: "qpoases"
 
 stack:
-    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXY"]
+    - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXYZ"]
     - ["LeftArm", "RightArm"]
     - ["Postural", "PelvisRPY"]
 
@@ -17,7 +17,7 @@ PelvisRPY:
     distal_link: "pelvis"
     weight: 0.1
 
-ComXY:
+ComXYZ:
     type: "Com"
     lambda: 0.1
     indices: [0, 1, 2]
