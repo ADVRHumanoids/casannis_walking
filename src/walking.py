@@ -108,7 +108,7 @@ class Walking:
             h_horz = x_k[0:2] - 0.25 * (p_k[0:2] + p_k[3:5] + p_k[6:8] + p_k[9:11])  # xy
 
             # vertical distance between CoM and mean of feet
-            h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
+            h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.68
 
             j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
                   1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
@@ -163,7 +163,7 @@ class Walking:
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
-    def solve(self, x0, contacts, swing_id, swing_tgt, swing_t, min_f=50):
+    def solve(self, x0, contacts, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
         """Solve the stepping problem
 
         Args:
@@ -171,6 +171,7 @@ class Walking:
             contacts ([type]): list of contact point positions
             swing_id ([type]): the index of the swing leg from 0 to 3
             swing_tgt ([type]): the target foothold for the swing leg
+            swing_clearance: clearance achieved from the highest point between initial and target position
             swing_t ([type]): pair (t_lift, t_touch) in secs
             min_f: minimum threshold for forces in z direction
         """
@@ -184,6 +185,15 @@ class Walking:
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
+
+        # time that maximum clearance occurs
+        clearance_time = 0.5 * (swing_t[0] + swing_t[1])
+
+        # swing foot position at maximum clearance
+        if contacts[swing_id][2] >= swing_tgt[2]:
+            clearance_swing_position = contacts[swing_id][0:2].tolist() + [contacts[swing_id][2] + swing_clearance]
+        else:
+            clearance_swing_position = swing_tgt[0:2].tolist() + [swing_tgt[2] + swing_clearance]
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -224,7 +234,14 @@ class Walking:
 
             # contact positions
             p_k = np.hstack(contacts)  # start with initial contacts (4x3)
-            if k >= 0.5 * (swing_t[0] + swing_t[1])/self._dt:
+
+            # time region around max clearance time
+            clearance_region = (clearance_time / self._dt - 4 <= k <= clearance_time / self._dt + 4)
+
+            if clearance_region:
+                p_k[3 * swing_id:3 * (swing_id + 1)] = clearance_swing_position
+
+            elif k > clearance_time / self._dt + 4:
                 # after the swing, the swing foot is now at swing_tgt
                 p_k[3*swing_id:3*(swing_id+1)] = swing_tgt
 
@@ -550,14 +567,15 @@ if __name__ == "__main__":
     # swing_target = np.array([-0.35, -0.35, -0.719])
     dx = 0.0
     dy = 0.0
-    dz = -0.0
+    dz = -0.1
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     # swing_time = (1.5, 3.0)
     swing_time = [4.0, 9.0]
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=100)
+    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
+                  swing_clearance=0.1, swing_t=swing_time, min_f=100)
 
     # debug
     print("X0 is:", x_init)

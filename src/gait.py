@@ -162,7 +162,7 @@ class Gait:
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
-    def solve(self, x0, contacts, swing_id, swing_tgt, swing_t, min_f=50):
+    def solve(self, x0, contacts, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
         """Solve the stepping problem
 
         Args:
@@ -170,6 +170,7 @@ class Gait:
             contacts ([type]): list of contact point positions
             swing_id ([type]): the indexes of the legs to be swinged from 0 to 3
             swing_tgt ([type]): the target footholds for the swing legs
+            swing_clearance: clearance achieved from the highest point between initial and target position
             swing_t ([type]): list of lists with swing times in secs
             min_f: minimum threshold for forces in z direction
         """
@@ -183,6 +184,23 @@ class Gait:
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
+
+        # time that maximum clearance occurs
+        clearance_time = [0.5 * (x[0] + x[1]) for x in swing_t]
+
+        # number of steps
+        step_num = len(swing_id)
+
+        # swing feet positions at maximum clearance
+        clearance_swing_position = []
+
+        for i in range(step_num):
+            if contacts[swing_id[i] - 1][2] >= swing_tgt[swing_id[i] - 1][2]:
+                clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
+                                                [contacts[swing_id[i]][2] + swing_clearance])
+            else:
+                clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
+                                                [swing_tgt[swing_id[i]][2] + swing_clearance])
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -232,8 +250,14 @@ class Gait:
             p_k = np.hstack(contacts)  # start with initial contacts (4x3)
 
             # for all swing legs overwrite with target positions
-            for i in range(len(swing_id)):
-                if k >= (0.5 * (swing_t[i][0] + swing_t[i][1]))/self._dt:
+            for i in range(step_num):
+                # time region around max clearance time
+                clearance_region = (clearance_time[i] / self._dt - 4 <= k <= clearance_time[i] / self._dt + 4)
+
+                if clearance_region:
+                    p_k[3*swing_id[i]:3*(swing_id[i]+1)] = clearance_swing_position[i]
+
+                elif k > clearance_time[i] / self._dt + 4:
                     # after the swing, the swing foot is now at swing_tgt
                     p_k[3*swing_id[i]:3*(swing_id[i]+1)] = swing_tgt[i]
 
@@ -490,7 +514,8 @@ if __name__ == "__main__":
     swing_time = [[1.0, 4.0], [5.0, 8.0]]
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target, swing_t=swing_time, min_f=100)
+    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
+                  swing_clearance=0.1, swing_t=swing_time, min_f=100)
     # debug
     print("X0 is:", x_init)
     print("contacts is:", foot_contacts)

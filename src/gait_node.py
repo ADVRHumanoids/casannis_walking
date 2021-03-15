@@ -123,7 +123,8 @@ def casannis(int_freq):
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=[x-1 for x in swing_id], swing_tgt=swing_tgt, swing_t=swing_t, min_f=100)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=[x-1 for x in swing_id],
+                     swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=100)
 
     # interpolate the trj, pass solution values and interpolation frequency
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
