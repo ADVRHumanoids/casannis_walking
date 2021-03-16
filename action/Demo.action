@@ -1,0 +1,8 @@
+# Define the goal
+bool demo_goal  # True or false
+---
+# Define the result
+bool demo_result    # True or false result for execution or not
+---
+# Define a feedback message
+std_msgs/String demo_feedback
