@@ -29,8 +29,6 @@ def casannis(int_freq):
 
     """
 
-    rospy.init_node('casannis', anonymous=True)
-
     # accept one message for com and feet initial position
     com_init = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
     fl_init = rospy.wait_for_message("/cartesian/FL_wheel/current_reference", PoseStamped, timeout=None)
@@ -65,15 +63,12 @@ def casannis(int_freq):
     id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
 
     # Target position of the foot wrt to the current position
-    tgt_dx = rospy.get_param("~tgt_dx")  # get from command line as target_dx
+    tgt_dx = rospy.get_param("~tgt_dx")
     tgt_dy = rospy.get_param("~tgt_dy")
     tgt_dz = rospy.get_param("~tgt_dz")
 
     # Clearance to be achieved, counted from the highest point
-    swing_clear = rospy.get_param("~clear")  # get from command line as target_dx
-
-    # Swing velocity
-    #swing_vel = rospy.get_param("~sw_vel")
+    swing_clear = rospy.get_param("~clear")
 
     # target position as array
     swing_tgt = np.array([contacts[swing_id - 1][0] + tgt_dx, contacts[swing_id - 1][1] + tgt_dy, contacts[swing_id - 1][2] + tgt_dz])
@@ -126,9 +121,6 @@ def casannis(int_freq):
 
     # approximate distance covered during swing
     tgt_ds = interpl['sw']['s']
-
-    # publish freq wrt the desired swing velocity - this is to publish in a different frequency which is not right
-    #freq = swing_vel * N_swing_total / tgt_ds
 
     # mean velocity of the swing foot
     mean_foot_velocity = tgt_ds / (swing_t[1] - swing_t[0])
@@ -220,6 +212,8 @@ def casannis(int_freq):
 
 
 if __name__ == '__main__':
+
+    rospy.init_node('casannis_step', anonymous=True)
 
     # desired interpolation frequency
     interpolation_freq = 300

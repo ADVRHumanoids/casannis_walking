@@ -20,8 +20,6 @@ def roll_feet(freq):
         node for rolling the feet of centauro. Compatible with a driving stack.
     '''
 
-    rospy.init_node('casannis_roller', anonymous=True)
-
     # map feet to a string for publishing to the corresponding topic
     id_name = ['FL', 'FR', 'HL', 'HR']
 
@@ -105,11 +103,10 @@ def roll_feet(freq):
             polygon_points[i][0] += tgt_dx
             polygon_points[i][1] += tgt_dy
 
-    print(polygon_points)
     polygon = Polygon(polygon_points)
-    print("polygon centroid is", polygon.centroid.coords[0])
+
     com_tgt = [polygon.centroid.coords[0][0] + 0.02, polygon.centroid.coords[0][1]] + [com_init[2]]
-    print("com_tgt is:", com_tgt)
+
 
     interpl_trj.append(interpol.swing_trj_triangle(sw_curr=com_init, sw_tgt=com_tgt,
                                                    clear=0, sw_t=swing_t[0], total_t=total_time,
@@ -157,6 +154,8 @@ def roll_feet(freq):
 
 
 if __name__ == '__main__':
+
+    rospy.init_node('casannis_roller', anonymous=True)
 
     # desired interpolation & publish frequency
     int_freq = 300

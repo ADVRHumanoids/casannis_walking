@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   centauro_contact_detection
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -63,16 +64,16 @@ add_message_files( DIRECTORY msg
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+   DIRECTORY action
+   FILES Demo.action
+ )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
     DEPENDENCIES
     std_msgs
+    actionlib_msgs
 )
 
 ################################################
@@ -107,7 +108,7 @@ generate_messages(
 catkin_package(
 #    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs centauro_contact_detection message_runtime
+    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs
 #  DEPENDS system_lib
 )
 
