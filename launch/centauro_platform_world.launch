@@ -34,7 +34,7 @@
   <!-- from where the simulation enviornment will be loaded:
        WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
   <arg name="world_name" default="$(find casannis_walking)/worlds/centauro_platform.world"/>
-  <!--arg name="world_name" default="~/Desktop/world_platform.world"/-->
+  <!--arg name="world_name" default="$(find casannis_walking)/worlds/demo_world.world"/-->
 
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->
