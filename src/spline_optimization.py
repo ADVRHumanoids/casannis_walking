@@ -136,7 +136,7 @@ class Spline_optimization_z:
 
         self._solver = cs.qpsol('solver', 'qpoases', self._qp)
 
-    def solver(self, position, ramps, obst):
+    def solver(self, waypoints_pos, midpoints_pos, ramps, obst):
 
         # waypoints
         Xl = []  # position lower bounds
@@ -159,43 +159,43 @@ class Spline_optimization_z:
 
             # variable bounds
             # trj phases
-            is_ramp = (1 <= k <= ramps)
-            is_obstacle = (1 + ramps <= k < 1 + ramps + obst)
-            is_obstacle_max = (k == int(1 + ramps + obst/2))
-            is_landing = (1 + ramps + obst <= k <= self._N - 1)
-            is_start_slow_down = (k == 1 + ramps + obst)
+            is_ramp = (0 < k < ramps)  # excluding initial
+            is_obstacle = (ramps <= k < ramps + obst)
+            is_obstacle_max = (k == int(ramps + obst / 2))
+            is_landing = (ramps + obst <= k < self._N - 1)  # excluding final
+            is_start_slow_down = (k == ramps + obst)
 
             # position bounds
-            # start, end position
-            if k == 0 or k == self._N - 1:
-                print('initial,final', k)
-                x_max = position[k]
-                x_min = position[k]
 
-            # ramp
-            elif is_ramp:
+            if k == 0 or k == self._N - 1:  # initial/target position
+                x_max = waypoints_pos[k]
+                x_min = waypoints_pos[k]
+
+            elif is_ramp:  # ramp part
                 print('ramp', k)
-                x_max = cs.inf #position[k+1]
-                x_min = position[0]
+                x_max = cs.inf
+                x_min = waypoints_pos[0]
 
-            # main obstacle - clearance
-            elif is_obstacle:
+            elif is_obstacle:  # main obstacle - clearance part
 
-                if is_obstacle_max:
+                if is_obstacle_max:  # maximum clearance
                     print('is obstacle max', k)
-                    x_max = position[k] + 0.02
-                    x_min = position[k]
+                    x_max = waypoints_pos[k]
+                    x_min = waypoints_pos[k]
 
-                else:
+                else:  # lower than maximum clearance
                     print('obstacle', k)
-                    x_max = position[k]
-                    x_min = position[k] - 0.05
+                    x_max = waypoints_pos[k]
+                    x_min = -cs.inf
 
-            elif is_landing:
+            elif is_landing:  # landing part
 
-                print('landing', k)
-                x_max = cs.inf #position[k] + 0.02
-                x_min = position[-1] #position[k+1]
+                if is_start_slow_down:  # first point
+                    x_max = waypoints_pos[k]
+                    x_min = waypoints_pos[k]
+                else:
+                    x_max = cs.inf
+                    x_min = waypoints_pos[-1]
 
             else:
                 x_max = cs.inf
@@ -217,9 +217,9 @@ class Spline_optimization_z:
                 dx_min = 0.0
 
             # landing
-            #elif is_start_slow_down:
-                #dx_max = 0.0
-                #dx_min = - 0.03
+            elif is_landing:
+                dx_max = cs.inf
+                dx_min = - 0.03
 
             else:
                 dx_max = cs.inf
@@ -230,25 +230,25 @@ class Spline_optimization_z:
 
             # acceleration bounds
 
-            # landing
+            # ramp
             if is_ramp:
                 ddx_max = cs.inf
-                ddx_min = 0.2
+                ddx_min = 0.001
 
             elif is_obstacle:
-                ddx_max = - 0.0
+                ddx_max = 0.0
                 ddx_min = - cs.inf
 
-            elif is_landing:
+            # elif is_landing:
 
-                if is_start_slow_down:
-                    print('start slow down', k)
-                    ddx_max = -0.0001
-                    ddx_min = -cs.inf
+            # if is_start_slow_down:
+            # print('start slow down', k)
+            # ddx_max = -0.0001
+            # ddx_min = -cs.inf
 
-                else:
-                    ddx_max = cs.inf
-                    ddx_min = 0.0
+            # else:
+            # ddx_max = cs.inf
+            # ddx_min = 0.0
 
             else:
                 ddx_max = cs.inf
@@ -259,14 +259,39 @@ class Spline_optimization_z:
 
             # midpoints - variable constraints
             if not k == self._N - 1:
-                x_mid_max = cs.inf
-                x_mid_min = - cs.inf
+
+                # position
+                if is_ramp:
+                    x_mid_max = cs.inf
+                    x_mid_min = waypoints_pos[k]
+                # elif is_obstacle_max:
+                # x_mid_max = waypoints_pos[k]
+                # x_mid_min = - cs.inf
+                # elif is_landing:
+                # x_mid_max = cs.inf
+                # x_mid_min = -cs.inf
+                else:
+                    x_mid_max = cs.inf
+                    x_mid_min = -cs.inf
 
                 X_mid_u.append(x_mid_max)
                 X_mid_l.append(x_mid_min)
 
-                dx_mid_max = cs.inf
-                dx_mid_min = - cs.inf
+                # velocity
+                if is_obstacle_max:
+                    dx_mid_max = -0.000
+                    dx_mid_min = - cs.inf
+                elif is_landing:
+                    if is_start_slow_down:
+                        dx_mid_max = 0.0
+                        dx_mid_min = -cs.inf
+                    else:
+                        dx_mid_max = 0.0
+                        dx_mid_min = -cs.inf
+
+                else:
+                    dx_mid_max = cs.inf
+                    dx_mid_min = - cs.inf
 
                 DX_mid_u.append(dx_mid_max)
                 DX_mid_l.append(dx_mid_min)
@@ -358,39 +383,44 @@ if __name__ == "__main__":
     target_pos = 0.05
     terrain_conf = 0.05
     swing_time = [0.0, 6.0]
-    N = 18  # number of waypoints
+    N = 14  # number of waypoints
 
-    ramp_points = 5
-    ramp_step = 0.01
+    ramp_points = 4  # including initial
+    ramp_step = 0.005
 
     obstacle_points = 3
-    h_obs = 0.2
+    clearance = 0.1
+
+    if initial_pos >= target_pos:
+        max_height = initial_pos + clearance
+    else:
+        max_height = target_pos + clearance
 
     slow_down_points = N - ramp_points - obstacle_points
 
     # times
-    ramp_time = np.linspace(swing_time[0], 0.5 * (swing_time[1]-swing_time[0]), ramp_points + obstacle_points + 2).tolist()
-    fast_time = np.linspace(swing_time[0], 0.4 * (swing_time[1]-swing_time[0]), ramp_points + obstacle_points + 2).tolist()
-    slow_time = np.linspace(0.4 * (swing_time[1]-swing_time[0]), swing_time[1], N - (ramp_points + obstacle_points + 1)).tolist()
-    times = fast_time + slow_time[1:]
+    duration = swing_time[1] - swing_time[0]
 
-    #times = np.linspace(swing_time[0], swing_time[1], N)
-    N = len(times)
+    ramp_time = np.linspace(swing_time[0], 0.05 * duration, ramp_points).tolist()
+    obst_time = np.linspace(0.05 * duration, 0.4 * duration, obstacle_points + 1).tolist()
+    slow_time = np.linspace(0.4 * duration, swing_time[1], N + 1 - (ramp_points + obstacle_points)).tolist()
+
+    times = ramp_time[: -1] + obst_time[: -1] + slow_time
     dt = [times[i + 1] - times[i] for i in range(N - 1)]
 
-    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N-1)]
+    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N - 1)]
 
     # Construct waypoints
     waypoints = []
 
     # ramp
     waypoints.append(initial_pos)
-    for i in range(1, ramp_points+1):
+    for i in range(1, ramp_points):
         waypoints.append(initial_pos + i * ramp_step)
 
-    # max height - obstacle
+    # max clearance - obstacle
     for i in range(obstacle_points):
-        waypoints.append(h_obs)
+        waypoints.append(max_height)
 
     # slow down
     slow_down = np.linspace(target_pos + terrain_conf, target_pos, N - len(waypoints)).tolist()
@@ -398,12 +428,13 @@ if __name__ == "__main__":
     for i in range(len(slow_down)):
         waypoints.append(slow_down[i])
 
+    # midpoints poisitons
+    midpoints = [waypoints[i] + 0.5 * (waypoints[i + 1] - waypoints[i]) for i in range(N - 1)]
+
     start = time.time()
 
     my_object = Spline_optimization_z(N, dt)
-
-    solution = my_object.solver(waypoints, ramp_points, obstacle_points)
-
+    solution = my_object.solver(waypoints, midpoints, ramp_points, obstacle_points)
     splines = my_object.get_splines(solution['x'][0:N], dt)
 
     end = time.time()
@@ -411,7 +442,7 @@ if __name__ == "__main__":
     print('Positions:', solution['x'][0:N])
     print('Velocities:', solution['x'][N:2 * N])
     print('Accelerations:', solution['x'][2 * N:3 * N])
-    print('Computation time:', 100*(end-start), 'ms')
+    print('Computation time:', 1000 * (end - start), 'ms')
 
     # print results
     s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
@@ -420,7 +451,8 @@ if __name__ == "__main__":
     plt.plot(times, solution['x'][0:N], "o")
     plt.plot(time_midpoints, solution['x'][3 * N:(4 * N - 1)], ".")
     plt.plot(times, waypoints, "x")
-    for i in range(N-1):
+    # plt.plot(time_midpoints, midpoints, ".")
+    for i in range(N - 1):
         plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
     plt.grid()
     plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
@@ -446,10 +478,4 @@ if __name__ == "__main__":
     plt.xlabel('time [s]')
     plt.ylabel('z acceleration [m/s^2]')
 
-    # x-z plot
-    '''x = np.polynomial.polynomial.Polynomial([0, 0.0375, 0.00001, 0.0001])
-
-    plt.figure()
-    for i in range(N - 1):
-        plt.plot([x(j + times[i]) for j in s[i]], splines['pos'][i](s[i]))'''
     plt.show()
