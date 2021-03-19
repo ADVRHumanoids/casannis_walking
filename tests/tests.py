@@ -400,7 +400,7 @@ if __name__ == "__main__":
 
     my_object = Spline_tests(N, dt)
     solution = my_object.solver(waypoints, midpoints, ramp_points, obstacle_points)
-    splines = my_object.get_splines(solution['x'][0:N], dt)
+    splines = my_object.get_splines(solution, dt)
 
     end = time.time()
 
