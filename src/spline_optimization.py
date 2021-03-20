@@ -315,20 +315,21 @@ class Spline_optimization_z:
 
         return self._sol
 
-    def get_splines(self, optim_variables, delta_t):
+    def get_splines(self):
 
         # numerically evaluate matrices
-        h3 = self.evaluate(self._sol['x'], self._h3)
-        h4 = self.evaluate(self._sol['x'], self._h4)
+        #h3 = self.evaluate(self._sol['x'], self._h3)
+        #h4 = self.evaluate(self._sol['x'], self._h4)
         h5 = self.evaluate(self._sol['x'], self._h5)
         h6 = self.evaluate(self._sol['x'], self._h6)
 
-        # pseudo-inverse
-        #inv_h1 = np.linalg.pinv(h1)
+        # evaluate optimized decision variables
+        optim_variables_evaluated = self.evaluate(self._sol['x'], self._sol['x'])
+        optim_variables = [x for t in optim_variables_evaluated for x in t]
 
-        a = optim_variables['x'][0:N]
-        b = optim_variables['x'][N:2 * N] #np.matmul(inv_h1, np.matmul(h2, a))
-        c = np.matmul(h3, a) + np.matmul(h4, b)
+        a = optim_variables[0:N]
+        b = optim_variables[N:2 * N] #np.matmul(inv_h1, np.matmul(h2, a))
+        c = [0.5 * x for x in optim_variables[2 * N:3 * N]] #np.matmul(h3, a) + np.matmul(h4, b)
         d = np.matmul(h5, a) + np.matmul(h6, b)
 
         pos_coeffs = []
@@ -351,6 +352,8 @@ class Spline_optimization_z:
 
         print("ai coeffs are:", a)
         print("bi coeffs are:", b)
+        print("ci coeffs are:", c)
+
         return {
             'pos': pos_polynomials,
             'vel': vel_polynomials,
@@ -381,13 +384,13 @@ if __name__ == "__main__":
 
     # main specs of the trajectory
     initial_pos = 0.0
-    target_pos = 0.05
+    target_pos = 0.0
     terrain_conf = 0.03
-    swing_time = [0.0, 6.0]
+    swing_time = [0.0, 4.0]
     clearance = 0.1
-    N = 11 # number of waypoints
+    N = 9 # number of waypoints
 
-    ramp_points = 5  # including initial
+    ramp_points = 3  # including initial
     ramp_step = 0.005
 
     obstacle_points = 3
@@ -436,7 +439,7 @@ if __name__ == "__main__":
 
     my_object = Spline_optimization_z(N, dt)
     solution = my_object.solver(waypoints, midpoints, ramp_points, obstacle_points)
-    splines = my_object.get_splines(solution, dt)
+    splines = my_object.get_splines()
 
     end = time.time()
 
