@@ -31,17 +31,17 @@ class Spline_optimization_z:
         self._h6 = sym_t.zeros(self._N, self._N)
 
         for i in range(self._N-1):
-            self._h3[i, i] = -3 / (delta_t[i]**2)
-            self._h3[i, i+1] = 3 / (delta_t[i] ** 2)
+            self._h3[i, i] = - 3 / (delta_t[i] ** 2)
+            self._h3[i, i+1] = - self._h3[i, i]
 
-            self._h4[i, i] = -2 / delta_t[i]
-            self._h4[i, i + 1] = -1 / delta_t[i]
+            self._h4[i, i] = - 2 / delta_t[i]
+            self._h4[i, i + 1] = 0.5 * self._h4[i, i]
 
             self._h5[i, i] = 2 / (delta_t[i] ** 3)
-            self._h5[i, i + 1] = -2 / (delta_t[i] ** 3)
+            self._h5[i, i + 1] = - self._h5[i, i]
 
             self._h6[i, i] = 1 / (delta_t[i] ** 2)
-            self._h6[i, i + 1] = 1 / (delta_t[i] ** 2)
+            self._h6[i, i + 1] = self._h6[i, i]
 
         self._h1 = sym_t.zeros(self._N, self._N)
         self._h2 = sym_t.zeros(self._N, self._N)
@@ -77,8 +77,8 @@ class Spline_optimization_z:
         }
 
         for i in range(self._N-1):
-            g_terms['g1'][0][i, :] = self._h3[i, : ] * (delta_t_midpoint[i] ** 2)
-            g_terms['g1'][1][i, :] = self._h5[i, : ] * (delta_t_midpoint[i] ** 3)
+            g_terms['g1'][0][i, :] = self._h3[i, :] * (delta_t_midpoint[i] ** 2)
+            g_terms['g1'][1][i, :] = self._h5[i, :] * (delta_t_midpoint[i] ** 3)
             g_terms['g1'][2][i, i] = 1
 
             g_terms['g2'][0][i, i] = delta_t_midpoint[i]
@@ -86,10 +86,10 @@ class Spline_optimization_z:
             g_terms['g2'][2][i, :] = self._h6[i, :] * (delta_t_midpoint[i] ** 3)
 
             g_terms['g3'][0][i, :] = self._h3[i, :] * 2 * delta_t_midpoint[i]
-            g_terms['g3'][1][i, :] = self._h5[i, : ] * 3 * (delta_t_midpoint[i] ** 2)
+            g_terms['g3'][1][i, :] = self._h5[i, :] * 3 * (delta_t_midpoint[i] ** 2)
 
-            g_terms['g4'][0][i, :] = self._h4[i, : ] * 2 * delta_t_midpoint[i]
-            g_terms['g4'][1][i, :] = self._h6[i, : ] * 3 * (delta_t_midpoint[i] ** 2)
+            g_terms['g4'][0][i, :] = self._h4[i, :] * 2 * delta_t_midpoint[i]
+            g_terms['g4'][1][i, :] = self._h6[i, :] * 3 * (delta_t_midpoint[i] ** 2)
             g_terms['g4'][2][i, i] = 1
 
         # all 4 matrices in one list
@@ -122,7 +122,7 @@ class Spline_optimization_z:
                 g.append(vel_midpoints)
 
                 # objective function
-                j_k = dx[k] ** 2 + dx_mid[k]**2
+                j_k = dx[k] ** 2 + dx_mid[k] ** 2
 
             else:
                 j_k = dx[k] ** 2
@@ -154,6 +154,9 @@ class Spline_optimization_z:
 
         gl = []  # constraint lower bounds
         gu = []  # constraint upper bounds
+
+        # max landing velocity
+        vel_max = 0.08
 
         for k in range(self._N):
 
@@ -189,7 +192,7 @@ class Spline_optimization_z:
             elif is_landing:  # landing part
 
                 if is_start_slow_down:  # first point
-                    x_max = waypoints_pos[k]
+                    x_max = waypoints_pos[k] + 0.02
                     x_min = waypoints_pos[k]
                 else:
                     x_max = cs.inf
@@ -213,7 +216,7 @@ class Spline_optimization_z:
 
             elif is_landing:    # landing
                 dx_max = cs.inf
-                dx_min = - 0.08
+                dx_min = - vel_max
 
             else:
                 dx_max = cs.inf
@@ -259,9 +262,9 @@ class Spline_optimization_z:
                 # elif is_obstacle_max:
                 # x_mid_max = waypoints_pos[k]
                 # x_mid_min = - cs.inf
-                # elif is_landing:
-                # x_mid_max = cs.inf
-                # x_mid_min = -cs.inf
+                elif is_landing:
+                    x_mid_max = cs.inf
+                    x_mid_min = waypoints_pos[-1]
                 else:
                     x_mid_max = cs.inf
                     x_mid_min = -cs.inf
@@ -277,10 +280,10 @@ class Spline_optimization_z:
                 elif is_landing:
                     if is_start_slow_down:
                         dx_mid_max = 0.0
-                        dx_mid_min = -cs.inf
+                        dx_mid_min = - vel_max
                     else:
                         dx_mid_max = 0.0
-                        dx_mid_min = -cs.inf
+                        dx_mid_min = - vel_max
 
                 else:
                     dx_mid_max = cs.inf
@@ -292,7 +295,7 @@ class Spline_optimization_z:
                 gl.append(np.zeros(2))
                 gu.append(np.zeros(2))
 
-            # constraints pos, vel, acc at waypoints
+            # constraints vel, acc at waypoints
             gl.append(np.zeros(2))
             gu.append(np.zeros(2))
 
@@ -310,12 +313,10 @@ class Spline_optimization_z:
     def get_splines(self):
 
         # numerically evaluate matrices
-        #h3 = self.evaluate(self._sol['x'], self._h3)
-        #h4 = self.evaluate(self._sol['x'], self._h4)
         h5 = self.evaluate(self._sol['x'], self._h5)
         h6 = self.evaluate(self._sol['x'], self._h6)
 
-        # evaluate optimized decision variables
+        # evaluate optimal decision variables
         optim_variables_evaluated = self.evaluate(self._sol['x'], self._sol['x'])
         optim_variables = [x for t in optim_variables_evaluated for x in t]
 
@@ -345,6 +346,8 @@ class Spline_optimization_z:
         print("ai coeffs are:", a)
         print("bi coeffs are:", b)
         print("ci coeffs are:", c)
+        print("di coeffs are:", d)
+
 
         return {
             'pos': pos_polynomials,
@@ -372,7 +375,7 @@ class Spline_optimization_z:
 
         return trj_list
 
-    def evaluate(self, solution, expr):
+    def evaluate(self, opt_solution, expr):
         """ Evaluate a given expression
 
         Args:
@@ -387,18 +390,17 @@ class Spline_optimization_z:
         # casadi function that symbolically maps the _nlp to the given expression
         expr_fun = cs.Function('expr_fun', [self._qp['x']], [expr], ['v'], ['expr'])
 
-        expr_value = expr_fun(v=solution)['expr'].toarray()
+        expr_value = expr_fun(v=opt_solution)['expr'].toarray()
 
         return expr_value
 
     def print_results(self, point_plan, optimal_vars, polynoms):
 
         # print waypoints
-        plt.figure()
+        '''plt.figure()
         plt.plot(point_plan['wayp_times'], point_plan['waypoints'], 'o')
         plt.xlabel('time [s]')
-        plt.ylabel('z position [m]')
-        plt.show()
+        plt.ylabel('z position [m]')'''
 
         print('Waypoints Positions:', optimal_vars['x'][0:self._N])
         print('Velocities:', optimal_vars['x'][self._N:2 * self._N])
@@ -459,9 +461,9 @@ def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_nu
     duration = swing_t[1] - swing_t[0]
     ramp_time = np.linspace(swing_t[0], 0.05 * duration, ramp_num).tolist()
     obst_time = np.linspace(0.05 * duration, 0.3 * duration, obstacle_num + 1).tolist()
-    slow_time = np.linspace(0.3 * duration, swing_t[1], slow_down_points + 1).tolist()
+    slow_time = np.linspace(0.4 * duration, swing_t[1], slow_down_points).tolist()
 
-    times = ramp_time[: -1] + obst_time[: -1] + slow_time
+    times = ramp_time[: -1] + obst_time[:] + slow_time
 
     dt = [times[i + 1] - times[i] for i in range(num - 1)]
 
@@ -497,10 +499,10 @@ if __name__ == "__main__":
 
     # main specs of the trajectory
     initial_pos = 0.0
-    target_pos = -0.02
-    terrain_conf = 0.03
-    swing_time = [0.0, 2.0]
-    clear = 0.1
+    target_pos = -0.05
+    terrain_conf = 0.04
+    swing_time = [0.0, 3.0]
+    clear = 0.05
     N = 9   # number of waypoints
     ramp_points = 3  # including initial
     obstacle_points = 3
