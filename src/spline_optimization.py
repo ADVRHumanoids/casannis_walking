@@ -157,7 +157,6 @@ class Spline_optimization_z:
 
         for k in range(self._N):
 
-            # variable bounds
             # trj phases
             is_ramp = (0 < k < ramps)  # excluding initial
             is_obstacle = (ramps <= k < ramps + obst)
@@ -166,7 +165,6 @@ class Spline_optimization_z:
             is_start_slow_down = (k == ramps + obst)
 
             # position bounds
-
             if k == 0 or k == self._N - 1:  # initial/target position
                 x_max = waypoints_pos[k]
                 x_min = waypoints_pos[k]
@@ -205,21 +203,17 @@ class Spline_optimization_z:
             Xl.append(x_min)
 
             # velocity bounds
-
-            # start, end velocity
-            if k == 0 or k == self._N - 1:
+            if k == 0 or k == self._N - 1:  # start, end velocity
                 dx_max = 0.0
                 dx_min = 0.0
 
-            # obstacle max clearance
-            elif is_obstacle_max:
+            elif is_obstacle_max:   # obstacle max clearance
                 dx_max = 0.0
                 dx_min = 0.0
 
-            # landing
-            elif is_landing:
+            elif is_landing:    # landing
                 dx_max = cs.inf
-                dx_min = - 0.03
+                dx_min = - 0.08
 
             else:
                 dx_max = cs.inf
@@ -229,9 +223,7 @@ class Spline_optimization_z:
             DXl.append(dx_min)
 
             # acceleration bounds
-
-            # ramp
-            if is_ramp:
+            if is_ramp:     # ramp
                 ddx_max = cs.inf
                 ddx_min = 0.0
 
@@ -279,7 +271,7 @@ class Spline_optimization_z:
 
                 # velocity
                 if is_obstacle_max:
-                    dx_mid_max = -0.000
+                    dx_mid_max = -0.0
                     dx_mid_min = - cs.inf
 
                 elif is_landing:
@@ -327,9 +319,9 @@ class Spline_optimization_z:
         optim_variables_evaluated = self.evaluate(self._sol['x'], self._sol['x'])
         optim_variables = [x for t in optim_variables_evaluated for x in t]
 
-        a = optim_variables[0:N]
-        b = optim_variables[N:2 * N] #np.matmul(inv_h1, np.matmul(h2, a))
-        c = [0.5 * x for x in optim_variables[2 * N:3 * N]] #np.matmul(h3, a) + np.matmul(h4, b)
+        a = optim_variables[0:self._N]
+        b = optim_variables[self._N:2 * self._N] #np.matmul(inv_h1, np.matmul(h2, a))
+        c = [0.5 * x for x in optim_variables[2 * self._N:3 * self._N]] #np.matmul(h3, a) + np.matmul(h4, b)
         d = np.matmul(h5, a) + np.matmul(h6, b)
 
         pos_coeffs = []
@@ -360,6 +352,26 @@ class Spline_optimization_z:
             'acc': acc_polynomials
         }
 
+    def interpolate_trj(self, cubic_splines, dt, inter_freq=300):
+
+        # spline times
+        s = [np.linspace(0, dt[i], round(inter_freq * dt[i]) + 1) for i in range(self._N - 1)]
+
+        # list of lists
+        trj_list = [cubic_splines['pos'][i](s[i]).tolist()[: -1] for i in range(self._N - 1)]
+
+        # flat list
+        trj_list = [i for x in trj_list for i in x]
+        trj_list.append(cubic_splines['pos'][self._N - 2](s[self._N - 2][-1]))  # append last points
+
+        # plot interpolated trj
+        plt.figure()
+        plt.plot(np.linspace(0.0, sum(dt), len(trj_list)), trj_list)
+        plt.show()
+        print(trj_list)
+
+        return trj_list
+
     def evaluate(self, solution, expr):
         """ Evaluate a given expression
 
@@ -379,110 +391,131 @@ class Spline_optimization_z:
 
         return expr_value
 
+    def print_results(self, point_plan, optimal_vars, polynoms):
+
+        # print waypoints
+        plt.figure()
+        plt.plot(point_plan['wayp_times'], point_plan['waypoints'], 'o')
+        plt.xlabel('time [s]')
+        plt.ylabel('z position [m]')
+        plt.show()
+
+        print('Waypoints Positions:', optimal_vars['x'][0:self._N])
+        print('Velocities:', optimal_vars['x'][self._N:2 * self._N])
+        print('Accelerations:', optimal_vars['x'][2 * self._N:3 * self._N])
+        print('------------------------------------------')
+        print('Midpoints Positions:', optimal_vars['x'][3 * self._N:4 * self._N - 1])
+        print('Midpoints Velocities:', optimal_vars['x'][4 * self._N - 1:5 * self._N - 2])
+
+        # print results
+        s = [np.linspace(0, point_plan['wayp_dt'][i], 100) for i in range(self._N - 1)]
+
+        plt.figure()
+        plt.plot(point_plan['wayp_times'], optimal_vars['x'][0:self._N], "o")
+        plt.plot(point_plan['mid_times'], optimal_vars['x'][3 * self._N:(4 * self._N - 1)], ".")
+        plt.plot(point_plan['wayp_times'], point_plan['waypoints'], "x")
+        # plt.plot(time_midpoints, midpoints, ".")
+        for i in range(self._N - 1):
+            plt.plot([x + point_plan['wayp_times'][i] for x in s[i]], polynoms['pos'][i](s[i]))
+        plt.grid()
+        plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
+        plt.xlabel('time [s]')
+        plt.ylabel('z position [m]')
+
+        plt.figure()
+        plt.plot(point_plan['wayp_times'], optimal_vars['x'][self._N:2 * self._N], "o")
+        plt.plot(point_plan['mid_times'], optimal_vars['x'][(4 * self._N - 1):(5 * self._N - 2)], ".")
+        for i in range(self._N - 1):
+            plt.plot([x + point_plan['wayp_times'][i] for x in s[i]], polynoms['vel'][i](s[i]))
+        plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
+        plt.grid()
+        plt.xlabel('time [s]')
+        plt.ylabel('z velocity [m/s]')
+
+        plt.figure()
+        plt.plot(point_plan['wayp_times'], optimal_vars['x'][2 * self._N:3 * self._N], "o")
+        for i in range(self._N - 1):
+            plt.plot([x + point_plan['wayp_times'][i] for x in s[i]], polynoms['acc'][i](s[i]))
+        plt.plot(point_plan['wayp_times'], optimal_vars['x'][2 * self._N:3 * self._N], "o")
+        plt.grid()
+        plt.xlabel('time [s]')
+        plt.ylabel('z acceleration [m/s^2]')
+        plt.show()
+
+
+def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_num, obstacle_num):
+
+    # parameters
+    ramp_step = 0.005
+    slow_down_points = num - ramp_num - obstacle_num
+
+    # max height point
+    if initial >= target:
+        max_height = initial + clearance
+    else:
+        max_height = target_pos + clearance
+
+    # times
+    duration = swing_t[1] - swing_t[0]
+    ramp_time = np.linspace(swing_t[0], 0.05 * duration, ramp_num).tolist()
+    obst_time = np.linspace(0.05 * duration, 0.3 * duration, obstacle_num + 1).tolist()
+    slow_time = np.linspace(0.3 * duration, swing_t[1], slow_down_points + 1).tolist()
+
+    times = ramp_time[: -1] + obst_time[: -1] + slow_time
+
+    dt = [times[i + 1] - times[i] for i in range(num - 1)]
+
+    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(num - 1)]
+
+    # Construct waypoints
+    waypoints = []
+    waypoints.append(initial)   # ramp
+    for i in range(1, ramp_num):
+        waypoints.append(initial + i * ramp_step)
+
+    for i in range(obstacle_num):   # max clearance - obstacle
+        waypoints.append(max_height)
+
+    slow_down = np.linspace(target + height_conf, target, num - len(waypoints)).tolist()
+
+    for i in range(len(slow_down)): # slow down
+        waypoints.append(slow_down[i])
+
+    # midpoints positions
+    midpoints = [waypoints[i] + 0.5 * (waypoints[i + 1] - waypoints[i]) for i in range(num - 1)]
+
+    return {
+        'wayp_dt': dt,
+        'waypoints': waypoints,
+        'midpoints': midpoints,
+        'wayp_times': times,
+        'mid_times': time_midpoints
+    }
+
 
 if __name__ == "__main__":
 
     # main specs of the trajectory
     initial_pos = 0.0
-    target_pos = 0.0
+    target_pos = -0.02
     terrain_conf = 0.03
-    swing_time = [0.0, 4.0]
-    clearance = 0.1
-    N = 9 # number of waypoints
-
+    swing_time = [0.0, 2.0]
+    clear = 0.1
+    N = 9   # number of waypoints
     ramp_points = 3  # including initial
-    ramp_step = 0.005
-
     obstacle_points = 3
 
-    if initial_pos >= target_pos:
-        max_height = initial_pos + clearance
-    else:
-        max_height = target_pos + clearance
-
-    slow_down_points = N - ramp_points - obstacle_points
-
-    # times
-    duration = swing_time[1] - swing_time[0]
-
-    ramp_time = np.linspace(swing_time[0], 0.05 * duration, ramp_points).tolist()
-    obst_time = np.linspace(0.05 * duration, 0.3 * duration, obstacle_points + 1).tolist()
-    slow_time = np.linspace(0.3 * duration, swing_time[1], N + 1 - (ramp_points + obstacle_points)).tolist()
-
-    times = ramp_time[: -1] + obst_time[: -1] + slow_time
-    dt = [times[i + 1] - times[i] for i in range(N - 1)]
-
-    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N - 1)]
-
-    # Construct waypoints
-    waypoints = []
-
-    # ramp
-    waypoints.append(initial_pos)
-    for i in range(1, ramp_points):
-        waypoints.append(initial_pos + i * ramp_step)
-
-    # max clearance - obstacle
-    for i in range(obstacle_points):
-        waypoints.append(max_height)
-
-    # slow down
-    slow_down = np.linspace(target_pos + terrain_conf, target_pos, N - len(waypoints)).tolist()
-
-    for i in range(len(slow_down)):
-        waypoints.append(slow_down[i])
-
-    # midpoints positions
-    midpoints = [waypoints[i] + 0.5 * (waypoints[i + 1] - waypoints[i]) for i in range(N - 1)]
+    plan = original_plan(num=N, initial=initial_pos, target=target_pos, height_conf=terrain_conf, swing_t=swing_time,
+                         clearance=clear, ramp_num=ramp_points, obstacle_num=obstacle_points)
 
     start = time.time()
 
-    my_object = Spline_optimization_z(N, dt)
-    solution = my_object.solver(waypoints, midpoints, ramp_points, obstacle_points)
+    my_object = Spline_optimization_z(N, plan['wayp_dt'])
+    solution = my_object.solver(plan['waypoints'], plan['midpoints'], ramp_points, obstacle_points)
     splines = my_object.get_splines()
+    # trj_points = my_object.interpolate_trj(splines , plan['wayp_dt'])
 
     end = time.time()
+    print('Computation time:', 1e3 * (end - start), 'ms')
 
-    print('Waypoints Positions:', solution['x'][0:N])
-    print('Velocities:', solution['x'][N:2 * N])
-    print('Accelerations:', solution['x'][2 * N:3 * N])
-    print('------------------------------------------')
-    print('Midpoints Positions:', solution['x'][3 * N:4 * N - 1])
-    print('Midpoints Velocities:', solution['x'][4 * N - 1:5 * N - 2])
-    print('Computation time:', 1000 * (end - start), 'ms')
-
-    # print results
-    s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
-
-    plt.figure()
-    plt.plot(times, solution['x'][0:N], "o")
-    plt.plot(time_midpoints, solution['x'][3 * N:(4 * N - 1)], ".")
-    plt.plot(times, waypoints, "x")
-    # plt.plot(time_midpoints, midpoints, ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
-    plt.grid()
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.xlabel('time [s]')
-    plt.ylabel('z position [m]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][N:2 * N], "o")
-    plt.plot(time_midpoints, solution['x'][(4 * N - 1):(5 * N - 2)], ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['vel'][i](s[i]))
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z velocity [m/s]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['acc'][i](s[i]))
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z acceleration [m/s^2]')
-
-    plt.show()
+    my_object.print_results(plan, solution, splines)
