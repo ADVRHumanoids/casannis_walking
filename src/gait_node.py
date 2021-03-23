@@ -75,8 +75,8 @@ def casannis(int_freq):
     # Clearance to be achieved, counted from the highest point
     swing_clear = rospy.get_param("~clear")  # get from command line as target_dx
 
-    # Swing velocity
-    swing_vel = rospy.get_param("~sw_vel")
+    # force threshold
+    minimum_force = rospy.get_param("~min_for")
 
     # apply or no contact detection
     cont_detection = rospy.get_param("~cont_det")  # from command line as contact_det:=True/False
@@ -123,8 +123,8 @@ def casannis(int_freq):
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = walk.solve(x0=x0, contacts=contacts, swing_id=[x-1 for x in swing_id],
-                     swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=100)
+    sol = walk.solve(x0=x0, contacts=contacts, swing_id=[x-1 for x in swing_id], swing_tgt=swing_tgt,
+                     swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
 
     # interpolate the trj, pass solution values and interpolation frequency
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
