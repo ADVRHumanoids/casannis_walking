@@ -109,6 +109,62 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
     }
 
 
+def cubic_splines(dt, init_cond, fin_cond):
+    """
+    This function computes the polynomial of 3rd order between two points with 4 given conditions
+    Args:
+        dt: time interval that the polynomial applies
+        init_cond: list with initial position, velocity conditions
+        fin_cond: list with final position, velocity conditions
+
+    Returns:
+        a list with the coefficient of the polynomial of the spline
+    """
+
+    # symbolic polynomial coefficients
+    sym_t = cs.SX
+    a0 = sym_t.sym('a0', 1)
+    a1 = sym_t.sym('a1', 1)
+    a2 = sym_t.sym('a2', 1)
+    a3 = sym_t.sym('a3', 1)
+
+    # time
+    t = sym_t.sym('t', 1)
+
+    # initial and final conditions
+    p0 = init_cond[0]
+    v0 = init_cond[1]
+    p1 = fin_cond[0]
+    v1 = fin_cond[1]
+    # print('Initial and final conditions are:', p0, v0, ac0, p1, v1, ac1)
+
+    # the 5th order polynomial expression
+    spline = a0 + a1 * t + a2 * t ** 2 + a3 * t ** 3
+
+    # wrap the polynomial expression in a function
+    p = cs.Function('p', [t, a0, a1, a2, a3], [spline], ['t', 'a0', 'a1', 'a2', 'a3'], ['spline'])
+
+    # symbolic velocity - 1st derivative
+    first_der = cs.jacobian(spline, t)
+    dp = cs.Function('dp', [t, a1, a2, a3], [first_der], ['t', 'a1', 'a2', 'a3'], ['first_der'])
+
+    # symbolic acceleration - 2nd derivative
+    sec_der = cs.jacobian(first_der, t)
+    ddp = cs.Function('ddp', [t, a2, a3], [sec_der], ['t', 'a2', 'a3'], ['sec_der'])
+
+    # construct the system of equations Ax=B, with x the list of coefficients to be computed
+    A = np.array([[p(dt[0], 1, 0, 0, 0), p(dt[0], 0, 1, 0, 0), p(dt[0], 0, 0, 1, 0), p(dt[0], 0, 0, 0, 1)],\
+                  [0, dp(dt[0], 1, 0, 0), dp(dt[0], 0, 1, 0), dp(dt[0], 0, 0, 1)],\
+                  [p(dt[1], 1, 0, 0, 0), p(dt[1], 0, 1, 0, 0), p(dt[1], 0, 0, 1, 0), p(dt[1], 0, 0, 0, 1)],\
+                  [0, dp(dt[1], 1, 0, 0), dp(dt[1], 0, 1, 0), dp(dt[1], 0, 0, 1)]])
+
+    B = np.array([p0, v0, p1, v1])
+
+    # coefficients
+    coeffs = np.linalg.inv(A).dot(B)
+
+    return coeffs
+
 def splines(dt, init_cond, fin_cond):
     """
     This function computes the polynomial of 5th order between two points with 6 given conditions
