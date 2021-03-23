@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
-from centauro_contact_detection.msg import contacts as contacts_msg
+from centauro_contact_detection.msg import Contacts as Contacts_msg
 from gait import Gait
 
 # radius of centauro wheels
@@ -116,7 +116,7 @@ def casannis(int_freq):
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
     # Subscriber for contact flags
-    rospy.Subscriber('/contacts', contacts_msg, contacts_callback)
+    rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
     walk = Gait(mass=95, N=int((swing_t[-1][1] + 2.0) / 0.2), dt=0.2)
