@@ -26,10 +26,10 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
     else:
         max_point = np.array([0.5 * (sw_curr[0] + sw_tgt[0]), 0.5 * (sw_curr[1] + sw_tgt[1]), sw_tgt[2] + clear])
 
-    # list of first and last point of swing phase
+    # list of three points swing phase
     sw_points = [sw_curr] + [max_point] + [sw_tgt]
 
-    # list of the two points of swing phase for each coordinate
+    # list of the three points of swing phase for each coordinate
     sw_x = [sw_points[0][0], sw_points[1][0], sw_points[2][0]]
     sw_y = [sw_points[0][1], sw_points[1][1], sw_points[2][1]]
     sw_z = [sw_points[0][2], sw_points[1][2], sw_points[2][2]]
@@ -53,18 +53,26 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
     cond3_y = [sw_y[2], 0, 0]
     cond3_z = [sw_z[2], 0, 0]
 
-    # divide time in two
-    sw_t1 = [sw_t[0], 0.5 * (sw_t[0] + sw_t[1])]
-    sw_t2 = [0.5 * (sw_t[0] + sw_t[1]), sw_t[1]]
+    # fractions of distances between the three points to assign corresponding time
+    dist1 = math.sqrt((sw_x[1] - sw_x[0]) ** 2 + (sw_y[1] - sw_y[0]) ** 2 + (sw_z[1] - sw_z[0]) ** 2)
+    dist2 = math.sqrt((sw_x[2] - sw_x[1]) ** 2 + (sw_y[2] - sw_y[1]) ** 2 + (sw_z[2] - sw_z[1]) ** 2)
+
+    dist_fraction1 = dist1 / (dist1 + dist2)
+    dist_fraction2 = dist2 / (dist1 + dist2)
+
+    # assign spline time according to distances
+    t_middle = sw_t[0] + dist_fraction1 * (sw_t[1] - sw_t[0])
+    sw_t1 = [sw_t[0], t_middle]
+    sw_t2 = [t_middle, sw_t[1]]
 
     # save polynomial coefficients in one list for each coordinate
-    sw_cx1 = splines(sw_t1, cond1_x, cond2_x)  # spline 1
-    sw_cy1 = splines(sw_t1, cond1_y, cond2_y)
-    sw_cz1 = splines(sw_t1, cond1_z, cond2_z)
+    sw_cx1 = fifth_splines(sw_t1, cond1_x, cond2_x)  # spline 1
+    sw_cy1 = fifth_splines(sw_t1, cond1_y, cond2_y)
+    sw_cz1 = fifth_splines(sw_t1, cond1_z, cond2_z)
 
-    sw_cx2 = splines(sw_t2, cond2_x, cond3_x)  # spline 2
-    sw_cy2 = splines(sw_t2, cond2_y, cond3_y)
-    sw_cz2 = splines(sw_t2, cond2_z, cond3_z)
+    sw_cx2 = fifth_splines(sw_t2, cond2_x, cond3_x)  # spline 2
+    sw_cy2 = fifth_splines(sw_t2, cond2_y, cond3_y)
+    sw_cz2 = fifth_splines(sw_t2, cond2_z, cond3_z)
 
     # convert to polynomial functions
     sw_px1 = np.polynomial.polynomial.Polynomial(sw_cx1)  # spline 1
@@ -77,8 +85,8 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
 
     # construct list of interpolated points according to specified resolution
     sw_dt = sw_t[1] - sw_t[0]
-    sw_interpl_t1 = np.linspace(sw_t1[0], sw_t1[1], int(0.5 * resol * sw_dt))
-    sw_interpl_t2 = np.linspace(sw_t2[0], sw_t2[1], int(0.5 * resol * sw_dt))
+    sw_interpl_t1 = np.linspace(sw_t1[0], sw_t1[1], round(dist_fraction1 * resol * sw_dt))
+    sw_interpl_t2 = np.linspace(sw_t2[0], sw_t2[1], round(dist_fraction2 * resol * sw_dt))
 
     sw_interpl_x = np.concatenate((sw_px1(sw_interpl_t1), sw_px2(sw_interpl_t2)))
     sw_interpl_y = np.concatenate((sw_py1(sw_interpl_t1), sw_py2(sw_interpl_t2)))
@@ -148,10 +156,6 @@ def cubic_splines(dt, init_cond, fin_cond):
     first_der = cs.jacobian(spline, t)
     dp = cs.Function('dp', [t, a1, a2, a3], [first_der], ['t', 'a1', 'a2', 'a3'], ['first_der'])
 
-    # symbolic acceleration - 2nd derivative
-    sec_der = cs.jacobian(first_der, t)
-    ddp = cs.Function('ddp', [t, a2, a3], [sec_der], ['t', 'a2', 'a3'], ['sec_der'])
-
     # construct the system of equations Ax=B, with x the list of coefficients to be computed
     A = np.array([[p(dt[0], 1, 0, 0, 0), p(dt[0], 0, 1, 0, 0), p(dt[0], 0, 0, 1, 0), p(dt[0], 0, 0, 0, 1)],\
                   [0, dp(dt[0], 1, 0, 0), dp(dt[0], 0, 1, 0), dp(dt[0], 0, 0, 1)],\
@@ -165,7 +169,8 @@ def cubic_splines(dt, init_cond, fin_cond):
 
     return coeffs
 
-def splines(dt, init_cond, fin_cond):
+
+def fifth_splines(dt, init_cond, fin_cond):
     """
     This function computes the polynomial of 5th order between two points with 6 given conditions
     Args:
