@@ -5,8 +5,18 @@ import time
 
 
 class Spline_optimization_z:
+    '''
+    Class for prototyping swing trajectory planning with spline optimization.
+    Based on Kolter et al. ICRA 2009.
+    '''
 
     def __init__(self, N, delta_t):
+        '''
+
+        Args:
+            N: number of waypoints
+            delta_t: time periods between waypoints
+        '''
 
         sym_t = cs.SX
         self._N = N
@@ -137,6 +147,17 @@ class Spline_optimization_z:
         self._solver = cs.qpsol('solver', 'qpoases', self._qp)
 
     def solver(self, waypoints_pos, midpoints_pos, ramps, obst):
+        '''
+        Solver of the QP problem
+        Args:
+            waypoints_pos: waypoints' position of the initial plan
+            midpoints_pos: midpoints' position of the initial plan
+            ramps: number of ramp points (including initial)
+            obst: number of obstacle points (max clearance)
+
+        Returns:
+            Optimal solution/Optimized decision variables
+        '''
 
         # waypoints
         Xl = []  # position lower bounds
@@ -311,6 +332,11 @@ class Spline_optimization_z:
         return self._sol
 
     def get_splines(self):
+        '''
+        Class method for evaluating the optimized cubic splines.
+        Returns:
+            splines for position, velocity and acceleration
+        '''
 
         # numerically evaluate matrices
         h5 = self.evaluate(self._sol['x'], self._h5)
@@ -348,30 +374,45 @@ class Spline_optimization_z:
         print("ci coeffs are:", c)
         print("di coeffs are:", d)
 
-
         return {
             'pos': pos_polynomials,
             'vel': vel_polynomials,
             'acc': acc_polynomials
         }
 
-    def interpolate_trj(self, cubic_splines, dt, inter_freq=300):
+    def interpolate_trj(self, cubic_splines, knot_times, inter_freq=300):
+        '''
 
-        # spline times
-        s = [np.linspace(0, dt[i], round(inter_freq * dt[i]) + 1) for i in range(self._N - 1)]
+        Args:
+            cubic_splines: optimized splines
+            knot_times: optimized knots' times
+            inter_freq: interpolation frequency
 
-        # list of lists
-        trj_list = [cubic_splines['pos'][i](s[i]).tolist()[: -1] for i in range(self._N - 1)]
+        Returns:
+            swing trajectory points at the specified frequency
+        '''
+        swing_duration = knot_times[-1] - knot_times[0]
+
+        # split global time
+        time_split_tot = np.linspace(knot_times[0], knot_times[-1], int(inter_freq * swing_duration))
+
+        # split spline time
+        time_spl = [[] for i in range(self._N - 1)]
+        trj_list = [[] for i in range(self._N - 1)]
+
+        for i in range(self._N - 1):
+            time_spl[i] = [(x - knot_times[i]) for x in time_split_tot if (knot_times[i] <= x < knot_times[i + 1])]
+
+            trj_list[i] = cubic_splines['pos'][i](np.array(time_spl[i]))
 
         # flat list
         trj_list = [i for x in trj_list for i in x]
-        trj_list.append(cubic_splines['pos'][self._N - 2](s[self._N - 2][-1]))  # append last points
+        trj_list.append(cubic_splines['pos'][self._N - 2](time_spl[self._N - 2][-1]))  # append last point
 
         # plot interpolated trj
-        plt.figure()
-        plt.plot(np.linspace(0.0, sum(dt), len(trj_list)), trj_list)
-        plt.show()
-        print(trj_list)
+        #plt.figure()
+        #plt.plot(np.linspace(knot_times[0], knot_times[-1], len(trj_list)), trj_list)
+        #plt.show()
 
         return trj_list
 
@@ -395,6 +436,16 @@ class Spline_optimization_z:
         return expr_value
 
     def print_results(self, point_plan, optimal_vars, polynoms):
+        '''
+        Print the results of the spline optimization
+        Args:
+            point_plan: initial plan
+            optimal_vars: optimized variables
+            polynoms: optimized splines
+
+        Returns:
+
+        '''
 
         # print waypoints
         '''plt.figure()
@@ -446,6 +497,21 @@ class Spline_optimization_z:
 
 
 def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_num, obstacle_num):
+    '''
+
+    Args:
+        num: number of waypoints
+        initial: initial position
+        target: target position
+        height_conf: height from target to start slowing down
+        swing_t: time period of swing phase
+        clearance: clearance to achieve from higher point (from initial/target)
+        ramp_num: number of ramp points
+        obstacle_num: number of obstacle points (around max clearance)
+
+    Returns:
+        an initial plan for waypoints and midpoints as well as their timings
+    '''
 
     # parameters
     ramp_step = 0.005
@@ -455,13 +521,17 @@ def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_nu
     if initial >= target:
         max_height = initial + clearance
     else:
-        max_height = target_pos + clearance
+        max_height = target + clearance
 
     # times
     duration = swing_t[1] - swing_t[0]
-    ramp_time = np.linspace(swing_t[0], 0.05 * duration, ramp_num).tolist()
-    obst_time = np.linspace(0.05 * duration, 0.3 * duration, obstacle_num + 1).tolist()
-    slow_time = np.linspace(0.4 * duration, swing_t[1], slow_down_points).tolist()
+    ramp_end_time = swing_t[0] + 0.05 * duration
+    obst_end_time = swing_t[0] + 0.3 * duration
+    land_start_time = swing_t[0] + 0.4 * duration
+
+    ramp_time = np.linspace(swing_t[0], ramp_end_time, ramp_num).tolist()
+    obst_time = np.linspace(ramp_end_time, obst_end_time, obstacle_num + 1).tolist()
+    slow_time = np.linspace(land_start_time, swing_t[1], slow_down_points).tolist()
 
     times = ramp_time[: -1] + obst_time[:] + slow_time
 
@@ -498,7 +568,7 @@ def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_nu
 if __name__ == "__main__":
 
     # main specs of the trajectory
-    initial_pos = 0.0
+    initial_pos = -0.0
     target_pos = -0.05
     terrain_conf = 0.04
     swing_time = [0.0, 3.0]
@@ -515,9 +585,10 @@ if __name__ == "__main__":
     my_object = Spline_optimization_z(N, plan['wayp_dt'])
     solution = my_object.solver(plan['waypoints'], plan['midpoints'], ramp_points, obstacle_points)
     splines = my_object.get_splines()
-    # trj_points = my_object.interpolate_trj(splines , plan['wayp_dt'])
+    trj_points = my_object.interpolate_trj(splines, plan['wayp_times'])
 
     end = time.time()
-    print('Computation time:', 1e3 * (end - start), 'ms')
 
     my_object.print_results(plan, solution, splines)
+
+    print('Computation time:', 1e3 * (end - start), 'ms')

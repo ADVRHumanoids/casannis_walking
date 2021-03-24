@@ -381,6 +381,9 @@ class Walking:
         # swing trajectory with intemediate point
         sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
+            # swing trajectory with spline optimization for z coordinate
+        #sw_interpl = interpol.swing_trj_optimal_spline(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
+
         # swing trajectory with gaussian function
         #sw_interpl = self.swing_trj_gaussian(sw_curr, sw_tgt, sw_t, t_tot, resol)
 
@@ -562,18 +565,20 @@ if __name__ == "__main__":
     # swing id from 0 to 3
     sw_id = 0
 
+    step_clear = 0.05
+
     # swing_target = np.array([-0.35, -0.35, -0.719])
     dx = 0.1
     dy = 0.0
-    dz = -0.1
+    dz = -0.05
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     # swing_time = (1.5, 3.0)
-    swing_time = [2.0, 6.0]
+    swing_time = [2.0, 5.0]
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
-                  swing_clearance=0.1, swing_t=swing_time, min_f=100)
+                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
 
     # debug
     print("X0 is:", x_init)
@@ -584,7 +589,6 @@ if __name__ == "__main__":
 
     # interpolate the values, pass values and interpolation resolution
     res = 300
-    step_clear = 0.1
     interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
 
     publish_hz = res
