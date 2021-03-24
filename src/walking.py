@@ -469,8 +469,6 @@ class Walking:
 
         return sw_interpol
 
-
-
     def print_trj(self, results, resol, publish_freq, t_exec=0):
         '''
 
@@ -546,7 +544,7 @@ class Walking:
 
 if __name__ == "__main__":
 
-    w = Walking(mass=95, N=50, dt=0.2)
+    w = Walking(mass=95, N=40, dt=0.2)
 
     # initial state =
     c0 = np.array([0.107729, 0.0000907, -0.02118])
@@ -565,13 +563,13 @@ if __name__ == "__main__":
     sw_id = 0
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.0
+    dx = 0.1
     dy = 0.0
     dz = -0.1
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     # swing_time = (1.5, 3.0)
-    swing_time = [4.0, 9.0]
+    swing_time = [2.0, 6.0]
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,

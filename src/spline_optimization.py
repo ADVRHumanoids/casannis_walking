@@ -379,7 +379,7 @@ class Spline_optimization_z:
         """ Evaluate a given expression
 
         Args:
-            solution: given solution
+            opt_solution: given solution
             expr: expression to be evaluated
 
         Returns:

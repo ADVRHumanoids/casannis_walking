@@ -74,7 +74,7 @@ class DemoAction(object):
             rospy.set_param('~sw_t', "[2.0, 6.0]")
             rospy.set_param('~min_for', 100)
             rospy.set_param('~cont_det', True)
-            rospy.set_param('~plots', False)
+            rospy.set_param('~plots', True)
 
             step.casannis(freq)
             rospy.loginfo('%s: Step completed' % (self._action_name))
