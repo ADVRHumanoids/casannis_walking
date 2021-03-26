@@ -1,9 +1,12 @@
-import casadi as cs 
+#!/usr/bin/env python3
+
+import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import norm
 from operator import add
 import trj_interpolation as interpol
+
 
 class Walking:
     """
@@ -381,7 +384,7 @@ class Walking:
         # swing trajectory with intemediate point
         sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
-            # swing trajectory with spline optimization for z coordinate
+        # swing trajectory with spline optimization for z coordinate
         #sw_interpl = interpol.swing_trj_optimal_spline(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
         # swing trajectory with gaussian function

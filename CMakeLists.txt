@@ -8,7 +8,6 @@ project(casannis_walking)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   rospy
   geometry_msgs
   message_generation
@@ -108,7 +107,7 @@ generate_messages(
 catkin_package(
 #    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-    CATKIN_DEPENDS roscpp rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs
+    CATKIN_DEPENDS rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs
 #  DEPENDS system_lib
 )
 
