@@ -194,13 +194,16 @@ class Gait:
         # swing feet positions at maximum clearance
         clearance_swing_position = []
 
+        print('lala', swing_tgt)
+        print('lalaaa', swing_id)
+
         for i in range(step_num):
             if contacts[swing_id[i] - 1][2] >= swing_tgt[swing_id[i] - 1][2]:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [contacts[swing_id[i]][2] + swing_clearance])
             else:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
-                                                [swing_tgt[swing_id[i]][2] + swing_clearance])
+                                                [swing_tgt[i][2] + swing_clearance])
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -233,10 +236,10 @@ class Gait:
             # swing phases
             is_swing = []
 
-            for i in range(len(swing_id)):
+            for i in range(step_num):
                 is_swing.append(k >= swing_t[i][0]/self._dt and k <= swing_t[i][1]/self._dt)
 
-            for i in range(len(swing_id)):
+            for i in range(step_num):
                 if is_swing[i]:
                     # we are in swing phase
                     f_max[3*swing_id[i]:3*(swing_id[i]+1)] = np.zeros(self._dimf)   # overwrite forces for the swing leg
