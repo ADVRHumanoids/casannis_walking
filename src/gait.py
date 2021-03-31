@@ -402,6 +402,9 @@ class Gait:
         for i in range(len(sw_curr)):
             sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
 
+            # spline optimization
+            #sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
+
         return {
             't': self._t,
             'x': int_state,
@@ -509,7 +512,7 @@ if __name__ == "__main__":
     #swing_target = np.array([-0.35, -0.35, -0.719])
     dx = 0.1
     dy = 0.0
-    dz = -0.05
+    dz = 0.0
     swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[1]][2] + dz]\
                             , [foot_contacts[sw_id[1]][0] + dx, foot_contacts[sw_id[1]][1] + dy, foot_contacts[sw_id[1]][2] + dz]])
 

@@ -380,13 +380,13 @@ class Walking:
         # ----------- swing leg trajectory interpolation --------------
 
         # swing trajectory with intemediate point
-        #sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
+        sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
         # swing trajectory with spline optimization for z coordinate
         #sw_interpl = interpol.swing_trj_optimal_spline(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
         # swing trajectory with gaussian function
-        sw_interpl = interpol.swing_trj_gaussian(sw_curr, sw_tgt, sw_t, t_tot, resol)
+        #sw_interpl = interpol.swing_trj_gaussian(sw_curr, sw_tgt, sw_t, t_tot, resol)
 
         return {
             't': self._t,
