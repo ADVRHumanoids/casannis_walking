@@ -1,18 +1,34 @@
 <?xml version="1.0"?>
 
 <launch>
+    <arg name="dynamic" default="False"/>
+
     <arg name="swing_id" default="[1, 2, 3, 4]"/>
     <arg name="target_dx" default="0.1"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
-    <arg name="swing_t1" default="[2.0, 6.0]"/>
-    <arg name="swing_t2" default="[7.0, 11.0]"/>
-    <arg name="swing_t3" default="[12.0, 16.0]"/>
-    <arg name="swing_t4" default="[17.0, 21.0]"/>
+
+    <arg name="swing_t1" default="[2.0, 6.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[7.0, 11.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[12.0, 16.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[17.0, 21.0]" unless="$(arg dynamic)"/>
+
+    <arg name="swing_t1" default="[1.0, 3.5]" if="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[4.0, 6.5]" if="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[7.0, 9.5" if="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[10.0, 12.5]" if="$(arg dynamic)"/>
+
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.1"/>
     <arg name="min_force" default="100"/>
+
+    <!--group if="$(arg dynamic)">
+        <arg name="swing_t1" value="[2.0, 4.5]"/>
+        <arg name="swing_t2" value="[5.5, 8.0]"/>
+        <arg name="swing_t3" value="[9.0, 11.5]"/>
+        <arg name="swing_t4" value="[12.5, 15.0]"/>
+    </--group-->
 
     <node name="casannis" pkg="casannis_walking" type="gait_node.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>

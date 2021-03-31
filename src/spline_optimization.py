@@ -568,11 +568,11 @@ def original_plan(num, initial, target, height_conf, swing_t, clearance, ramp_nu
 if __name__ == "__main__":
 
     # main specs of the trajectory
-    initial_pos = -0.0
-    target_pos = -0.05
+    initial_pos = 0.0
+    target_pos = 0.0
     terrain_conf = 0.04
-    swing_time = [0.0, 3.0]
-    clear = 0.05
+    swing_time = [0.0, 2.5]
+    clear = 0.1
     N = 9   # number of waypoints
     ramp_points = 3  # including initial
     obstacle_points = 3
