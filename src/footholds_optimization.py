@@ -16,7 +16,7 @@ class Gait:
     Dynamics:
       1) input is com jerk
       2) dynamics is a triple integrator of com jerk
-      3) there must be contact forces that
+      3) there must be contact forces at contact points that
         - realize the motion
         - fulfil contact constraints (i.e. unilateral constraint)
     """
@@ -72,7 +72,6 @@ class Gait:
         U = list()
         F = list()
         P = list()
-        #P_steps = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
 
@@ -80,7 +79,7 @@ class Gait:
             'x': X,
             'u': U,
             'F': F,
-            'P': P    #P_steps
+            'P': P
         }
 
         # iterate over knots
@@ -143,9 +142,7 @@ class Gait:
             g.append(euler)
 
             # contact constraints
-            '''for i in range(self._step_num):
-                if k == swing_t[i][0] / se
-            contact_constr = p_k - self._contacts
+            '''contact_constr = p_k - self._contacts
             g.append(contact_constr)'''
 
             # update contacts
@@ -153,16 +150,11 @@ class Gait:
                 if k == swing_t[i][0] / self._dt:
                     self._contacts = p_k'''
 
-        # contact points for swing legs as deceision variables
-        '''p_steps = sym_t.sym('p_var', self._step_num * dimc)
-        P_steps.append(p_steps)'''
-
         # construct the solver
         self._nlp = {
             'x': cs.vertcat(*X, *U, *F, *P),
             'f': sum(J),
-            'g': cs.vertcat(*g)#,
-            #'p': cs.vertcat(*P)
+            'g': cs.vertcat(*g)
             }
 
         # save dimensions
@@ -196,8 +188,6 @@ class Gait:
         Fu = list()  # force upper bounds
         Pl = list()  # footholds lower
         Pu = list()  # footholds upper
-        P_stepsl = list()  # footholds lower
-        P_stepsu = list()  # footholds upper
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
 
@@ -260,35 +250,13 @@ class Gait:
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
 
-            # limits for contact constraint
-            '''cont_lim_l = np.zeros(12)   # initial assignment
-            cont_lim_u = np.zeros(12)
-
-            # for all swing legs impose foothold constraints
-            for i in range(self._step_num):
-
-                if k == swing_t[i][0] / self._dt:
-
-                    # assign foothold positions
-                    cont_lim_l[3 * swing_id[i]:3 * (swing_id[i] + 1)] = np.array([-0.3, -0.3, 0.0])
-                    cont_lim_u[3 * swing_id[i]:3 * (swing_id[i] + 1)] = np.array([0.3, 0.3, 0.0])
-
-            gl.append(cont_lim_l)
-            gu.append(cont_lim_u)'''
-
-            # contacts as params
-            '''p_k = self._contacts
-            P.append(p_k)'''
-
-            Pl.append(np.array(self._contacts + [-0.3, -0.3, 0.0] * 4))
-            Pu.append(np.array(self._contacts + [0.3, 0.3, 0.0] * 4))
-
-        # step contacts variable limits
-        '''p_steps_max = self._contacts + np.array([0.3, 0.3, 0.0] * self._step_num)
-        p_steps_min = self._contacts + np.array([-0.3, -0.3, 0.0] * self._step_num)
-
-        P_stepsl.append(p_steps_min)
-        P_stepsu.append(p_steps_max)'''
+            # contacts limits
+            if not is_swing:
+                Pl.append(np.hstack(self._contacts))
+                Pu.append(np.hstack(self._contacts))
+            else:
+                Pl.append(np.full(12, -cs.inf))
+                Pu.append(np.full(12, cs.inf))
 
         # final constraints
         Xl[-1][3:] = 0  # zero velocity and acceleration
@@ -311,14 +279,14 @@ class Gait:
         x_trj = cs.horzcat(*self._trj['x'])  # pack states in a desired matrix
         f_trj = cs.horzcat(*self._trj['F'])  # pack forces in a desired matrix
         u_trj = cs.horzcat(*self._trj['u'])  # pack control inputs in a desired matrix
-        p_steps_trj = cs.horzcat(*self._trj['P'])  # pack control inputs in a desired matrix
+        p_trj = cs.horzcat(*self._trj['P'])  # pack control inputs in a desired matrix
 
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
             'F': self.evaluate(sol['x'], f_trj),
             'u': self.evaluate(sol['x'], u_trj),
-            'p': self.evaluate(sol['x'], p_steps_trj)
+            'p': self.evaluate(sol['x'], p_trj)
         }
 
     def evaluate(self, solution, expr):
