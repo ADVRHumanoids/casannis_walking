@@ -205,37 +205,33 @@ def casannis(int_freq):
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
 
-            if swing_phase == -1:
-                pass
+            for i in range(2):
+                if swing_phase[i] == -1:
+                    pass
 
-            # do not check for early contact
-            elif not cont_detection or early_check is False:
+                # do not check for early contact
+                elif not cont_detection or early_check is False:
 
-                # publish swing trajectory
-                for i in range(2):
+                    # publish swing trajectory
                     f_msg[swing_phase[i]].header.stamp = rospy.Time.now()
                     f_pub_[swing_phase[i]].publish(f_msg[swing_phase[i]])
 
-            # If no early contact detected yet
-            '''elif not early_contact[swing_phase]:
+                # If no early contact detected yet
+                elif not early_contact[swing_phase[i]]:
+                    print('time for contact detection')
+                    # if there is contact
+                    if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase[i]] - 1]), 'data'):
 
-                # if there is contact
-                if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase] - 1]), 'data'):
+                        early_contact[swing_phase[i]] = True  # stop swing trajectory of this foot
 
-                    early_contact[swing_phase] = True  # stop swing trajectory of this foot
+                        executed_trj.append(counter)    # save counter
+                        print("early contact detected ", counter)
 
-                    executed_trj.append(counter)    # save counter
-                    print("early contact detected ", counter)
-
-                # if no contact
-                else:
-                    # publish swing trajectory
-                    f_msg[swing_phase].header.stamp = rospy.Time.now()
-                    f_pub_[swing_phase].publish(f_msg[swing_phase])
-
-                    # publish swing trajectory
-                    f_msg[swing_phase + 2].header.stamp = rospy.Time.now()
-                    f_pub_[swing_phase + 2].publish(f_msg[swing_phase + 2])'''
+                    # if no contact
+                    else:
+                        # publish swing trajectory
+                        f_msg[swing_phase[i]].header.stamp = rospy.Time.now()
+                        f_pub_[swing_phase[i]].publish(f_msg[swing_phase[i]])
 
         rate.sleep()
 
@@ -247,11 +243,14 @@ def casannis(int_freq):
 
             if rospy.get_param("~plots"):
                 walk.print_trj(interpl, int_freq, int_freq, executed_trj)
+                walk.print_support_line([contacts[i] for i in [1, 2]], [swing_tgt[i] for i in [0, 3]], sol['x'], swing_t)
+
     except:
         print("No early contact detected")
 
         if rospy.get_param("~plots"):
             walk.print_trj(interpl, int_freq, int_freq, [N_total-1, N_total-1, N_total-1, N_total-1])
+            walk.print_support_line([contacts[i] for i in [1, 2]], [swing_tgt[i] for i in [0, 3]], sol['x'], swing_t)
 
 
 if __name__ == '__main__':
