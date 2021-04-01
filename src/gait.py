@@ -412,10 +412,11 @@ class Gait:
             'sw': sw_interpl
         }
 
-    def print_trj(self, results, resol, publish_freq, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, t_exec=[0, 0, 0, 0]):
         '''
 
         Args:
+            solution: optimized decision variables
             t_exec: list of last trj points that were executed (because of early contact or other)
             results: results from interpolation
             resol: interpolation resol
@@ -426,21 +427,19 @@ class Gait:
 
         '''
 
-        # scale time for the case of publish through rostopics
-        time_scale = (resol/publish_freq)
-
         # Interpolated state plot
         state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
         plt.figure()
         for i, name in enumerate(state_labels):
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
-                plt.plot([i * time_scale for i in results['t']], results['x'][self._dimc * i + j], '-')
+                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
+                #plt.plot([i * self._dt for i in range(self._N)], solution['x'][self._dimc * i + j], '.')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
         plt.xlabel('Time [s]')
-        #plt.savefig('../plots/gait_state_trj.png')
+        # plt.savefig('../plots/gait_state_trj.png')
 
         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
@@ -449,12 +448,12 @@ class Gait:
         for i, name in enumerate(feet_labels):
             plt.subplot(2, 2, i + 1)
             for k in range(3):
-                plt.plot([i * time_scale for i in results['t']], results['f'][3 * i + k], '-')
+                plt.plot(results['t'], results['f'][3 * i + k], '-')
             plt.grid()
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
-        #plt.savefig('../plots/gait_forces.png')
+        # plt.savefig('../plots/gait_forces.png')
 
         # plot swing trajectory
         # All points to be published
@@ -465,24 +464,27 @@ class Gait:
             plt.figure()
             for i, name in enumerate(coord_labels):
                 plt.subplot(3, 1, i + 1)
-                plt.plot([i * time_scale for i in s], results['sw'][j][name])   # nominal trj
-                plt.plot([i * time_scale for i in s[0:t_exec[j]]], results['sw'][j][name][0:t_exec[j]])   # executed trj
+                plt.plot(s, results['sw'][j][name])  # nominal trj
+                plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
                 plt.grid()
                 plt.legend(['nominal', 'real'])
                 plt.title('Trajectory ' + name)
             plt.xlabel('Time [s]')
-            #plt.savefig('../plots/gait_swing.png')
+            # plt.savefig('../plots/gait_swing.png')
 
-            # plot swing trajectory in two dimensions Z - X
-            plt.figure()
-            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])    # nominal trj
-            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])    # real trj
+        # plot swing trajectory in two dimensions Z - X
+        plt.figure()
+        for j in range(len(results['sw'])):
+            plt.subplot(2, 2, j + 1)
+            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
+            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
             plt.grid()
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory Z- X')
             plt.xlabel('X [m]')
             plt.ylabel('Z [m]')
-            #plt.savefig('../plots/gait_swing_zx.png')
+            # plt.savefig('../plots/gait_swing_zx.png')
+
         plt.show()
 
 
@@ -535,8 +537,7 @@ if __name__ == "__main__":
     swing_currents = [foot_contacts[sw_id[0]], foot_contacts[sw_id[1]]]
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
-    publish_hz = res
     # print the results
-    w.print_trj(interpl, res, publish_hz)
+    w.print_trj(sol, interpl, res)
 
 

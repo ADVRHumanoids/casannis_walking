@@ -395,7 +395,7 @@ class Walking:
             'sw': sw_interpl
         }
 
-    def print_trj(self, results, resol, publish_freq, t_exec=0):
+    def print_trj(self, solution, results, resol, t_exec=0):
         '''
 
         Args:
@@ -409,16 +409,13 @@ class Walking:
 
         '''
 
-        # scale time for the case of publish through rostopics
-        time_scale = (resol/publish_freq)
-
         # Interpolated state plot
         state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
         plt.figure()
         for i, name in enumerate(state_labels):
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
-                plt.plot([i * time_scale for i in results['t']], results['x'][self._dimc * i + j], '-')
+                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
@@ -432,7 +429,7 @@ class Walking:
         for i, name in enumerate(feet_labels):
             plt.subplot(2, 2, i + 1)
             for k in range(3):
-                plt.plot([i * time_scale for i in results['t']], results['f'][3 * i + k], '-')
+                plt.plot(results['t'], results['f'][3 * i + k], '-')
             plt.grid()
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
@@ -447,8 +444,8 @@ class Walking:
         plt.figure()
         for i, name in enumerate(coord_labels):
             plt.subplot(3, 1, i + 1)
-            plt.plot([i * time_scale for i in s], results['sw'][name])   # nominal trj
-            plt.plot([i * time_scale for i in s[0:t_exec]], results['sw'][name][0:t_exec])   # executed trj
+            plt.plot(s, results['sw'][name])   # nominal trj
+            plt.plot(s[0:t_exec], results['sw'][name][0:t_exec])   # executed trj
             plt.grid()
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
@@ -514,8 +511,7 @@ if __name__ == "__main__":
     res = 300
     interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
 
-    publish_hz = res
     # print the results
-    w.print_trj(interpl, res, publish_hz)
+    w.print_trj(sol, interpl, res)
 
 
