@@ -211,7 +211,7 @@ def casannis(int_freq):
         print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
 
     if rospy.get_param("~plots"):
-        walk.print_trj(interpl, int_freq, int_freq, executed_trj)
+        walk.print_trj(sol, interpl, int_freq, executed_trj)
 
 
 if __name__ == '__main__':
