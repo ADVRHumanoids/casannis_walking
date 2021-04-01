@@ -109,9 +109,9 @@ class Gait:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e1 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) +\
-                  1e-2 * cs.sumsqr(h_vert) #+ 1e-8 * cs.sumsqr(h_horz)
-
+            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
+                  1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
+                  1e-3 * cs.sumsqr(f_k[1::3])
             J.append(j_k)
 
             # newton
@@ -599,7 +599,7 @@ if __name__ == "__main__":
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
     # print the results
-    w.print_trj(sol, interpl, res)
+    w.print_trj(solution=sol, results=interpl, resol=res)
 
     # print support lines
     w.print_support_line([foot_contacts[1], foot_contacts[2]],
