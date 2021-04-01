@@ -109,9 +109,8 @@ class Gait:
             # vertical distance between CoM and mean of feet
             h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
 
-            j_k = 1e-11 * cs.sumsqr(u_k) #+ 1e-2 * cs.sumsqr(h_vert)#+ 1e-3 * cs.sumsqr(f_k[0::3]) + \
-                  #1e-3 * cs.sumsqr(f_k[1::3])
-                  #1e-2 * cs.sumsqr(h_horz)
+            j_k = 1e1 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3]) +\
+                  1e-2 * cs.sumsqr(h_vert) #+ 1e-8 * cs.sumsqr(h_horz)
 
             J.append(j_k)
 
@@ -279,22 +278,24 @@ class Gait:
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
 
-            # swing phases
-            is_swing = []
+            # robust swing phases for applying zmp
+            is_swing_rob = []
 
             for i in range(step_num):
-                is_swing.append(k >= (swing_t[i][0] / self._dt) - 4 and k <= (swing_t[i][1] / self._dt) + 4)
+                is_swing_rob.append((swing_t[i][0] / self._dt) - 2 <= k <= (swing_t[i][1] / self._dt) + 2)
 
             # zmp constraints
             zmp_liml = np.full(2, -cs.inf)
             zmp_limu = np.full(2, cs.inf)
 
-            if is_swing[0]:
-                zmp_liml = np.array([0, -cs.inf])
-                zmp_limu = np.array([0, cs.inf])
-            elif is_swing[1]:
+            if is_swing_rob[0]:
+                # sequence 14 , 23
                 zmp_liml = np.array([-cs.inf, 0])
                 zmp_limu = np.array([cs.inf, 0])
+
+            elif is_swing_rob[1]:
+                zmp_liml = np.array([0, -cs.inf])
+                zmp_limu = np.array([0, cs.inf])
 
             gl.append(zmp_liml)
             gu.append(zmp_limu)
@@ -498,8 +499,9 @@ class Gait:
             plt.xlabel('Time [s]')
             # plt.savefig('../plots/gait_swing.png')
 
-            # plot swing trajectory in two dimensions Z - X
-            plt.figure()
+        plt.figure()
+        for j in range(len(results['sw'])):            # plot swing trajectory in two dimensions Z - X
+            plt.subplot(2, 2, j + 1)
             plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
             plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
             plt.grid()
@@ -508,6 +510,46 @@ class Gait:
             plt.xlabel('X [m]')
             plt.ylabel('Z [m]')
             # plt.savefig('../plots/gait_swing_zx.png')
+
+        plt.show()
+
+    def print_support_line(self, contacts1, contacts2, com_pos, swing_periods):
+
+        print_knots = [int(k / self._dt) for j in swing_periods for k in j]
+
+        # print support lines and CoM
+        plt.figure()
+        plt.plot([contacts1[0][1], contacts1[1][1]], [contacts1[0][0], contacts1[1][0]], '-')
+        plt.plot(com_pos[1][0:print_knots[1]], com_pos[0][0:print_knots[1]], '.')
+
+        label = 0
+        for x, y in zip(com_pos[1][print_knots[0]:print_knots[1]], com_pos[0][print_knots[0]:print_knots[1]]):
+            # label = range(0, 40) #"{:.2f}".format(y)
+
+            plt.annotate(label,  # this is the text
+                         (x, y),  # this is the point to label
+                         textcoords="offset points",  # how to position the text
+                         xytext=(0, 10),  # distance from text to points (x,y)
+                         ha='center')  # horizontal alignment can be left, right or center
+            label += 1
+
+        plt.plot([contacts2[0][1], contacts2[1][1]], [contacts2[0][0], contacts2[1][0]], '-')
+        plt.plot(com_pos[1][print_knots[1]:print_knots[3]], com_pos[0][print_knots[1]:print_knots[3]], '.')
+
+        for x, y in zip(com_pos[1][print_knots[2]:print_knots[3]], com_pos[0][print_knots[2]:print_knots[3]]):
+            # label = range(0, 40) #"{:.2f}".format(y)
+
+            plt.annotate(label,  # this is the text
+                         (x, y),  # this is the point to label
+                         textcoords="offset points",  # how to position the text
+                         xytext=(0, 10),  # distance from text to points (x,y)
+                         ha='center')  # horizontal alignment can be left, right or center
+            label += 1
+
+        plt.xlim(0.5, -0.5)
+        plt.ylabel('X axis [m]')
+        plt.xlabel('Y axis [m]')
+        plt.legend(['support line1', 'CoM projection1', 'support line2', 'CoM projection2'])
         plt.show()
 
 
@@ -541,7 +583,7 @@ if __name__ == "__main__":
         [[foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz] for i in sw_id])
 
     # swing_time = (1.5, 3.0)
-    swing_time = [[2.0, 4.0], [5.0, 7.0], [5.0, 7.0], [2.0, 4.0]]
+    swing_time = [[2.0, 3.0], [4.0, 5.0], [4.0, 5.0], [2.0, 3.0]]
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
@@ -563,31 +605,7 @@ if __name__ == "__main__":
     # print the results
     w.print_trj(interpl, res, publish_hz)
 
-    # print support lines and CoM
-    plt.figure()
-    plt.plot([foot_contacts[1][0], foot_contacts[2][0]], [foot_contacts[1][1], foot_contacts[2][1]], '-')
-    plt.plot(sol['x'][0][0:40], sol['x'][1][0:40], '.')
-    label = 0
-    for x, y in zip(sol['x'][0][20:40], sol['x'][1][20:40]):
-        #label = range(0, 40) #"{:.2f}".format(y)
-
-        plt.annotate(label,  # this is the text
-                     (x, y),  # this is the point to label
-                     textcoords="offset points",  # how to position the text
-                     xytext=(0, 10),  # distance from text to points (x,y)
-                     ha='center')  # horizontal alignment can be left, right or center
-        label +=1
-
-    plt.figure()
-    plt.plot([swing_target[0][0], swing_target[3][0]], [swing_target[0][1], swing_target[3][1]], '-')
-    plt.plot(sol['x'][0][40:70], sol['x'][1][40:70], '.')
-    for x, y in zip(sol['x'][0][50:70], sol['x'][1][50:70]):
-        # label = range(0, 40) #"{:.2f}".format(y)
-
-        plt.annotate(label,  # this is the text
-                     (x, y),  # this is the point to label
-                     textcoords="offset points",  # how to position the text
-                     xytext=(0, 10),  # distance from text to points (x,y)
-                     ha='center')  # horizontal alignment can be left, right or center
-        label += 1
-    plt.show()
+    # print support lines
+    w.print_support_line([foot_contacts[1], foot_contacts[2]],
+                         [swing_target[0], swing_target[3]],
+                         sol['x'][0:3], swing_time[0:2])
