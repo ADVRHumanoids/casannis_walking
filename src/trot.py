@@ -133,7 +133,7 @@ class Gait:
 
             g.append(euler)
 
-            # zmp constraint
+            # zmp constraint - support line
             alpha14 = (p_k[10] - p_k[1])/(p_k[9] - p_k[0])
             beta14 = p_k[1] - alpha14 * p_k[0]
 
@@ -197,9 +197,6 @@ class Gait:
         # swing feet positions at maximum clearance
         clearance_swing_position = []
 
-        print('lala', swing_tgt)
-        print('lalaaa', swing_id)
-
         for i in range(step_num):
             if contacts[swing_id[i] - 1][2] >= swing_tgt[swing_id[i] - 1][2]:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
@@ -220,8 +217,8 @@ class Gait:
                 # x_max = np.full(self._dimx, cs.inf) # do not bound state
 
                 # constraining com z coordinate
-                x_max = np.concatenate([[cs.inf], [cs.inf], [0.2], np.full(6, cs.inf)])
-                x_min = -np.concatenate([[cs.inf], [cs.inf], [-0.2], np.full(6, cs.inf)])
+                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
+                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
 
             Xu.append(x_max)
             Xl.append(x_min)
@@ -438,10 +435,11 @@ class Gait:
             'sw': sw_interpl
         }
 
-    def print_trj(self, results, resol, publish_freq, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, t_exec=[0, 0, 0, 0]):
         '''
 
         Args:
+            solution: optimized decision variables
             t_exec: list of last trj points that were executed (because of early contact or other)
             results: results from interpolation
             resol: interpolation resol
@@ -452,16 +450,14 @@ class Gait:
 
         '''
 
-        # scale time for the case of publish through rostopics
-        time_scale = (resol / publish_freq)
-
         # Interpolated state plot
         state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
         plt.figure()
         for i, name in enumerate(state_labels):
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
-                plt.plot([i * time_scale for i in results['t']], results['x'][self._dimc * i + j], '-')
+                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
+                #plt.plot([i * self._dt for i in range(self._N)], solution['x'][self._dimc * i + j], '.')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
@@ -475,7 +471,7 @@ class Gait:
         for i, name in enumerate(feet_labels):
             plt.subplot(2, 2, i + 1)
             for k in range(3):
-                plt.plot([i * time_scale for i in results['t']], results['f'][3 * i + k], '-')
+                plt.plot(results['t'], results['f'][3 * i + k], '-')
             plt.grid()
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
@@ -491,16 +487,17 @@ class Gait:
             plt.figure()
             for i, name in enumerate(coord_labels):
                 plt.subplot(3, 1, i + 1)
-                plt.plot([i * time_scale for i in s], results['sw'][j][name])  # nominal trj
-                plt.plot([i * time_scale for i in s[0:t_exec[j]]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+                plt.plot(s, results['sw'][j][name])  # nominal trj
+                plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
                 plt.grid()
                 plt.legend(['nominal', 'real'])
                 plt.title('Trajectory ' + name)
             plt.xlabel('Time [s]')
             # plt.savefig('../plots/gait_swing.png')
 
+        # plot swing trajectory in two dimensions Z - X
         plt.figure()
-        for j in range(len(results['sw'])):            # plot swing trajectory in two dimensions Z - X
+        for j in range(len(results['sw'])):
             plt.subplot(2, 2, j + 1)
             plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
             plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
@@ -589,11 +586,11 @@ if __name__ == "__main__":
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
                   swing_clearance=0.1, swing_t=swing_time, min_f=100)
     # debug
-    print("X0 is:", x_init)
+    '''print("X0 is:", x_init)
     print("contacts is:", foot_contacts)
     print("swing id is:", sw_id)
     print("swing target is:", swing_target)
-    print("swing time:", swing_time)
+    print("swing time:", swing_time)'''
     # interpolate the values, pass values and interpolation resolution
     res = 300
     step_clear = 0.1
@@ -601,9 +598,8 @@ if __name__ == "__main__":
     swing_currents = [foot_contacts[sw_id[i]] for i in sw_id]
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
-    publish_hz = res
     # print the results
-    w.print_trj(interpl, res, publish_hz)
+    w.print_trj(sol, interpl, res)
 
     # print support lines
     w.print_support_line([foot_contacts[1], foot_contacts[2]],
