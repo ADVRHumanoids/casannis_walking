@@ -198,7 +198,7 @@ class Gait:
         print('lalaaa', swing_id)
 
         for i in range(step_num):
-            if contacts[swing_id[i] - 1][2] >= swing_tgt[swing_id[i] - 1][2]:
+            if contacts[swing_id[i]][2] >= swing_tgt[swing_id[i]][2]:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [contacts[swing_id[i]][2] + swing_clearance])
             else:
@@ -400,10 +400,10 @@ class Gait:
         # swing trajectories with one intemediate point
         sw_interpl = []
         for i in range(len(sw_curr)):
-            sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
+            #sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
 
             # spline optimization
-            #sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
+            sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
 
         return {
             't': self._t,
@@ -518,12 +518,15 @@ if __name__ == "__main__":
     swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[1]][2] + dz]\
                             , [foot_contacts[sw_id[1]][0] + dx, foot_contacts[sw_id[1]][1] + dy, foot_contacts[sw_id[1]][2] + dz]])
 
-    #swing_time = (1.5, 3.0)
-    swing_time = [[1.0, 4.0], [5.0, 8.0]]
+    # swing_time
+    #swing_time = [[1.0, 4.0], [5.0, 8.0]]
+    swing_time = [[1.0, 2.5], [3.5, 5.0]]
+
+    step_clear = 0.05
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
-                  swing_clearance=0.1, swing_t=swing_time, min_f=100)
+                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
     # debug
     print("X0 is:", x_init)
     print("contacts is:", foot_contacts)
@@ -532,7 +535,6 @@ if __name__ == "__main__":
     print("swing time:", swing_time)
     # interpolate the values, pass values and interpolation resolution
     res = 300
-    step_clear = 0.1
 
     swing_currents = [foot_contacts[sw_id[0]], foot_contacts[sw_id[1]]]
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
