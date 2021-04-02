@@ -138,7 +138,7 @@ def casannis(int_freq):
     early_contact = [False, False, False, False]
 
     # times activating contact detection
-    t_early = [0.6 * (swing_t[i][0] + swing_t[i][1]) for i in range(step_num)]
+    t_early = [swing_t[i][0] + 0.7 * (swing_t[i][1] - swing_t[i][0]) for i in range(step_num)]
 
     # time intervals [swing_start, early_cont_detection_start, swing_stop]
     delta_t_early = [[swing_t[i][0], t_early[i], swing_t[i][1]] for i in range(step_num)]

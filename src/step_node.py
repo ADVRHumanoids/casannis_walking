@@ -117,7 +117,7 @@ def casannis(int_freq):
     early_contact = False
 
     # time starting contact detection
-    t_early = 0.6 * (swing_t[0] + swing_t[1])
+    t_early = swing_t[0] + 0.7 * (swing_t[1] - swing_t[0])
 
     # trj points during swing phase
     #N_swing_total = int((swing_t[1] - swing_t[0]) * int_freq)
