@@ -2,7 +2,7 @@
 
 <launch>
     <arg name="swing_id" default="[1, 2, 3, 4]"/>
-    <arg name="target_dx" default="0.1"/>
+    <arg name="target_dx" default="0.05"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
 
