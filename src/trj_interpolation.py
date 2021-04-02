@@ -164,6 +164,9 @@ def swing_trj_optimal_spline(sw_curr, sw_tgt, clear, sw_t, total_t, resol, terra
     # get trj points
     z_trj_points = z_qp.interpolate_trj(z_splines, z_plan['wayp_times'])
 
+    # print
+    #z_qp.print_results(z_plan, z_qpsol, z_splines)
+
     end = time.time()
     print('Time for spline optimization:', 1e3 * (end - start), 'msec')
 

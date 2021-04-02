@@ -571,8 +571,8 @@ if __name__ == "__main__":
     initial_pos = 0.0
     target_pos = 0.0
     terrain_conf = 0.04
-    swing_time = [0.0, 2.5]
-    clear = 0.1
+    swing_time = [0.0, 1.5]
+    clear = 0.05
     N = 9   # number of waypoints
     ramp_points = 3  # including initial
     obstacle_points = 3
