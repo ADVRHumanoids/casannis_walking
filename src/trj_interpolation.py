@@ -60,8 +60,12 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
     dist1 = math.sqrt((sw_x[1] - sw_x[0]) ** 2 + (sw_y[1] - sw_y[0]) ** 2 + (sw_z[1] - sw_z[0]) ** 2)
     dist2 = math.sqrt((sw_x[2] - sw_x[1]) ** 2 + (sw_y[2] - sw_y[1]) ** 2 + (sw_z[2] - sw_z[1]) ** 2)
 
-    dist_fraction1 = dist1 / (dist1 + dist2)
-    dist_fraction2 = dist2 / (dist1 + dist2)
+    try:    # deal with division with zero
+        dist_fraction1 = dist1 / (dist1 + dist2)
+        dist_fraction2 = dist2 / (dist1 + dist2)
+    except:
+        dist_fraction1 = 0.5
+        dist_fraction2 = 0.5
 
     # assign spline time according to distances
     t_middle = sw_t[0] + dist_fraction1 * (sw_t[1] - sw_t[0])
