@@ -52,8 +52,17 @@ class DemoAction(object):
 
             # roll 1, 3, 4
             rospy.set_param('~sw_id', "[1, 3, 4]")
-            rospy.set_param('~tgt_dx', 0.2)
-            rospy.set_param('~tgt_dy', 0.0)
+
+            rospy.set_param('~tgt_dx1', 0.2)
+            rospy.set_param('~tgt_dx2', 0.2)
+            rospy.set_param('~tgt_dx3', 0.2)
+            rospy.set_param('~tgt_dx4', 0.2)
+
+            rospy.set_param('~tgt_dy1', 0.0)
+            rospy.set_param('~tgt_dy2', 0.0)
+            rospy.set_param('~tgt_dy3', 0.0)
+            rospy.set_param('~tgt_dy4', 0.0)
+
             rospy.set_param('~sw_t1', "[0.0, 4.0]")
             rospy.set_param('~sw_t2', "[0.0, 4.0]")
             rospy.set_param('~sw_t3', "[0.0, 4.0]")
@@ -81,8 +90,10 @@ class DemoAction(object):
 
             # roll 1, 2, 3
             rospy.set_param('~sw_id', "[1, 2, 3]")
-            rospy.set_param('~tgt_dx', 0.1)
-            rospy.set_param('~tgt_dy', 0.0)
+            rospy.set_param('~tgt_dx1', 0.1)
+            rospy.set_param('~tgt_dx2', 0.1)
+            rospy.set_param('~tgt_dx3', 0.1)
+            rospy.set_param('~tgt_dx4', 0.1)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
@@ -102,16 +113,20 @@ class DemoAction(object):
 
             # roll 1, 3, 4
             rospy.set_param('~sw_id', "[1, 3, 4]")
-            rospy.set_param('~tgt_dx', 0.2)
-            rospy.set_param('~tgt_dy', 0.0)
+            rospy.set_param('~tgt_dx1', 0.2)
+            rospy.set_param('~tgt_dx2', 0.2)
+            rospy.set_param('~tgt_dx3', 0.2)
+            rospy.set_param('~tgt_dx4', 0.2)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # roll 3
             rospy.set_param('~sw_id', "[3]")
-            rospy.set_param('~tgt_dx', 0.1)
-            rospy.set_param('~tgt_dy', 0.0)
+            rospy.set_param('~tgt_dx1', 0.1)
+            rospy.set_param('~tgt_dx2', 0.1)
+            rospy.set_param('~tgt_dx3', 0.1)
+            rospy.set_param('~tgt_dx4', 0.1)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
@@ -131,8 +146,10 @@ class DemoAction(object):
 
             # roll 1, 2, 3
             rospy.set_param('~sw_id', "[1, 2, 3]")
-            rospy.set_param('~tgt_dx', 0.2)
-            rospy.set_param('~tgt_dy', 0.0)
+            rospy.set_param('~tgt_dx1', 0.2)
+            rospy.set_param('~tgt_dx2', 0.2)
+            rospy.set_param('~tgt_dx3', 0.2)
+            rospy.set_param('~tgt_dx4', 0.2)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
@@ -152,8 +169,10 @@ class DemoAction(object):
 
             # roll 1, 2
             rospy.set_param('~sw_id', "[1, 2]")
-            rospy.set_param('~tgt_dx', 0.2)
-            rospy.set_param('~tgt_dy', 0.0)
+            rospy.set_param('~tgt_dx1', 0.2)
+            rospy.set_param('~tgt_dx2', 0.2)
+            rospy.set_param('~tgt_dx3', 0.2)
+            rospy.set_param('~tgt_dx4', 0.2)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
@@ -169,8 +188,16 @@ class DemoAction(object):
     def move_fwd(self, distance, pub_freq):
 
         rospy.set_param('~sw_id', "[1, 2, 3, 4]")
-        rospy.set_param('~tgt_dx', distance)
-        rospy.set_param('~tgt_dy', 0.0)
+        rospy.set_param('~tgt_dx1', distance)
+        rospy.set_param('~tgt_dx2', distance)
+        rospy.set_param('~tgt_dx3', distance)
+        rospy.set_param('~tgt_dx4', distance)
+
+        rospy.set_param('~tgt_dy1', 0.0)
+        rospy.set_param('~tgt_dy2', 0.0)
+        rospy.set_param('~tgt_dy3', 0.0)
+        rospy.set_param('~tgt_dy4', 0.0)
+
         rospy.set_param('~sw_t1', "[0.0, 4.0]")
         rospy.set_param('~sw_t2', "[0.0, 4.0]")
         rospy.set_param('~sw_t3', "[0.0, 4.0]")
@@ -178,6 +205,7 @@ class DemoAction(object):
 
         roll.roll_feet(pub_freq)
         rospy.loginfo('%s: Roll completed' % (self._action_name))
+
 
 if __name__ == '__main__':
 
