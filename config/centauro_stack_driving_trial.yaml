@@ -1,6 +1,10 @@
 solver_options:
     regularization: 1e-3
     back_end: "osqp"
+    #regularization: 0
+    #back_end: "qpoases"
+    #front_end: "nhqp"
+    #nhqp_min_sv_ratio: 0.05
 
 stack:
     - ["Wheel1", "Wheel2", "Wheel3", "Wheel4", "ComXYZ", "Steering1", "Steering2", "Steering3", "Steering4"]
@@ -15,7 +19,7 @@ params:
  - &cont_base_link world
  - &cont_indices [3, 4]
  - &cont_weight 0.1
- - &roll_weight 1000.0
+ - &roll_weight 10.0
 
 Cont1RP:
    type: "Cartesian"
