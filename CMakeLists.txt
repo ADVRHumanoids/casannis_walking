@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files( DIRECTORY msg
     FILES
     Four_contacts.msg
+    Obstacles.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -73,6 +74,7 @@ generate_messages(
     DEPENDENCIES
     std_msgs
     actionlib_msgs
+    geometry_msgs
 )
 
 ################################################

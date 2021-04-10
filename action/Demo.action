@@ -1,5 +1,6 @@
 # Define the goal
-bool demo_goal  # True or false
+bool simulation  # True or false
+casannis_walking/Obstacles platform
 ---
 # Define the result
 bool demo_result    # True or false result for execution or not
