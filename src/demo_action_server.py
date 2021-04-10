@@ -22,7 +22,7 @@ class DemoAction(object):
 
         self._action_name = name
         self._as = actionlib.SimpleActionServer(self._action_name, casannis_walking.msg.DemoAction,
-                                                execute_cb=self.execute_callback_fast, auto_start=False)
+                                                execute_cb=self.execute_callback, auto_start=False)
         self._as.start()
 
     def execute_callback(self, goal):
