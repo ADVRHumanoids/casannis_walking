@@ -19,7 +19,7 @@ params:
  - &cont_base_link world
  - &cont_indices [3, 4]
  - &cont_weight 0.1
- - &roll_weight 10.0
+ - &roll_weight 1.0
 
 Cont1RP:
    type: "Cartesian"
