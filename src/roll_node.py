@@ -125,14 +125,10 @@ def roll_feet(freq):
             polygon_points[i][0] = round(polygon_points[i][0] + tgt_dx[indic], 4)
             polygon_points[i][1] = round(polygon_points[i][1] + tgt_dy[indic], 4)
 
-    #polygon_points.append(polygon_points[0])
-    print("Polygon points:", polygon_points)
     polygon = Polygon(polygon_points)
-    print("Centroid sketo:", polygon.centroid)
-    print("Polygon centroid", [round(polygon.centroid.coords[0][k], 3) for k in [0,1]])   #debug
 
     # send com at the centroid of the polygon and a bit forward
-    com_tgt = [polygon.centroid.coords[0][0] + 0.02, polygon.centroid.coords[0][1]] + [com_init[2]]
+    com_tgt = [polygon.centroid.coords[0][0] + 0.05, polygon.centroid.coords[0][1]] + [com_init[2]]
 
     interpl_trj.append(interpol.swing_trj_triangle(sw_curr=com_init, sw_tgt=com_tgt,
                                                    clear=0, sw_t=swing_t[0], total_t=total_time,
