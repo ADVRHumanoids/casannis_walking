@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt

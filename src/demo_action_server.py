@@ -6,6 +6,11 @@ import casannis_walking.msg
 import step_node as step
 import roll_node as roll
 
+from tf_listener import get_transform
+
+wheel_radius = 0.078
+safety_from_edges = 0.04
+
 
 class DemoAction(object):
 
@@ -17,10 +22,31 @@ class DemoAction(object):
 
         self._action_name = name
         self._as = actionlib.SimpleActionServer(self._action_name, casannis_walking.msg.DemoAction,
-                                                execute_cb=self.execute_callback, auto_start=False)
+                                                execute_cb=self.execute_callback_fast, auto_start=False)
         self._as.start()
 
     def execute_callback(self, goal):
+
+        get_transform('wheel_2', 'wheel_1')
+
+        # robot & platform localization in global frame
+        pelvis_x = 0.045
+        fr_wheel_x = 0.394  # to be found from tfs
+        edge1_x = 1.0
+
+        # distances to be covered
+        dist1 = edge1_x - fr_wheel_x - wheel_radius - safety_from_edges
+
+        simulation = goal.simulation
+        h_platform = goal.platform.height
+        len_platform = goal.platform.depth
+
+        if simulation:
+            h_error = 0.03
+            contact_detection = True
+        else:
+            h_error = 0.0
+            contact_detection = False
 
         # helper variables
         rate = rospy.Rate(100)
@@ -31,7 +57,7 @@ class DemoAction(object):
 
         # publish info to the console for the user
         rospy.loginfo('%s: Executing the demo action with goal %i with seeds %s' % (
-            self._action_name, goal.demo_goal, self._feedback.demo_feedback))
+            self._action_name, goal.simulation, self._feedback.demo_feedback))
 
         # start executing the action
         for i in range(1, 2):
@@ -72,17 +98,17 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # move forward
-            self.move_fwd(0.47, freq)
+            self.move_fwd(dist1, freq)
 
             # step on 2
             rospy.set_param('~sw_id', 2)
             rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
-            rospy.set_param('~tgt_dz', 0.17)
-            rospy.set_param('~clear', 0.08)
+            rospy.set_param('~tgt_dz', (h_platform - h_error))
+            rospy.set_param('~clear', (0.05 + h_error))
             rospy.set_param('~sw_t', "[2.0, 6.0]")
             rospy.set_param('~min_for', 100)
-            rospy.set_param('~cont_det', True)
+            rospy.set_param('~cont_det', contact_detection)
             rospy.set_param('~plots', False)
 
             step.casannis(freq)
@@ -105,18 +131,18 @@ class DemoAction(object):
             rospy.set_param('~sw_id', 4)
             rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
-            rospy.set_param('~tgt_dz', 0.17)
-            rospy.set_param('~clear', 0.08)
+            rospy.set_param('~tgt_dz', (h_platform - h_error))
+            rospy.set_param('~clear', (0.05 + h_error))
 
             step.casannis(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # roll 1, 3, 4
             rospy.set_param('~sw_id', "[1, 3, 4]")
-            rospy.set_param('~tgt_dx1', 0.2)
-            rospy.set_param('~tgt_dx2', 0.2)
-            rospy.set_param('~tgt_dx3', 0.2)
-            rospy.set_param('~tgt_dx4', 0.2)
+            rospy.set_param('~tgt_dx1', 0.25)
+            rospy.set_param('~tgt_dx2', 0.25)
+            rospy.set_param('~tgt_dx3', 0.25)
+            rospy.set_param('~tgt_dx4', 0.25)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
@@ -136,9 +162,9 @@ class DemoAction(object):
 
             # step off 2
             rospy.set_param('~sw_id', 2)
-            rospy.set_param('~tgt_dx', 0.2)
+            rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
-            rospy.set_param('~tgt_dz', - 0.23)
+            rospy.set_param('~tgt_dz', -(h_platform + h_error))
             rospy.set_param('~clear', 0.04)
 
             step.casannis(freq)
@@ -159,9 +185,9 @@ class DemoAction(object):
 
             # step off 4
             rospy.set_param('~sw_id', 4)
-            rospy.set_param('~tgt_dx', 0.2)
+            rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
-            rospy.set_param('~tgt_dz', - 0.23)
+            rospy.set_param('~tgt_dz', -(h_platform + h_error))
             rospy.set_param('~clear', 0.04)
 
             step.casannis(freq)
@@ -208,6 +234,23 @@ class DemoAction(object):
 
     def execute_callback_fast(self, goal):
 
+        # robot & platform localization in global frame
+        pelvis_x = 0.045
+        fr_wheel_x = 0.394  # to be found from tfs
+        edge1_x = 1.0
+
+        # info from the received goal
+        simulation = goal.simulation
+        h_platform = goal.platform.height
+        len_platform = goal.platform.depth
+
+        if simulation:
+            h_error = 0.03
+            contact_detection = True
+        else:
+            h_error = 0.0
+            contact_detection = False
+
         # helper variables
         rate = rospy.Rate(100)
         success = True
@@ -217,7 +260,7 @@ class DemoAction(object):
 
         # publish info to the console for the user
         rospy.loginfo('%s: Executing the demo action with goal %i with seeds %s' % (
-            self._action_name, goal.demo_goal, self._feedback.demo_feedback))
+            self._action_name, goal.simulation, self._feedback.demo_feedback))
 
         # start executing the action
         for i in range(1, 2):
@@ -236,13 +279,16 @@ class DemoAction(object):
             # publish frequency
             freq = 300
 
+            # distance to be covered
+            dist1 = edge1_x - fr_wheel_x - wheel_radius - safety_from_edges
+
             # roll 1, 3, 4
             rospy.set_param('~sw_id', "[1, 2, 3, 4]")
 
-            rospy.set_param('~tgt_dx1', (0.2 + 0.47))
-            rospy.set_param('~tgt_dx2', 0.47)
-            rospy.set_param('~tgt_dx3', (0.2 + 0.47))
-            rospy.set_param('~tgt_dx4', (0.2 + 0.47))
+            rospy.set_param('~tgt_dx1', (0.2 + dist1))
+            rospy.set_param('~tgt_dx2', dist1)
+            rospy.set_param('~tgt_dx3', (0.2 + dist1))
+            rospy.set_param('~tgt_dx4', (0.2 + dist1))
 
             rospy.set_param('~tgt_dy1', 0.0)
             rospy.set_param('~tgt_dy2', 0.0)
@@ -261,15 +307,18 @@ class DemoAction(object):
             rospy.set_param('~sw_id', 2)
             rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
-            rospy.set_param('~tgt_dz', 0.17)
-            rospy.set_param('~clear', 0.08)
+            rospy.set_param('~tgt_dz', (h_platform - h_error))
+            rospy.set_param('~clear', (0.05 + h_error))
             rospy.set_param('~sw_t', "[2.0, 6.0]")
             rospy.set_param('~min_for', 100)
-            rospy.set_param('~cont_det', True)
+            rospy.set_param('~cont_det', contact_detection)
             rospy.set_param('~plots', False)
 
             step.casannis(freq)
             rospy.loginfo('%s: Step completed' % (self._action_name))
+
+            # distance to be covered
+            dist2 = 0
 
             # roll 1, 2, 3
             rospy.set_param('~sw_id', "[1, 2, 3, 4]")
@@ -295,6 +344,9 @@ class DemoAction(object):
 
             step.casannis(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
+
+            # distance to be covered
+            dist3 = len_platform - 2 * safety_from_edges
 
             # roll 1, 3, 4 and then roll 3
             rospy.set_param('~sw_id', "[1, 2, 3, 4]")
