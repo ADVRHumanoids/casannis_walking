@@ -3,523 +3,470 @@
 import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
-import time
-from src.spline_optimization import Spline_optimization_z
 
 
-class Spline_tests(Spline_optimization_z):
+class Walking:
+    """
+    Assumptions:
+      1) mass concentrated at com
+      2) zero angular momentum
+      3) point contacts
+    Dynamics:
+      1) input is com jerk
+      2) dynamics is a triple integrator of com jerk
+      3) there must be contact forces that
+        - realize the motion
+        - fulfil contact constraints (i.e. unilateral constraint)
+    """
 
-    def solver(self, waypoints_pos, midpoints_pos, ramps, obst):
+    def __init__(self, mass, N, dt):
+        """Walking class constructor
+        Args:
+            mass (float): robot mass
+            N (int): horizon length
+            dt (float): discretization step
+        """
 
-        # waypoints
-        Xl = []  # position lower bounds
-        Xu = []  # position upper bounds
-        DXl = []  # velocity lower bounds
-        DXu = []  # velocity upper bounds
-        DDXl = []  # acceleration lower bounds
-        DDXu = []  # acceleration upper bounds
+        self._N = N
+        self._dt = dt  # dt used for optimization knots
+        self._mass = mass
+        self._time = [(i * dt) for i in range(N)]
 
-        # midpoints
-        X_mid_u = []
-        X_mid_l = []
-        DX_mid_u = []
-        DX_mid_l = []
+        gravity = np.array([0, 0, -9.81])
 
-        gl = []  # constraint lower bounds
-        gu = []  # constraint upper bounds
+        # define dimensions
+        sym_t = cs.SX
+        self._dimc = dimc = 3
+        self._dimx = dimx = 3 * dimc
+        self._dimu = dimu = dimc
+        self._dimf = dimf = dimc
+        self._ncontacts = ncontacts = 4
 
+        # define cs variables
+        delta_t = sym_t.sym('delta_t', 1)  # symbolic in order to pass values for optimization/interpolation
+        c = sym_t.sym('c', dimc)
+        dc = sym_t.sym('dc', dimc)
+        ddc = sym_t.sym('ddc', dimc)
+        x = cs.vertcat(c, dc, ddc)
+        u = sym_t.sym('u', dimc)
+
+        # expression for the integrated state
+        xf = cs.vertcat(
+            c + dc * delta_t + 0.5 * ddc * delta_t ** 2 + 1.0 / 6.0 * u * delta_t ** 3,  # position
+            dc + ddc * delta_t + 0.5 * u * delta_t ** 2,  # velocity
+            ddc + u * delta_t  # acceleration
+        )
+
+        # wrap the expression into a function
+        self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
+
+        # construct the optimization problem (variables, cost, constraints, bounds)
+        X = list()
+        U = list()
+        F = list()
+        P = list()
+        g = list()  # list of constraint expressions
+        J = list()  # list of cost function expressions
+
+        self._trj = {
+            'x': X,
+            'u': U,
+            'F': F
+        }
+
+        # iterate over knots starting from k = 0
+        for k in range(N):
+
+            # create k-th state
+            x_k = sym_t.sym('x_' + str(k), dimx)
+            X.append(x_k)
+
+            # create k-th control
+            u_k = sym_t.sym('u_' + str(k), dimu)
+            U.append(u_k)
+
+            # dynamics constraint
+            if k > 0:
+                x_old = X[-2]  # save previous state
+                u_old = U[-2]  # prev control
+                dyn_k = self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'] - x_k
+                g.append(dyn_k)
+
+            # forces
+            f_k = sym_t.sym('f_' + str(k), ncontacts * dimf)
+            F.append(f_k)
+
+            # contact points
+            p_k = sym_t.sym('p_' + str(k), ncontacts * dimc)
+            P.append(p_k)
+
+            # cost  function
+
+            # horizontal distance of CoM from the mean of contact points
+            h_horz = x_k[0:2] - 0.25 * (p_k[0:2] + p_k[3:5] + p_k[6:8] + p_k[9:11])  # xy
+
+            # vertical distance between CoM and mean of feet
+            h_vert = x_k[2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.68
+
+            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
+                  1e-0 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + \
+                  1e-3 * cs.sumsqr(f_k[1::3])
+
+            # debug trials
+            # horizontal distance of CoM from each foot
+            # distances = [(cs.sumsqr(x_k[0:2] - p_k[3*i:(3*i+2)]) - 0.495 ** 2) ** 2 for i in range(4)]   # xy
+            # j_k = 1e1 * sum(distances) + 1e-2 * cs.sumsqr(u_k) + 1e-3 * cs.sumsqr(f_k[0::3]) + 1e-3 * cs.sumsqr(f_k[1::3])
+            '''r = np.array([5e1, 5e1, 5e0, 1e0, 1e0, 1e5, 1e0, 1e0, 1e0])
+            R = np.diag(r)
+            j_k = cs.mtimes(cs.transpose(x_k), cs.mtimes(R, x_k)) + 1e1 * cs.sumsqr(u_k) #+ 1e1 * cs.sumsqr(f_k)'''
+            # j_k = 0.5 * cs.sumsqr(u_k) + 1e-12 * cs.sumsqr(f_k) + 5e-0 * cs.sumsqr(x_k[0:2])
+
+            J.append(j_k)
+
+            # newton
+            ddc_k = x_k[6:9]
+            newton = mass * ddc_k - mass * gravity
+            for i in range(ncontacts):
+                f_i_k = f_k[3 * i:3 * (i + 1)]  # force of i-th contact
+                newton -= f_i_k
+
+            g.append(newton)
+
+            # euler
+            c_k = x_k[0:3]
+            euler = np.zeros(dimf)
+            for i in range(ncontacts):
+                f_i_k = f_k[3 * i:3 * (i + 1)]  # force of i-th contact
+                p_i_k = p_k[3 * i:3 * (i + 1)]  # contact of i-th contact
+                euler += cs.cross(p_i_k - c_k, f_i_k)
+
+            g.append(euler)
+
+        # construct the solver
+        self._nlp = {
+            'x': cs.vertcat(*X, *U, *F),
+            'f': sum(J),
+            'g': cs.vertcat(*g),
+            'p': cs.vertcat(*P)
+        }
+
+        # save dimensions
+        self._nvars = self._nlp['x'].size1()
+        self._nconstr = self._nlp['g'].size1()
+        self._nparams = self._nlp['p'].size1()
+
+        solver_options = {
+            'ipopt.linear_solver': 'ma57'
+        }
+
+        self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
+
+    def solve(self, x0, contacts, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
+        """Solve the stepping problem
+        Args:
+            x0 ([type]): initial state (com position, velocity, acceleration)
+            contacts ([type]): list of contact point positions
+            swing_id ([type]): the index of the swing leg from 0 to 3
+            swing_tgt ([type]): the target foothold for the swing leg
+            swing_clearance: clearance achieved from the highest point between initial and target position
+            swing_t ([type]): pair (t_lift, t_touch) in secs
+            min_f: minimum threshold for forces in z direction
+        """
+
+        Xl = list()  # state lower bounds
+        Xu = list()  # state upper bounds
+        Ul = list()  # control lower bounds
+        Uu = list()  # control upper bounds
+        Fl = list()  # force lower bounds
+        Fu = list()  # force upper bounds
+        gl = list()  # constraint lower bounds
+        gu = list()  # constraint upper bounds
+        P = list()  # parameter values
+
+        # time that maximum clearance occurs
+        clearance_time = 0.5 * (swing_t[0] + swing_t[1])
+
+        # swing foot position at maximum clearance
+        if contacts[swing_id][2] >= swing_tgt[2]:
+            clearance_swing_position = contacts[swing_id][0:2].tolist() + [contacts[swing_id][2] + swing_clearance]
+        else:
+            clearance_swing_position = swing_tgt[0:2].tolist() + [swing_tgt[2] + swing_clearance]
+
+        # iterate over knots starting from k = 0
         for k in range(self._N):
 
-            # variable bounds
-            # trj phases
-            is_ramp = (0 < k < ramps)   # excluding initial
-            is_obstacle = (ramps <= k < ramps + obst)
-            is_obstacle_max = (k == int(ramps + obst / 2))
-            is_landing = (ramps + obst <= k < self._N - 1)  # excluding final
-            is_start_slow_down = (k == ramps + obst)
-
-            # position bounds
-
-            if k == 0 or k == self._N - 1:  # initial/target position
-                x_max = waypoints_pos[k]
-                x_min = waypoints_pos[k]
-
-            elif is_ramp:   # ramp part
-                print('ramp', k)
-                x_max = cs.inf
-                x_min = waypoints_pos[0]
-
-            elif is_obstacle:   # main obstacle - clearance part
-
-                if is_obstacle_max:     # maximum clearance
-                    print('is obstacle max', k)
-                    x_max = waypoints_pos[k]
-                    x_min = waypoints_pos[k]
-
-                else:   # lower than maximum clearance
-                    print('obstacle', k)
-                    x_max = waypoints_pos[k]
-                    x_min = -cs.inf
-
-            elif is_landing:    # landing part
-
-                if is_start_slow_down:  # first point
-                    x_max = waypoints_pos[k]
-                    x_min = waypoints_pos[k]
-                else:
-                    x_max = cs.inf
-                    x_min = waypoints_pos[-1]
+            # state bounds
+            if k == 0:
+                x_max = x0
+                x_min = x0
 
             else:
-                x_max = cs.inf
-                x_min = -cs.inf
+                # x_max = np.full(self._dimx, cs.inf) # do not bound state
+
+                # constraining com z coordinate
+                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
+                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
 
             Xu.append(x_max)
             Xl.append(x_min)
 
-            # velocity bounds
+            # ctrl bounds
+            u_max = np.full(self._dimu, cs.inf)  # do not bound control
+            u_min = -u_max
+            Uu.append(u_max)
+            Ul.append(u_min)
 
-            # start, end velocity
-            if k == 0 or k == self._N - 1:
-                dx_max = 0.0
-                dx_min = 0.0
+            # force bounds
+            f_max = np.full(self._dimf * self._ncontacts, cs.inf)
+            f_min = np.array([-cs.inf, -cs.inf, min_f] * self._ncontacts)  # bound only the z component
 
-            # obstacle max clearance
-            elif is_obstacle_max:
-                dx_max = 0.0
-                dx_min = 0.0
+            # swing phase
+            is_swing = k >= swing_t[0] / self._dt and k <= swing_t[1] / self._dt
+            if is_swing:
+                # we are in swing phase
+                f_max[3 * swing_id:3 * (swing_id + 1)] = np.zeros(self._dimf)  # overwrite forces for the swing leg
+                f_min[3 * swing_id:3 * (swing_id + 1)] = np.zeros(self._dimf)
+            Fl.append(f_min)
+            Fu.append(f_max)
 
-            # landing
-            elif is_landing:
-                dx_max = cs.inf
-                dx_min = - 0.03
+            # contact positions
+            p_k = np.hstack(contacts)  # start with initial contacts (4x3)
 
-            else:
-                dx_max = cs.inf
-                dx_min = - cs.inf
+            # time region around max clearance time
+            clearance_region = (clearance_time / self._dt - 4 <= k <= clearance_time / self._dt + 4)
 
-            DXu.append(dx_max)
-            DXl.append(dx_min)
+            if clearance_region:
+                p_k[3 * swing_id:3 * (swing_id + 1)] = clearance_swing_position
 
-            # acceleration bounds
+            elif k > clearance_time / self._dt + 4:
+                # after the swing, the swing foot is now at swing_tgt
+                p_k[3 * swing_id:3 * (swing_id + 1)] = swing_tgt
 
-            # ramp
-            if is_ramp:
-                ddx_max = cs.inf
-                ddx_min = 0.001
+            P.append(p_k)
 
-            elif is_obstacle:
-                ddx_max = 0.0
-                ddx_min = - cs.inf
+            # dynamics bounds
+            if k > 0:
+                gl.append(np.zeros(self._dimx))
+                gu.append(np.zeros(self._dimx))
 
-            #elif is_landing:
+            # constraint bounds (newton-euler eq.)
+            gl.append(np.zeros(6))
+            gu.append(np.zeros(6))
 
-                #if is_start_slow_down:
-                    #print('start slow down', k)
-                    #ddx_max = -0.0001
-                    #ddx_min = -cs.inf
+            # final constraints
+        Xl[-1][3:] = 0  # zero velocity and acceleration
+        Xu[-1][3:] = 0
 
-                #else:
-                #ddx_max = cs.inf
-                #ddx_min = 0.0
-
-            else:
-                ddx_max = cs.inf
-                ddx_min = - cs.inf
-
-            DDXu.append(ddx_max)
-            DDXl.append(ddx_min)
-
-            # midpoints - variable constraints
-            if not k == self._N - 1:
-
-                # position
-                if is_ramp:
-                    x_mid_max = cs.inf
-                    x_mid_min = waypoints_pos[k]
-                #elif is_obstacle_max:
-                    #x_mid_max = waypoints_pos[k]
-                    #x_mid_min = - cs.inf
-                #elif is_landing:
-                    #x_mid_max = cs.inf
-                    #x_mid_min = -cs.inf
-                else:
-                    x_mid_max = cs.inf
-                    x_mid_min = -cs.inf
-
-                X_mid_u.append(x_mid_max)
-                X_mid_l.append(x_mid_min)
-
-                # velocity
-                if is_obstacle_max:
-                    dx_mid_max = -0.000
-                    dx_mid_min = - cs.inf
-                elif is_landing:
-                    if is_start_slow_down:
-                        dx_mid_max = 0.0
-                        dx_mid_min = -cs.inf
-                    else:
-                        dx_mid_max = 0.0
-                        dx_mid_min = -cs.inf
-
-                else:
-                    dx_mid_max = cs.inf
-                    dx_mid_min = - cs.inf
-
-                DX_mid_u.append(dx_mid_max)
-                DX_mid_l.append(dx_mid_min)
-
-                gl.append(np.zeros(2))
-                gu.append(np.zeros(2))
-
-            # constraints pos, vel, acc at waypoints
-            gl.append(np.zeros(2))
-            gu.append(np.zeros(2))
+        # initial guess
+        v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(*Xl, *DXl, *DDXl, *X_mid_l, *DX_mid_l)
-        ubv = cs.vertcat(*Xu, *DXu, *DDXu, *X_mid_u, *DX_mid_u)
+        lbv = cs.vertcat(*Xl, *Ul, *Fl)
+        ubv = cs.vertcat(*Xu, *Uu, *Fu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
+        params = cs.vertcat(*P)
 
-        # call solver
-        self._sol = self._solver(lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg)
+        # compute solution-call solver
+        sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
 
-        return self._sol
+        # plot state, forces, control input, quantities to be computed by evaluate function
+        x_trj = cs.horzcat(*self._trj['x'])  # pack states in a desired matrix
+        f_trj = cs.horzcat(*self._trj['F'])  # pack forces in a desired matrix
+        u_trj = cs.horzcat(*self._trj['u'])  # pack control inputs in a desired matrix
 
-    # ---------------------------------------------------------------------
-    def solver2(self, waypoints_pos, midpoints_pos):
+        # return values of the quantities *_trj
+        return {
+            'x': self.evaluate(sol['x'], x_trj),
+            'F': self.evaluate(sol['x'], f_trj),
+            'u': self.evaluate(sol['x'], u_trj)
+        }
 
-        # waypoints
-        Xl = []  # position lower bounds
-        Xu = []  # position upper bounds
-        DXl = []  # velocity lower bounds
-        DXu = []  # velocity upper bounds
-        DDXl = []  # acceleration lower bounds
-        DDXu = []  # acceleration upper bounds
+    def evaluate(self, solution, expr):
+        """ Evaluate a given expression
+        Args:
+            solution: given solution
+            expr: expression to be evaluated
+        Returns:
+            Numerical value of the given expression
+        """
 
-        # midpoints
-        X_mid_u = []
-        X_mid_l = []
-        DX_mid_u = []
-        DX_mid_l = []
+        # casadi function that symbolically maps the _nlp to the given expression
+        expr_fun = cs.Function('expr_fun', [self._nlp['x']], [expr], ['v'], ['expr'])
 
-        gl = []  # constraint lower bounds
-        gu = []  # constraint upper bounds
+        expr_value = expr_fun(v=solution)['expr'].toarray()
 
-        for k in range(self._N):
+        return expr_value
 
-            # variable bounds
-            # trj phases
-            #is_ramp = (0 < k < ramps)   # excluding initial
-            #is_obstacle = (ramps <= k < ramps + obst)
-            #is_obstacle_max = (k == int(ramps + obst / 2))
-            #is_landing = (ramps + obst <= k < self._N - 1)  # excluding final
-            #is_start_slow_down = (k == ramps + obst)
+    def interpolate(self, solution, sw_curr, sw_tgt, clearance, sw_t, resol):
+        """ Interpolate the trajectories generated by the solution of the problem
+        Args:
+            solution: solution of the problem (numerical values) is a directory
+                solution['x'] 9x30 --> optimized states
+                solution['f'] 12x30 --> optimized forces
+                solution['u'] 9x30 --> optimized control
+            sw_curr: current position of the foot to be swinged
+            sw_tgt: target position of the foot to be swinged
+            clearance: swing clearance
+            sw_t: (start, stop) period of foot swinging in a global manner wrt to optimization problem
+            resol: interpolation resolution (points per second)
+        Returns: a dictionary with:
+            time list for interpolation times (in sec)
+            list of list with state trajectory points
+            list of lists with forces' trajectory points
+            list of lists with the swinging foot's trajectory points
+        """
 
-            # position bounds
-            # start, end position
-            if k == 0 or k == self._N - 1:
-                print('initial,final', k)
-                x_max = waypoints_pos[k]
-                x_min = waypoints_pos[k]
+        # start and end times of optimization problem
+        t_tot = [0.0, self._N * self._dt]
 
-            # ramp
-            #elif is_ramp:
-                #print('ramp', k)
-                #x_max = cs.inf  # position[k+1]
-                #x_min = position[0]
+        delta_t = 1 / resol  # dt for interpolation
 
-            # main obstacle - clearance
-            #elif is_obstacle:
+        # -------- state trajectory interpolation ------------
 
-                #if is_obstacle_max:
-                    #print('is obstacle max', k)
-                    #x_max = position[k] + 0.02
-                    #x_min = position[k]
+        # intermediate points between two knots --> time interval * resolution
+        self._n = int(self._dt * resol)
 
-                #else:
-                    #print('obstacle', k)
-                    #x_max = position[k]
-                    #x_min = position[k] - 0.05
+        x_old = solution['x'][0:9, 0]  # initial state
+        x_all = []  # list to append all states
 
-            #elif is_landing:
+        for ii in range(self._N):  # loop for knots
 
-                #print('landing', k)
-                #x_max = cs.inf  # position[k] + 0.02
-                #x_min = position[-1]  # position[k+1]
+            # control input to change in every knot
+            u_old = solution['u'][0:3, ii]
 
-            else:
-                x_max = cs.inf
-                x_min = waypoints_pos[k]
+            for j in range(self._n):  # loop for interpolation points
 
-            Xu.append(x_max)
-            Xl.append(x_min)
+                x_all.append(x_old)  # storing state in the list 600x9
 
-            # velocity bounds
+                x_next = self._integrator(x_old, u_old, delta_t)  # next state
+                x_old = x_next  # refreshing the current state
 
-            # start, end velocity
-            if k == 0 or k == self._N - 1:
-                dx_max = 0.0
-                dx_min = 0.0
+        # initialize state and time lists to gather the data
+        int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
+        self._t = [(ii * delta_t) for ii in range(self._N * self._n)]
 
-            # obstacle max clearance
-            #elif is_obstacle_max:
-                #dx_max = 0.0
-                #dx_min = 0.0
+        for i in range(self._dimx):  # loop for every component of the state vector
+            for j in range(self._N * self._n):  # loop for every point of interpolation
 
-            # landing
-            # elif is_start_slow_down:
-            # dx_max = 0.0
-            # dx_min = - 0.03
+                # append the value of x_i component on j point of interpolation
+                # in the element i of the list int_state
+                int_state[i].append(x_all[j][i])
 
-            else:
-                dx_max = cs.inf
-                dx_min = - cs.inf
+        # ----------- force trajectory interpolation --------------
 
-            DXu.append(dx_max)
-            DXl.append(dx_min)
+        force_func = [[] for i in range(len(solution['F']))]  # list to store the splines
+        int_force = [[] for i in range(len(solution['F']))]  # list to store lists of points
 
-            # acceleration bounds
+        for i in range(len(solution['F'])):  # loop for each component of the force vector
 
-            # landing
-            #if is_ramp:
-                #ddx_max = cs.inf
-                #ddx_min = 0.2
+            # append the spline (by casadi) in the i element of the list force_func
+            force_func[i].append(cs.interpolant('X_CONT', 'linear', [self._time], solution['F'][i]))
 
-            #if is_obstacle:
-                #ddx_max = 0.0
-                #ddx_min = - cs.inf
+            # store the interpolation points for each force component in the i element of the list int_force
+            # primary dimension = number of force components
+            int_force[i] = force_func[i][0](self._t)
 
-            #elif is_landing:
+        # ----------- swing leg trajectory interpolation --------------
 
-                #if is_start_slow_down:
-                    #print('start slow down', k)
-                    #ddx_max = -0.0001
-                    #ddx_min = -cs.inf
+        # swing trajectory with intemediate point
+        #sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
-                #else:
-                    #ddx_max = cs.inf
-                    #ddx_min = 0.0
+        # swing trajectory with spline optimization for z coordinate
+        # sw_interpl = interpol.swing_trj_optimal_spline(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
 
-            #else:
-            ddx_max = cs.inf
-            ddx_min = - cs.inf
+        # swing trajectory with gaussian function
+        # sw_interpl = interpol.swing_trj_gaussian(sw_curr, sw_tgt, sw_t, t_tot, resol)
 
-            DDXu.append(ddx_max)
-            DDXl.append(ddx_min)
+        return {
+            't': self._t,
+            'x': int_state,
+            'f': int_force
+        }
 
-            # midpoints - variable constraints
-            if not k == self._N - 1:
-                x_mid_max = cs.inf
-                x_mid_min = -cs.inf #midpoints_pos[k] + 0.05
+    def print_trj(self, solution, results, resol, t_exec=0):
+        '''
+        Args:
+            t_exec: time that trj execution stopped (because of early contact or other)
+            results: results from interpolation
+            resol: interpolation resol
+            publish_freq: publish frequency - applies only when trajectories are published through rostopics,
+                else publish_freq = resol
+        Returns: prints the nominal interpolated trajectories
+        '''
 
-                X_mid_u.append(x_mid_max)
-                X_mid_l.append(x_mid_min)
+        # Interpolated state plot
+        state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+        plt.figure()
+        for i, name in enumerate(state_labels):
+            plt.subplot(3, 1, i + 1)
+            for j in range(self._dimc):
+                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
+            plt.grid()
+            plt.legend(['x', 'y', 'z'])
+            plt.title(name)
+        plt.xlabel('Time [s]')
+        # plt.savefig('../plots/step_state_trj.png')
 
-                dx_mid_max = cs.inf
-                dx_mid_min = - cs.inf
+        feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
-                DX_mid_u.append(dx_mid_max)
-                DX_mid_l.append(dx_mid_min)
-
-                gl.append(np.zeros(2))
-                gu.append(np.zeros(2))
-
-            # constraints pos, vel, acc at waypoints
-            gl.append(np.zeros(2))
-            gu.append(np.zeros(2))
-
-        # format bounds and params according to solver
-        lbv = cs.vertcat(*Xl, *DXl, *DDXl, *X_mid_l, *DX_mid_l)
-        ubv = cs.vertcat(*Xu, *DXu, *DDXu, *X_mid_u, *DX_mid_u)
-        lbg = cs.vertcat(*gl)
-        ubg = cs.vertcat(*gu)
-
-        # call solver
-        self._sol = self._solver(lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg)
-
-        return self._sol
-
+        # Interpolated force plot
+        plt.figure()
+        for i, name in enumerate(feet_labels):
+            plt.subplot(2, 2, i + 1)
+            for k in range(3):
+                plt.plot(results['t'], results['f'][3 * i + k], '-')
+            plt.grid()
+            plt.title(name)
+            plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
+        plt.xlabel('Time [s]')
+        # plt.savefig('../plots/step_forces.png')
+        plt.show()
 
 if __name__ == "__main__":
+    w = Walking(mass=95, N=40, dt=0.2)
 
-    initial_pos = 0.0
-    target_pos = 0.05
-    terrain_conf = 0.05
-    swing_time = [0.0, 6.0]
-    N = 14  # number of waypoints
+    # initial state =
+    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    dc0 = np.zeros(3)
+    ddc0 = np.zeros(3)
+    x_init = np.hstack([c0, dc0, ddc0])
 
-    ramp_points = 4     # including initial
-    ramp_step = 0.005
+    foot_contacts = [
+        np.array([0.35, 0.35, -0.7187]),  # fl
+        np.array([0.35, -0.35, -0.7187]),  # fr
+        np.array([-0.35, 0.35, -0.7187]),  # hl
+        np.array([-0.35, -0.35, -0.7187])  # hr
+    ]
 
-    obstacle_points = 3
-    clearance = 0.1
+    # swing id from 0 to 3
+    sw_id = 0
 
-    if initial_pos >= target_pos:
-        max_height = initial_pos + clearance
-    else:
-        max_height = target_pos + clearance
+    step_clear = 0.05
 
-    slow_down_points = N - ramp_points - obstacle_points
+    # swing_target = np.array([-0.35, -0.35, -0.719])
+    dx = 0.1
+    dy = 0.0
+    dz = -0.05
+    swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
-    # times
-    duration = swing_time[1] - swing_time[0]
+    # swing_time = (1.5, 3.0)
+    swing_time = [2.0, 5.0]
 
-    ramp_time = np.linspace(swing_time[0], 0.05 * duration, ramp_points).tolist()
-    obst_time = np.linspace(0.05 * duration, 0.4 * duration, obstacle_points + 1).tolist()
-    slow_time = np.linspace(0.4 * duration, swing_time[1], N + 1 - (ramp_points + obstacle_points)).tolist()
+    # sol is the directory returned by solve class function contains state, forces, control values
+    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
+                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
 
-    times = ramp_time[: -1] + obst_time[: -1] + slow_time
-    dt = [times[i + 1] - times[i] for i in range(N - 1)]
+    # debug
+    print("X0 is:", x_init)
+    print("contacts is:", foot_contacts)
+    print("swing id is:", sw_id)
+    print("swing target is:", swing_target)
+    print("swing time:", swing_time)
 
-    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N - 1)]
+    # interpolate the values, pass values and interpolation resolution
+    res = 300
+    interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
 
-    # Construct waypoints
-    waypoints = []
-
-    # ramp
-    waypoints.append(initial_pos)
-    for i in range(1, ramp_points):
-        waypoints.append(initial_pos + i * ramp_step)
-
-    # max clearance - obstacle
-    for i in range(obstacle_points):
-        waypoints.append(max_height)
-
-    # slow down
-    slow_down = np.linspace(target_pos + terrain_conf, target_pos, N - len(waypoints)).tolist()
-
-    for i in range(len(slow_down)):
-        waypoints.append(slow_down[i])
-
-    # midpoints poisitons
-    midpoints = [waypoints[i] + 0.5 * (waypoints[i + 1] - waypoints[i]) for i in range(N - 1)]
-
-    start = time.time()
-
-    my_object = Spline_tests(N, dt)
-    solution = my_object.solver(waypoints, midpoints, ramp_points, obstacle_points)
-    splines = my_object.get_splines(solution, dt)
-
-    end = time.time()
-
-    print('Positions:', solution['x'][0:N])
-    print('Velocities:', solution['x'][N:2 * N])
-    print('Accelerations:', solution['x'][2 * N:3 * N])
-    print('Computation time:', 1000 * (end - start), 'ms')
-
-    # print results
-    s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
-
-    plt.figure()
-    plt.plot(times, solution['x'][0:N], "o")
-    plt.plot(time_midpoints, solution['x'][3 * N:(4 * N - 1)], ".")
-    plt.plot(times, waypoints, "x")
-    # plt.plot(time_midpoints, midpoints, ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
-    plt.grid()
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.xlabel('time [s]')
-    plt.ylabel('z position [m]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][N:2 * N], "o")
-    plt.plot(time_midpoints, solution['x'][(4 * N - 1):(5 * N - 2)], ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['vel'][i](s[i]))
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z velocity [m/s]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['acc'][i](s[i]))
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z acceleration [m/s^2]')
-
-    plt.show()
-
-    '''initial_pos = 0.0
-    target_pos = 0.05
-    terrain_conf = 0.05
-    clearance = 0.1
-
-    swing_time = [0.0, 6.0]
-    N = 16  # number of waypoints
-
-    # time
-    duration = swing_time[1] - swing_time[0]
-    times = np.linspace(swing_time[0], swing_time[1], N)
-    dt = [times[i + 1] - times[i] for i in range(N - 1)]
-
-    time_midpoints = [(times[i] + 0.5 * dt[i]) for i in range(N - 1)]
-
-    # Construct waypoints
-    clearance_time = 0.2 * duration
-    slow_down_time = 0.4 * duration
-
-    clearance_index = int(clearance_time / dt[0])
-    slow_down_index = int(slow_down_time / dt[0])
-
-    waypoints1 = np.linspace(initial_pos, target_pos + clearance, clearance_index)
-    waypoints2 = np.linspace(target_pos + clearance, target_pos + terrain_conf, 1 + slow_down_index - clearance_index)
-    waypoints3 = np.linspace(target_pos + terrain_conf, target_pos, N - slow_down_index + 1)
-
-    waypoints = waypoints1.tolist() + waypoints2.tolist()[1:] + waypoints3.tolist()[1:]
-
-    midpoints = [waypoints[i] + 0.5 * (waypoints[i + 1] - waypoints[i]) for i in range(N - 1)]
-
-    start = time.time()
-
-    my_object = Spline_tests(N, dt)
-    solution = my_object.solver2(waypoints, midpoints)
-    splines = my_object.get_splines(solution['x'][0:N], dt)
-
-    end = time.time()
-
-    print('Positions:', solution['x'][0:N])
-    print('Velocities:', solution['x'][N:2 * N])
-    print('Accelerations:', solution['x'][2 * N:3 * N])
-    print('Computation time:', 1000 * (end - start), 'ms')
-
-    # print results
-    s = [np.linspace(0, dt[i], 100) for i in range(N - 1)]
-
-    plt.figure()
-    plt.plot(times, solution['x'][0:N], "o")
-    plt.plot(time_midpoints, solution['x'][3 * N:(4 * N - 1)], ".")
-    plt.plot(times, waypoints, "x")
-    # plt.plot(time_midpoints, midpoints, ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['pos'][i](s[i]))
-    plt.grid()
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.xlabel('time [s]')
-    plt.ylabel('z position [m]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][N:2 * N], "o")
-    plt.plot(time_midpoints, solution['x'][(4 * N - 1):(5 * N - 2)], ".")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['vel'][i](s[i]))
-    plt.legend(['assigned knots', 'assigned midpoints', 'initial knots'])
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z velocity [m/s]')
-
-    plt.figure()
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    for i in range(N - 1):
-        plt.plot([x + times[i] for x in s[i]], splines['acc'][i](s[i]))
-    plt.plot(times, solution['x'][2 * N:3 * N], "o")
-    plt.grid()
-    plt.xlabel('time [s]')
-    plt.ylabel('z acceleration [m/s^2]')
-
-    plt.show()'''
+    # print the results
+    w.print_trj(sol, interpl, res)
