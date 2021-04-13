@@ -1,4 +1,5 @@
 venv/
+venv2/
 .idea/
 
 casannis-ros-pkg/src/__pycache__/walking.cpython-36.pyc
@@ -28,3 +29,11 @@ src/__pycache__/step_node.cpython-36.pyc
 src/__pycache__/trot.cpython-36.pyc
 
 src/__pycache__/tf_listener.cpython-36.pyc
+
+venv2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/lobpcg/tests/test_lobpcg.pyc
+
+.gitignore
+
+src/trj_interpolation.pyc
+
+src/spline_optimization.pyc
