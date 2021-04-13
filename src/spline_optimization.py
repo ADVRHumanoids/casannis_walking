@@ -160,18 +160,18 @@ class Spline_optimization_z:
         '''
 
         # waypoints
-        Xl = []  # position lower bounds
-        Xu = []  # position upper bounds
-        DXl = []  # velocity lower bounds
-        DXu = []  # velocity upper bounds
-        DDXl = []  # acceleration lower bounds
-        DDXu = []  # acceleration upper bounds
+        Xl = [0] * self._N #[]  # position lower bounds
+        Xu = [0] * self._N #[]  # position upper bounds
+        DXl = [0] * self._N #[]  # velocity lower bounds
+        DXu = [0] * self._N #[]  # velocity upper bounds
+        DDXl = [0] * self._N #[]  # acceleration lower bounds
+        DDXu = [0] * self._N #[]  # acceleration upper bounds
 
         # midpoints
-        X_mid_u = []
-        X_mid_l = []
-        DX_mid_u = []
-        DX_mid_l = []
+        X_mid_u = [0] * self._N #[]
+        X_mid_l = [0] * self._N #[]
+        DX_mid_u = [0] * self._N #[]
+        DX_mid_l = [0] * self._N #[]
 
         gl = []  # constraint lower bounds
         gu = []  # constraint upper bounds
@@ -223,8 +223,10 @@ class Spline_optimization_z:
                 x_max = cs.inf
                 x_min = -cs.inf
 
-            Xu.append(x_max)
-            Xl.append(x_min)
+            #Xu.append(x_max)
+            #Xl.append(x_min)
+            Xu[k] = x_max
+            Xl[k] = x_min
 
             # velocity bounds
             if k == 0 or k == self._N - 1:  # start, end velocity
@@ -243,8 +245,10 @@ class Spline_optimization_z:
                 dx_max = cs.inf
                 dx_min = - cs.inf
 
-            DXu.append(dx_max)
-            DXl.append(dx_min)
+            #DXu.append(dx_max)
+            #DXl.append(dx_min)
+            DXu[k] = dx_max
+            DXl[k] = dx_min
 
             # acceleration bounds
             if is_ramp:     # ramp
@@ -270,8 +274,10 @@ class Spline_optimization_z:
                 ddx_max = cs.inf
                 ddx_min = - cs.inf
 
-            DDXu.append(ddx_max)
-            DDXl.append(ddx_min)
+            #DDXu.append(ddx_max)
+            #DDXl.append(ddx_min)
+            DDXu[k] = ddx_max
+            DDXl[k] = ddx_min
 
             # midpoints - variable constraints
             if not k == self._N - 1:
@@ -290,8 +296,10 @@ class Spline_optimization_z:
                     x_mid_max = cs.inf
                     x_mid_min = -cs.inf
 
-                X_mid_u.append(x_mid_max)
-                X_mid_l.append(x_mid_min)
+                #X_mid_u.append(x_mid_max)
+                #X_mid_l.append(x_mid_min)
+                X_mid_u[k] = x_mid_max
+                X_mid_l[k] = x_mid_min
 
                 # velocity
                 if is_obstacle_max:
@@ -310,8 +318,10 @@ class Spline_optimization_z:
                     dx_mid_max = cs.inf
                     dx_mid_min = - cs.inf
 
-                DX_mid_u.append(dx_mid_max)
-                DX_mid_l.append(dx_mid_min)
+                #DX_mid_u.append(dx_mid_max)
+                #DX_mid_l.append(dx_mid_min)
+                DX_mid_u[k] = dx_mid_max
+                DX_mid_l[k] = dx_mid_min
 
                 gl.append(np.zeros(2))
                 gu.append(np.zeros(2))
@@ -321,8 +331,8 @@ class Spline_optimization_z:
             gu.append(np.zeros(2))
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(*Xl, *DXl, *DDXl, *X_mid_l, *DX_mid_l)
-        ubv = cs.vertcat(*Xu, *DXu, *DDXu, *X_mid_u, *DX_mid_u)
+        lbv = cs.vertcat(Xl, DXl, DDXl, X_mid_l, DX_mid_l)
+        ubv = cs.vertcat(Xu, DXu, DDXu, X_mid_u, DX_mid_u)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
 
