@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import rospy
 
 import tf2_ros
@@ -21,7 +21,8 @@ def get_transform(frame, base_frame):
 
     # receive in a loop
     rate = rospy.Rate(200.0)
-    while not rospy.is_shutdown():
+    trans = False
+    while not trans:
         try:
             trans = tfBuffer.lookup_transform(frame, base_frame, rospy.Time())
             #(trans, rot) = listener.lookupTransform(frame, base_frame, rospy.Time(0))
@@ -38,12 +39,14 @@ def get_transform(frame, base_frame):
 
             transform_pub.publish(trans)
 
+
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             rate.sleep()
             continue
 
         rate.sleep()
 
+    return trans
 
 if __name__ == '__main__':
 

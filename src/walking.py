@@ -175,7 +175,7 @@ class Walking:
         P = list()  # parameter values
 
         # time that maximum clearance occurs
-        clearance_time = 0.5 * (swing_t[0] + swing_t[1]) #??????????????????????? is wrong
+        clearance_time = 0.5 * (swing_t[0] + swing_t[1])    # not accurate
 
         # swing foot position at maximum clearance
         if contacts[swing_id][2] >= swing_tgt[2]:
