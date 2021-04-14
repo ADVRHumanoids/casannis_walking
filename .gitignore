@@ -37,3 +37,9 @@ venv2/lib/python2.7/site-packages/scipy/sparse/linalg/eigen/lobpcg/tests/test_lo
 src/trj_interpolation.pyc
 
 src/spline_optimization.pyc
+
+src/roll_node.pyc
+
+src/walking.pyc
+
+src/tf_listener.pyc
