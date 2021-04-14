@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 import rospy
 import actionlib
@@ -22,12 +22,10 @@ class DemoAction(object):
 
         self._action_name = name
         self._as = actionlib.SimpleActionServer(self._action_name, casannis_walking.msg.DemoAction,
-                                                execute_cb=self.execute_callback, auto_start=False)
+                                                execute_cb=self.execute_callback_fast, auto_start=False)
         self._as.start()
 
     def execute_callback(self, goal):
-
-        get_transform('wheel_2', 'wheel_1')
 
         # robot & platform localization in global frame
         pelvis_x = 0.045
@@ -123,6 +121,10 @@ class DemoAction(object):
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
+
+            # get transformation between feet 2 and 4
+            dist2 = get_transform('contact_2', 'contact_4')
+            rospy.loginfo(dist2)
 
             # move forward
             self.move_fwd(0.74, freq)
@@ -317,15 +319,17 @@ class DemoAction(object):
             step.casannis(freq)
             rospy.loginfo('%s: Step completed' % (self._action_name))
 
-            # distance to be covered
-            dist2 = 0
-
+            # distance to be covered - get transformation between feet 2 and 4
+            trans_4_2 = get_transform('contact_2', 'contact_4')
+            dist_2 = abs(trans_4_2.transform.translation.x) - 2 * wheel_radius - 2 * safety_from_edges
+            print('dist2 is:', dist_2)
+            dist_2 = 0.7 # temporary
             # roll 1, 2, 3
             rospy.set_param('~sw_id', "[1, 2, 3, 4]")
-            rospy.set_param('~tgt_dx1', (0.1 + 0.74))
-            rospy.set_param('~tgt_dx2', (0.1 + 0.74))
-            rospy.set_param('~tgt_dx3', (0.1 + 0.74))
-            rospy.set_param('~tgt_dx4', 0.74)
+            rospy.set_param('~tgt_dx1', (0.1 + dist_2))
+            rospy.set_param('~tgt_dx2', (0.1 + dist_2))
+            rospy.set_param('~tgt_dx3', (0.1 + dist_2))
+            rospy.set_param('~tgt_dx4', dist_2)
 
             rospy.set_param('~sw_t1', "[0.0, 6.0]")
             rospy.set_param('~sw_t2', "[0.0, 6.0]")

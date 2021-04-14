@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -86,8 +86,8 @@ def roll_feet(freq):
 
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(swing_id[i])))  # from command line as swing_t:="[a,b]"
-        swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
-        swing_t[i] = [float(i) for i in swing_t[i]]
+        swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to ['a','b']
+        swing_t[i] = [float(swing_t[i][0]), float(swing_t[i][1])]
 
         # swing feet trj publishers
         foot_topic = '/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference'
