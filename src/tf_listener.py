@@ -39,7 +39,6 @@ def get_transform(frame, base_frame):
 
             transform_pub.publish(trans)
 
-
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             rate.sleep()
             continue
@@ -48,11 +47,12 @@ def get_transform(frame, base_frame):
 
     return trans
 
+
 if __name__ == '__main__':
 
-    b_frame = 'wheel_2'
-    c_frame = 'wheel_4'
+    b_frame = 'fixed_frame'
+    c_frame = 'pelvis'
 
     rospy.init_node('tf_listener_' + b_frame + '_to_' + c_frame)
 
-    get_transform(c_frame, b_frame)
+    get_transform(b_frame, c_frame)
