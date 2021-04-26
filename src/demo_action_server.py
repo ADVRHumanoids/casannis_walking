@@ -11,7 +11,7 @@ from tf_listener import get_transform
 
 wheel_radius = 0.078
 safety_from_edges = 0.03
-bad_roll = 0.04
+bad_roll = 0.0#0.04
 
 
 class DemoAction(object):
