@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- requires roslaunch (not mon launch) because of the anon use -->
+
+<launch>
+    <arg name="link" default="centauro::wheel_4"/>
+    <arg name="rate" default="1000"/>
+
+    <node name="$(anon gazebo_link_pose)" pkg="casannis_walking" type="get_link_global_pose.py" output="screen">
+        <param name="link_name" value="$(arg link)"/>
+        <param name="publish_rate" value="$(arg rate)"/>
+
+    </node>
+</launch>
