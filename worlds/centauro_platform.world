@@ -116,29 +116,30 @@
       <max_step_size>0.00025</max_step_size>
       <max_contacts>5</max_contacts>
       <bullet>
-      <solver>
+      	<solver>
               <iters>100</iters>
               <sor>1.55</sor>
-            </solver>
-            <constraints>
-              <contact_surface_layer>0.2</contact_surface_layer>
-              <cfm>0.005</cfm>
-              <erp>0.2</erp>
-            </constraints> 
-          </bullet>
-          <ode>
-      <solver>
-<!--          <type>quick</type> -->
-          <iters>50</iters>
-          <sor>1.20</sor>
         </solver>
         <constraints>
-          <contact_surface_layer>0.0002</contact_surface_layer>
-          <contact_max_correcting_vel>500</contact_max_correcting_vel>
-          <cfm>0.000001</cfm>
-          <erp>0.3</erp>
-        </constraints> 
-      </ode>
+              <contact_surface_layer>0.002</contact_surface_layer>
+              <cfm>0.00005</cfm>
+              <erp>0.2</erp>
+         </constraints> 
+       </bullet>
+
+       <ode>
+         <solver>
+<!--          <type>quick</type> -->
+          	<iters>50</iters>
+          	<sor>1.20</sor>
+         </solver>
+         <constraints>
+          	<contact_surface_layer>0.0002</contact_surface_layer>
+          	<contact_max_correcting_vel>500</contact_max_correcting_vel>
+          	<cfm>0.000001</cfm>
+          	<erp>0.3</erp>
+         </constraints> 
+       </ode>
     </physics>
 
   </world>
