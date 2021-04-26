@@ -153,7 +153,7 @@ def casannis(int_freq):
     #freq = swing_vel * N_swing_total / tgt_ds
 
     # mean velocity of the swing foot
-    mean_foot_velocity = tgt_ds / step_num * (swing_t[0][1] - swing_t[0][0])
+    mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
     print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
 
     rate = rospy.Rate(int_freq)  # Frequency trj publishing
