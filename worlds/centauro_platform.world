@@ -46,7 +46,7 @@
   </model>
 
   <model name='unit_box'>
-      <pose frame=''>2.0 -0.5 0.10 0 -0 0</pose>
+      <pose frame=''>2.5 -0.5 0.10 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1000</mass>
@@ -99,7 +99,7 @@
     </model>
 
     <model name='wall'>
-      <pose frame=''>2.0 0.7 1.0 0 0 0</pose>
+      <pose frame=''>2.5 0.7 1.0 0 0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1000</mass>
