@@ -51,7 +51,7 @@ def get_transform(frame, base_frame):
 if __name__ == '__main__':
 
     b_frame = 'fixed_frame'
-    c_frame = 'pelvis'
+    c_frame = 'FR_wheel'
 
     rospy.init_node('tf_listener_' + b_frame + '_to_' + c_frame)
 
