@@ -1,6 +1,5 @@
 # Define the goal
-bool simulation  # True or false
-casannis_walking/Obstacles platform
+hhcm_perception/SingleObstacle platform
 ---
 # Define the result
 bool demo_result    # True or false result for execution or not

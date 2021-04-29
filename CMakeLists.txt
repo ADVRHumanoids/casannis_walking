@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   centauro_contact_detection
+  hhcm_perception
   actionlib_msgs
 )
 
@@ -73,12 +74,13 @@ add_action_files(
 generate_messages(
     DEPENDENCIES
     std_msgs
+    hhcm_perception
     actionlib_msgs
     geometry_msgs
 )
 
 ################################################
-## Declare ROS dynamic reconfigure parameters ##
+## Declare ROS dynamic reconfigureactionlib_msgs parameters ##
 ################################################
 
 ## To declare and build dynamic reconfigure parameters within this
@@ -109,7 +111,7 @@ generate_messages(
 catkin_package(
 #    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-    CATKIN_DEPENDS rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs
+    CATKIN_DEPENDS rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs hhcm_perception
 #  DEPENDS system_lib
 )
 
@@ -140,6 +142,7 @@ catkin_install_python(PROGRAMS tests/feet_contacts_window.py
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # add_dependencies(foot_contacts.py ${${PROJECT_NAME}_EXPORTED_TARGETS})
+#add_dependencies(demo_action_server.py ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
