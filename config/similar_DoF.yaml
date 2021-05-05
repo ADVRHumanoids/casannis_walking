@@ -1,0 +1,126 @@
+solver_options:
+    regularization: 1e-3
+    back_end: "qpoases"
+
+stack:
+    - ["PelvisZRP", "WheelZ1", "WheelZ2", "WheelZ3", "WheelZ4"]
+    - ["PelvisXYY", "WheelXYY1", "WheelXYY2", "WheelXYY3", "WheelXYY4"]
+    - ["LeftArm", "RightArm"]
+    - ["Postural"]
+
+constraints: ["JointLimits", "VelocityLimits"]
+
+params:
+ - &whxyy_indices [0, 1, 5]
+ - &whz_indices [2, 3, 4]
+ - &wh_base_link world
+
+
+PelvisZRP:
+    type: "Cartesian"
+    lambda: 0.1
+    indices: [2, 3, 4]
+    name: "PelvisZRP"
+    distal_link: "pelvis"
+    weight: 0.1
+
+PelvisXYY:
+    type: "Cartesian"
+    lambda: 0.1
+    indices: [0, 1, 5]
+    name: "PelvisXYY"
+    distal_link: "pelvis"
+    weight: 0.1
+
+ComXYZ:
+    type: "Com"
+    lambda: 0.1
+    indices: [0, 1, 2]
+    weight: 10
+
+WheelXYY1:
+    type: "Cartesian"
+    name: "FL_wheelXYY"
+    distal_link: "wheel_1"
+    indices: *whxyy_indices
+    lambda: 0.1
+
+WheelXYY2:
+    type: "Cartesian"
+    name: "FR_wheelXYY"
+    distal_link: "wheel_2"
+    indices: *whxyy_indices
+    lambda: 0.1
+
+WheelXYY3:
+    type: "Cartesian"
+    name: "HL_wheelXYY"
+    distal_link: "wheel_3"
+    indices: *whxyy_indices
+    lambda: 0.1
+
+WheelXYY4:
+    type: "Cartesian"
+    name: "HR_wheelXYY"
+    distal_link: "wheel_4"
+    indices: *whxyy_indices
+    lambda: 0.1
+
+WheelZ1:
+    type: "Cartesian"
+    name: "FL_wheel"
+    distal_link: "wheel_1"
+    indices: *whz_indices
+    lambda: 0.1
+
+WheelZ2:
+    type: "Cartesian"
+    name: "FR_wheel"
+    distal_link: "wheel_2"
+    indices: *whz_indices
+    lambda: 0.1
+
+WheelZ3:
+    type: "Cartesian"
+    name: "HL_wheel"
+    distal_link: "wheel_3"
+    indices: *whz_indices
+    lambda: 0.1
+
+WheelZ4:
+    type: "Cartesian"
+    name: "HR_wheel"
+    distal_link: "wheel_4"
+    indices: *whz_indices
+    lambda: 0.1
+
+LeftArm:
+    type: "Cartesian"
+    name: "left_hand"
+    distal_link: "arm1_8"
+    lambda: 0.1
+    base_link: "pelvis"
+
+RightArm:
+    type: "Cartesian"
+    name: "right_hand"
+    distal_link: "arm2_8"
+    lambda: 0.1
+    base_link: "pelvis"
+
+Postural:
+    type: "Postural"
+    lambda: 0.01
+    weight:
+        VIRTUALJOINT_1: 0.0
+        VIRTUALJOINT_2: 0.0
+        VIRTUALJOINT_3: 0.0
+        VIRTUALJOINT_4: 0.0
+        VIRTUALJOINT_5: 0.0
+        VIRTUALJOINT_6: 0.0
+
+JointLimits:
+    type: "JointLimits"
+
+VelocityLimits:
+    type: "VelocityLimits"

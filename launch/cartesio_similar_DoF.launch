@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="prefix" default=""/>
+    <arg name="gui" default="true"/>
+    
+    <param name="robot_description" 
+        textfile="$(find centauro_urdf)/urdf/centauro.urdf"/>
+    
+    <param name="robot_description_semantic"
+        textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
+    
+    <param name="cartesian/problem_description" 
+        textfile="$(find casannis_walking)/config/similar_DoF.yaml"/>
+
+    <param name="cartesian/velocity_whitelist" type="yaml"
+        value="[j_wheel_1, j_wheel_2, j_wheel_3, j_wheel_4]"/>
+
+    <include file="$(find cartesian_interface)/launch/cartesio.launch">
+        <arg name="rate" value="100.0"/>
+        <arg name="prefix" value="$(arg prefix)"/>
+    </include>
+
+    <node if="$(arg gui)"
+            type="rviz"
+            name="rviz"
+            pkg="rviz"
+            args="-d $(find cartesian_interface)/examples/rviz/disp.rviz"
+            output="screen"/>
+    <!--args="-d $(find casannis_walking)/rviz_frame.rviz"-->
+
+    <arg name="frequency" default="300"/>
+    <arg name="threshold" default="20"/>
+    <!--arg name="time_window" default="5"/-->
+
+    <include file="$(find casannis_walking)/launch/centauro_force_estimation.launch" pass_all_args="true"/>
+</launch>
