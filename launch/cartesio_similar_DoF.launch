@@ -12,7 +12,7 @@
         textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
     
     <param name="cartesian/problem_description" 
-        textfile="$(find casannis_walking)/config/similar_DoF.yaml"/>
+        textfile="$(find casannis_walking)/config/trial.yaml"/>
 
     <param name="cartesian/velocity_whitelist" type="yaml"
         value="[j_wheel_1, j_wheel_2, j_wheel_3, j_wheel_4]"/>

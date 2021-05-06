@@ -1,0 +1,238 @@
+solver_options:
+    regularization: 1e-3
+    back_end: "osqp"
+    #regularization: 0
+    #back_end: "qpoases"
+    #front_end: "nhqp"
+    #nhqp_min_sv_ratio: 0.05
+
+stack:
+    - ["WheelXY1", "WheelXY2", "WheelXY3", "WheelXY4", "ComXY", "Steering1", "Steering2", "Steering3", "Steering4"]
+    - ["LeftArm", "RightArm", "ComZ", "Waist", "WheelZ1", "WheelZ2", "WheelZ3", "WheelZ4", "Rolling1", "Rolling2", "Rolling3", "Rolling4", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
+    - ["Postural"]
+
+constraints: ["JointLimits", "VelocityLimits"]
+
+params:
+ - &wh_indicesxy [0, 1]
+ - &wh_indicesz [2]
+ - &wh_base_link world
+ - &cont_base_link world
+ - &cont_indices [3, 4]
+ - &cont_weight 1.0
+ - &roll_weight 1.0
+
+Cont1RP:
+   type: "Cartesian"
+   name: "contact1_rp"
+   distal_link: "contact_1"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+   weight: *cont_weight
+
+Cont2RP:
+   type: "Cartesian"
+   name: "contact2_rp"
+   distal_link: "contact_2"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+   weight: *cont_weight
+
+Cont3RP:
+   type: "Cartesian"
+   name: "contact3_rp"
+   distal_link: "contact_3"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+   weight: *cont_weight
+
+Cont4RP:
+   type: "Cartesian"
+   name: "contact4_rp"
+   distal_link: "contact_4"
+   base_link: *cont_base_link
+   indices: *cont_indices
+   lambda: 0.1
+   weight: *cont_weight
+
+ComXY:
+    type: "Com"
+    name: "CoMxy"
+    lambda: 0.1
+    indices: [0, 1]
+    weight: 10
+    active: true
+
+ComZ:
+   type: "Com"
+   name: "CoMz"
+   lambda: 0.1
+   indices: [2]
+   weight: 10
+   active: true
+
+Waist:
+    type: Cartesian
+    distal_link: pelvis
+    lambda: 0.1
+    weight: 1
+    indices: [3, 4, 5]
+    active: true
+
+WheelXY1:
+    type: "Cartesian"
+    name: "FL_wheelxy"
+    distal_link: "wheel_1"
+    base_link: *wh_base_link
+    indices: *wh_indicesxy
+    lambda: 0.1
+
+WheelXY2:
+    type: "Cartesian"
+    name: "FR_wheelxy"
+    distal_link: "wheel_2"
+    base_link: *wh_base_link
+    indices: *wh_indicesxy
+    lambda: 0.1
+
+
+WheelXY3:
+    type: "Cartesian"
+    name: "HL_wheelxy"
+    distal_link: "wheel_3"
+    base_link: *wh_base_link
+    indices: *wh_indicesxy
+    lambda: 0.1
+
+
+WheelXY4:
+    type: "Cartesian"
+    name: "HR_wheelxy"
+    distal_link: "wheel_4"
+    base_link: *wh_base_link
+    indices: *wh_indicesxy
+    lambda: 0.1
+
+WheelZ1:
+    type: "Cartesian"
+    name: "FL_wheelz"
+    distal_link: "wheel_1"
+    base_link: *wh_base_link
+    indices: *wh_indicesz
+    lambda: 0.1
+
+WheelZ2:
+    type: "Cartesian"
+    name: "FR_wheelz"
+    distal_link: "wheel_2"
+    base_link: *wh_base_link
+    indices: *wh_indicesz
+    lambda: 0.1
+
+
+WheelZ3:
+    type: "Cartesian"
+    name: "HL_wheelz"
+    distal_link: "wheel_3"
+    base_link: *wh_base_link
+    indices: *wh_indicesz
+    lambda: 0.1
+
+
+WheelZ4:
+    type: "Cartesian"
+    name: "HR_wheelz"
+    distal_link: "wheel_4"
+    base_link: *wh_base_link
+    indices: *wh_indicesz
+    lambda: 0.1
+
+Steering1:
+    type: "CentauroSteering"
+    wheel_name: "wheel_1"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering2:
+    type: "CentauroSteering"
+    wheel_name: "wheel_2"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering3:
+    type: "CentauroSteering"
+    wheel_name: "wheel_3"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Steering4:
+    type: "CentauroSteering"
+    wheel_name: "wheel_4"
+    lib_name: "libcentauro_cartesio_addon.so"
+    lambda: 0.1
+
+Rolling1:
+    type: "WheelRolling"
+    wheel_name: "wheel_1"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: *roll_weight
+
+Rolling2:
+    type: "WheelRolling"
+    wheel_name: "wheel_2"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: *roll_weight
+
+Rolling3:
+    type: "WheelRolling"
+    wheel_name: "wheel_3"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: *roll_weight
+
+Rolling4:
+    type: "WheelRolling"
+    wheel_name: "wheel_4"
+    lib_name: "libcentauro_cartesio_addon.so"
+    wheel_radius: 0.078
+    weight: *roll_weight
+
+
+LeftArm:
+    type: "Cartesian"
+    name: "left_hand"
+    distal_link: "arm1_8"
+    lambda: 0.1
+    base_link: "pelvis"
+
+RightArm:
+    type: "Cartesian"
+    name: "right_hand"
+    distal_link: "arm2_8"
+    lambda: 0.1
+    base_link: "pelvis"
+
+Postural:
+    type: "Postural"
+    lambda: 0.01
+    weight:
+        VIRTUALJOINT_1: 0.0
+        VIRTUALJOINT_2: 0.0
+        VIRTUALJOINT_3: 0.0
+        VIRTUALJOINT_4: 0.0
+        VIRTUALJOINT_5: 0.0
+        VIRTUALJOINT_6: 0.0
+
+
+
+JointLimits:
+    type: "JointLimits"
+
+
+VelocityLimits:
+    type: "VelocityLimits"
