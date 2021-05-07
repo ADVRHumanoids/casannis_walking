@@ -427,7 +427,7 @@ if __name__ == '__main__':
 
     # set global variables for physics and vizualization only case
     global physics
-    physics = rospy.get_param("~physics", False)
+    physics = rospy.get_param("~physics", True)
     global h_error
     global contact_detection
     if physics:

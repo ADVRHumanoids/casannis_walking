@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="swing_id" default="[3, 4]"/>
+    <arg name="swing_id" default="[1, 2, 3, 4]"/>
 
     <arg name="target_dx1" default="0.3"/>
     <arg name="target_dx2" default="0.3"/>
