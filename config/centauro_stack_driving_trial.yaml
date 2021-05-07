@@ -178,10 +178,10 @@ Postural:
     type: "Postural"
     lambda: 0.01
     weight:
-        VIRTUALJOINT_1: 0.0
-        VIRTUALJOINT_2: 0.0
-        VIRTUALJOINT_3: 0.0
-        VIRTUALJOINT_4: 0.0
+        VIRTUALJOINT_1: 0.0    # increases pelvis pitch for CoM X translation
+        VIRTUALJOINT_2: 0.0  # increases pelvis roll + yaw for CoM Y translation
+        VIRTUALJOINT_3: 0.0  # increases pelvis pitch for CoM Z translation
+        VIRTUALJOINT_4: 0.0  # reduces pelvis roll for CoM Y translation
         VIRTUALJOINT_5: 0.0
         VIRTUALJOINT_6: 0.0
 
