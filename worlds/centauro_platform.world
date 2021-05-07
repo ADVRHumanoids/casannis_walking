@@ -46,19 +46,9 @@
   </model>
 
   <model name='unit_box'>
+      <static>true</static>
       <pose frame=''>2.5 -0.5 0.10 0 -0 0</pose>
       <link name='link'>
-        <inertial>
-          <mass>1000</mass>
-          <inertia>
-            <ixx>100</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>100</iyy>
-            <iyz>0</iyz>
-            <izz>166</izz>
-          </inertia>
-        </inertial>
         <collision name='collision'>
           <geometry>
             <box>
@@ -167,7 +157,7 @@
     <physics name="update_rate" type="ode">
       <real_time_update_rate>4000</real_time_update_rate>
       <max_step_size>0.00025</max_step_size>
-      <max_contacts>5</max_contacts>
+      <max_contacts>6</max_contacts>
       <bullet>
       	<solver>
               <iters>100</iters>
