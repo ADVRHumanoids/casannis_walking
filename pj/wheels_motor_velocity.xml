@@ -1,42 +1,50 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root version="2.3.8">
  <tabbed_widget parent="main_window" name="Main Window">
-  <Tab containers="1" tab_name="tab1">
+  <Tab tab_name="tab1" containers="1">
    <Container>
-    <DockSplitter count="2" sizes="0.500479;0.499521" orientation="-">
-     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+    <DockSplitter orientation="-" count="2" sizes="0.500479;0.499521">
+     <DockSplitter orientation="|" count="2" sizes="0.5;0.5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range top="5.028717" bottom="3.876480" right="19.693500" left="0.000000"/>
+        <range right="23.573750" left="0.000000" top="15.553288" bottom="-0.379348"/>
         <limitY/>
-        <curve name="/xbotcore/joint_states/motor_velocity.5" color="#1f77b4"/>
-        <curve name="/xbotcore/joint_states/velocity_reference.5" color="#f14cc1"/>
+        <curve color="#1f77b4" name="/xbotcore/joint_states/motor_velocity.5"/>
+        <curve color="#f14cc1" name="/xbotcore/joint_states/velocity_reference.5"/>
+        <curve color="#1f77b4" name="/xbotcore/joint_states/motor_position.5"/>
+        <curve color="#f14cc1" name="/xbotcore/joint_states/position_reference.5"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range top="-3.891325" bottom="-5.065511" right="19.693500" left="0.000000"/>
+        <range right="23.573750" left="0.000000" top="0.658104" bottom="-12.679300"/>
         <limitY/>
-        <curve name="/xbotcore/joint_states/motor_velocity.11" color="#d62728"/>
-        <curve name="/xbotcore/joint_states/velocity_reference.11" color="#9467bd"/>
+        <curve color="#d62728" name="/xbotcore/joint_states/motor_velocity.11"/>
+        <curve color="#9467bd" name="/xbotcore/joint_states/velocity_reference.11"/>
+        <curve color="#d62728" name="/xbotcore/joint_states/motor_position.11"/>
+        <curve color="#9467bd" name="/xbotcore/joint_states/position_reference.11"/>
        </plot>
       </DockArea>
      </DockSplitter>
-     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+     <DockSplitter orientation="|" count="2" sizes="0.5;0.5">
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range top="5.049855" bottom="3.891707" right="19.693500" left="0.000000"/>
+        <range right="23.573750" left="0.000000" top="12.673489" bottom="-0.419858"/>
         <limitY/>
-        <curve name="/xbotcore/joint_states/motor_velocity.17" color="#1ac938"/>
-        <curve name="/xbotcore/joint_states/velocity_reference.17" color="#17becf"/>
+        <curve color="#1ac938" name="/xbotcore/joint_states/motor_velocity.17"/>
+        <curve color="#17becf" name="/xbotcore/joint_states/velocity_reference.17"/>
+        <curve color="#1ac938" name="/xbotcore/joint_states/motor_position.17"/>
+        <curve color="#17becf" name="/xbotcore/joint_states/position_reference.17"/>
        </plot>
       </DockArea>
       <DockArea name="...">
        <plot style="Lines" mode="TimeSeries">
-        <range top="-3.891411" bottom="-5.061984" right="19.693500" left="0.000000"/>
+        <range right="23.573750" left="0.000000" top="2.703834" bottom="-12.729683"/>
         <limitY/>
-        <curve name="/xbotcore/joint_states/motor_velocity.23" color="#ff7f0e"/>
-        <curve name="/xbotcore/joint_states/velocity_reference.23" color="#bcbd22"/>
+        <curve color="#ff7f0e" name="/xbotcore/joint_states/motor_velocity.23"/>
+        <curve color="#bcbd22" name="/xbotcore/joint_states/velocity_reference.23"/>
+        <curve color="#ff7f0e" name="/xbotcore/joint_states/motor_position.23"/>
+        <curve color="#bcbd22" name="/xbotcore/joint_states/position_reference.23"/>
        </plot>
       </DockArea>
      </DockSplitter>
@@ -70,8 +78,8 @@
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
   <plugin ID="ZMQ Subscriber"/>
-  <plugin ID="ROS /rosout Visualization" status="idle"/>
-  <plugin ID="ROS Topic Re-Publisher" status="idle"/>
+  <plugin status="idle" ID="ROS /rosout Visualization"/>
+  <plugin status="idle" ID="ROS Topic Re-Publisher"/>
  </Plugins>
  <!-- - - - - - - - - - - - - - - -->
  <previouslyLoaded_Datafiles/>
