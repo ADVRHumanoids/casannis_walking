@@ -77,9 +77,9 @@ class DemoAction(object):
             freq = 300
 
             # distance to be covered
-            fr_wheel_x = get_transform('fixed_frame', 'contact_2').transform.translation.x
-            print('FR wheel pose is:',fr_wheel_x )
-            dist1 = edge1_x - fr_wheel_x - wheel_radius - safety_from_edges + bad_roll
+            fr_contact_x = get_transform('fixed_frame', 'contact_2').transform.translation.x
+            print('FR contact pose is:',fr_contact_x )
+            dist1 = edge1_x - fr_contact_x - wheel_radius - safety_from_edges + bad_roll
             print('distance to roll is:', dist1)
 
             # roll 1, 3, 4
@@ -118,9 +118,9 @@ class DemoAction(object):
             rospy.loginfo('%s: Step completed' % (self._action_name))
 
             # distance to be covered - get transformation between feet 2 and 4
-            hr_wheel_x = get_transform('fixed_frame', 'contact_4').transform.translation.x
-            print('HR wheel pose is:', hr_wheel_x)
-            dist_2 = edge1_x - hr_wheel_x - wheel_radius - safety_from_edges + bad_roll
+            hr_contact_x = get_transform('fixed_frame', 'contact_4').transform.translation.x
+            print('HR contact pose is:', hr_contact_x)
+            dist_2 = edge1_x - hr_contact_x - wheel_radius - safety_from_edges + bad_roll
             print('distance to roll is:', dist_2)
             #dist_2 = 0.7 # temporary
 
@@ -150,12 +150,13 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # distance to be covered
-            fr_wheel_position = get_transform('fixed_frame', 'contact_2').transform.translation
-            fr_wheel_x = fr_wheel_position.x
-            fr_wheel_y = fr_wheel_position.y
-            step_off_h = fr_wheel_y - wheel_radius
-            print('FR wheel pose is:', fr_wheel_x)
-            dist_3 = edge2_x - fr_wheel_x - safety_from_edges
+            fr_contact_position = get_transform('fixed_frame', 'contact_2').transform.translation
+            fr_contact_x = fr_contact_position.x
+            fr_contact_y = fr_contact_position.y
+            fr_contact_z = fr_contact_position.z
+            step_off_h = fr_contact_z
+            dist_3 = edge2_x - fr_contact_x - safety_from_edges
+            print('FR contact pose is:', fr_contact_x, fr_contact_y, fr_contact_z)
             print('distance to roll is:', dist_3)
             #dist_3 = 1.33
 
@@ -175,6 +176,8 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # step off 2
+            print('Height to step off is', step_off_h)
+
             rospy.set_param('~sw_id', 2)
             rospy.set_param('~tgt_dx', 0.25)
             rospy.set_param('~tgt_dy', 0.0)
@@ -185,11 +188,9 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # distance to be
-            hr_wheel_position = get_transform('fixed_frame', 'contact_4').transform.translation
-            hr_wheel_x = hr_wheel_position.x
-            hr_wheel_y = hr_wheel_position.y
-            step_off_h = hr_wheel_y - wheel_radius
-            dist_4 = edge2_x - hr_wheel_x - safety_from_edges + bad_roll
+            hr_contact_position = get_transform('fixed_frame', 'contact_4').transform.translation
+            step_off_h = hr_contact_position.z
+            dist_4 = edge2_x - hr_contact_position.x - safety_from_edges + bad_roll
             print('distance to roll is:', dist_4)
             #dist_4 = 0.33
 
