@@ -7,7 +7,7 @@ from scipy.stats import norm
 from operator import add
 
 
-def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
+def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_order=5):
     '''
     Interpolates current, target foot position and a intermediate point with 5th order
     polynomials.
@@ -73,13 +73,23 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol):
     sw_t2 = [t_middle, sw_t[1]]
 
     # save polynomial coefficients in one list for each coordinate
-    sw_cx1 = fifth_splines(sw_t1, cond1_x, cond2_x)  # spline 1
-    sw_cy1 = fifth_splines(sw_t1, cond1_y, cond2_y)
-    sw_cz1 = fifth_splines(sw_t1, cond1_z, cond2_z)
+    if spline_order == 3:   # cubic polynomials
+        sw_cx1 = cubic_splines(sw_t1, cond1_x[0:2], cond2_x[0:2])  # spline 1
+        sw_cy1 = cubic_splines(sw_t1, cond1_y[0:2], cond2_y[0:2])
+        sw_cz1 = cubic_splines(sw_t1, cond1_z[0:2], cond2_z[0:2])
 
-    sw_cx2 = fifth_splines(sw_t2, cond2_x, cond3_x)  # spline 2
-    sw_cy2 = fifth_splines(sw_t2, cond2_y, cond3_y)
-    sw_cz2 = fifth_splines(sw_t2, cond2_z, cond3_z)
+        sw_cx2 = cubic_splines(sw_t2, cond2_x[0:2], cond3_x[0:2])  # spline 2
+        sw_cy2 = cubic_splines(sw_t2, cond2_y[0:2], cond3_y[0:2])
+        sw_cz2 = cubic_splines(sw_t2, cond2_z[0:2], cond3_z[0:2])
+
+    else:   # 5th order default
+        sw_cx1 = quintic_splines(sw_t1, cond1_x, cond2_x)  # spline 1
+        sw_cy1 = quintic_splines(sw_t1, cond1_y, cond2_y)
+        sw_cz1 = quintic_splines(sw_t1, cond1_z, cond2_z)
+
+        sw_cx2 = quintic_splines(sw_t2, cond2_x, cond3_x)  # spline 2
+        sw_cy2 = quintic_splines(sw_t2, cond2_y, cond3_y)
+        sw_cz2 = quintic_splines(sw_t2, cond2_z, cond3_z)
 
     # convert to polynomial functions
     sw_px1 = np.polynomial.polynomial.Polynomial(sw_cx1)  # spline 1
@@ -294,9 +304,9 @@ def swing_trj_gaussian(sw_curr, sw_tgt, sw_t, total_t, resol):
     fin_z = [sw_z[1], 0, 0]
 
     # save polynomial coefficients in one list for each coordinate
-    sw_cx = fifth_splines(sw_t, init_x, fin_x)
-    sw_cy = fifth_splines(sw_t, init_y, fin_y)
-    sw_cz = fifth_splines(sw_t, init_z, fin_z)
+    sw_cx = quintic_splines(sw_t, init_x, fin_x)
+    sw_cy = quintic_splines(sw_t, init_y, fin_y)
+    sw_cz = quintic_splines(sw_t, init_z, fin_z)
 
     # convert to polynomial functions
     sw_px = np.polynomial.polynomial.Polynomial(sw_cx)
@@ -404,7 +414,7 @@ def cubic_splines(dt, init_cond, fin_cond):
     return coeffs
 
 
-def fifth_splines(dt, init_cond, fin_cond):
+def quintic_splines(dt, init_cond, fin_cond):
     """
     This function computes the polynomial of 5th order between two points with 6 given conditions
     Args:

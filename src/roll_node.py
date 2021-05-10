@@ -110,7 +110,7 @@ def roll_feet(freq):
     for i in range(step_num):
         interpl_trj.append(interpol.swing_trj_triangle(sw_curr=swing_contacts[i], sw_tgt=swing_tgt[i],
                                                        clear=0, sw_t=swing_t[i], total_t=total_time,
-                                                       resol=freq))
+                                                       resol=freq, spline_order=3))
 
     # final support polygon
     polygon_points = []
@@ -176,7 +176,7 @@ def roll_feet(freq):
 
     # plot swing trajectory
     # All points to be published
-    '''s = np.linspace(total_time[0], total_time[1], N_total)
+    s = np.linspace(total_time[0], total_time[1], N_total)
     coord_labels = ['x', 'y', 'z']
     for j in range(step_num+1):
         plt.figure()
@@ -187,7 +187,7 @@ def roll_feet(freq):
             plt.legend(['nominal', 'real'])
             plt.title('Trajectory ' + name)
         plt.xlabel('Time [s]')
-    plt.show()'''
+    plt.show()
 
 
 if __name__ == '__main__':
