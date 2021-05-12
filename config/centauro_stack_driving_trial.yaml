@@ -166,6 +166,7 @@ LeftArm:
     distal_link: "arm1_8"
     lambda: 0.1
     base_link: "pelvis"
+    weight: 0.1
 
 RightArm:
     type: "Cartesian"
@@ -173,6 +174,7 @@ RightArm:
     distal_link: "arm2_8"
     lambda: 0.1
     base_link: "pelvis"
+    weight: 0.1
     
 Postural:
     type: "Postural"
