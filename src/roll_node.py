@@ -13,7 +13,8 @@ R = 0.078
 
 # map feet to a string for publishing to the corresponding topic
 id_name = ['FL', 'FR', 'HL', 'HR']
-task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]
+#task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]
+task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 leg_num = len(id_name)
 
 

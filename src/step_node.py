@@ -8,7 +8,9 @@ from centauro_contact_detection.msg import Contacts as contacts_msg
 
 # radius of centauro wheels
 R = 0.078
-task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]  # FL_wheel
+#task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
+task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
+
 
 def contacts_callback (msg):
 
@@ -40,10 +42,10 @@ def casannis(int_freq):
     f_init = [fl_init, fr_init, hl_init, hr_init]
 
     # define contacts, take into account the radius of the wheels
-    fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z] # - R]
-    fr_cont = [fr_init.pose.position.x, fr_init.pose.position.y, fr_init.pose.position.z] # - R]
-    hl_cont = [hl_init.pose.position.x, hl_init.pose.position.y, hl_init.pose.position.z] # - R]
-    hr_cont = [hr_init.pose.position.x, hr_init.pose.position.y, hr_init.pose.position.z] # - R]
+    fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z - R]
+    fr_cont = [fr_init.pose.position.x, fr_init.pose.position.y, fr_init.pose.position.z - R]
+    hl_cont = [hl_init.pose.position.x, hl_init.pose.position.y, hl_init.pose.position.z - R]
+    hr_cont = [hr_init.pose.position.x, hr_init.pose.position.y, hr_init.pose.position.z - R]
 
     contacts = [np.array(fl_cont), np.array(fr_cont), np.array(hl_cont), np.array(hr_cont)]
 
@@ -145,7 +147,7 @@ def casannis(int_freq):
             f_msg.pose.position.x = interpl['sw']['x'][counter]
             f_msg.pose.position.y = interpl['sw']['y'][counter]
             # add radius as origin of the wheel frame is in the center
-            f_msg.pose.position.z = interpl['sw']['z'][counter]# + R
+            f_msg.pose.position.z = interpl['sw']['z'][counter] + R
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
