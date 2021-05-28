@@ -273,12 +273,12 @@ class DemoAction(object):
             freq = 300
 
             # roll 1, 3, 4
-            rospy.set_param('~sw_id', "[1, 3, 4]")
+            rospy.set_param('~sw_id', "[1, 2, 3, 4]")
 
-            rospy.set_param('~tgt_dx1', 0.2)
-            rospy.set_param('~tgt_dx2', 0.2)
-            rospy.set_param('~tgt_dx3', 0.2)
-            rospy.set_param('~tgt_dx4', 0.2)
+            rospy.set_param('~tgt_dx1', 0.2 + dist1)
+            rospy.set_param('~tgt_dx2', dist1)
+            rospy.set_param('~tgt_dx3', 0.2 + dist1)
+            rospy.set_param('~tgt_dx4', 0.2 + dist1)
 
             rospy.set_param('~tgt_dy1', 0.0)
             rospy.set_param('~tgt_dy2', 0.0)
@@ -294,7 +294,7 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # move forward
-            self.move_fwd(dist1, freq)
+            #self.move_fwd(dist1, freq)
 
             # step on 2
             rospy.set_param('~sw_id', 2)
@@ -311,17 +311,17 @@ class DemoAction(object):
             rospy.loginfo('%s: Step completed' % (self._action_name))
 
             # roll 1, 2, 3
-            rospy.set_param('~sw_id', "[1, 2, 3]")
-            rospy.set_param('~tgt_dx1', 0.1)
-            rospy.set_param('~tgt_dx2', 0.1)
-            rospy.set_param('~tgt_dx3', 0.1)
-            rospy.set_param('~tgt_dx4', 0.1)
+            rospy.set_param('~sw_id', "[1, 2, 3, 4]")
+            rospy.set_param('~tgt_dx1', 0.1 + 0.74)
+            rospy.set_param('~tgt_dx2', 0.1 + 0.74)
+            rospy.set_param('~tgt_dx3', 0.1 + 0.74)
+            rospy.set_param('~tgt_dx4', 0.74)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # move forward
-            self.move_fwd(0.74, freq)
+            #self.move_fwd(0.74, freq)
 
             # step on 4
             rospy.set_param('~sw_id', 4)
@@ -334,17 +334,17 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # roll 1, 3, 4
-            rospy.set_param('~sw_id', "[1, 3, 4]")
-            rospy.set_param('~tgt_dx1', 0.25)
-            rospy.set_param('~tgt_dx2', 0.25)
-            rospy.set_param('~tgt_dx3', 0.25)
-            rospy.set_param('~tgt_dx4', 0.25)
+            rospy.set_param('~sw_id', "[1, 2, 3, 4]")
+            rospy.set_param('~tgt_dx1', 0.25 + 1.33)
+            rospy.set_param('~tgt_dx2', 1.33)
+            rospy.set_param('~tgt_dx3', 0.25 + 0.1 + 1.33)
+            rospy.set_param('~tgt_dx4', 0.25 + 1.33)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # roll 3
-            rospy.set_param('~sw_id', "[3]")
+            '''rospy.set_param('~sw_id', "[3]")
             rospy.set_param('~tgt_dx1', 0.1)
             rospy.set_param('~tgt_dx2', 0.1)
             rospy.set_param('~tgt_dx3', 0.1)
@@ -354,7 +354,7 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # move forward
-            self.move_fwd(1.33, freq)
+            self.move_fwd(1.33, freq)'''
 
             # step off 2
             rospy.set_param('~sw_id', 2)
@@ -367,17 +367,17 @@ class DemoAction(object):
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # roll 1, 2, 3
-            rospy.set_param('~sw_id', "[1, 2, 3]")
-            rospy.set_param('~tgt_dx1', 0.2)
-            rospy.set_param('~tgt_dx2', 0.2)
-            rospy.set_param('~tgt_dx3', 0.2)
-            rospy.set_param('~tgt_dx4', 0.2)
+            rospy.set_param('~sw_id', "[1, 2, 3, 4]")
+            rospy.set_param('~tgt_dx1', 0.2 + 0.33)
+            rospy.set_param('~tgt_dx2', 0.2 + 0.33)
+            rospy.set_param('~tgt_dx3', 0.2 + 0.33)
+            rospy.set_param('~tgt_dx4', 0.33)
 
             roll.roll_feet(freq)
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
             # move forward
-            self.move_fwd(0.33, freq)
+            #self.move_fwd(0.33, freq)
 
             # step off 4
             rospy.set_param('~sw_id', 4)
@@ -621,7 +621,7 @@ if __name__ == '__main__':
 
     rospy.init_node('demo_action_ioannis')
 
-    # set global variables for physics and vizualization only case
+    # set global variables for physics and vizualization only case --> rosparam set parameter_name value
     global physics, perception
     physics = rospy.get_param("~physics", True)
     perception = rospy.get_param("~perception", True)
