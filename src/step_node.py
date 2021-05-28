@@ -6,10 +6,11 @@ from walking import Walking
 import numpy as np
 from centauro_contact_detection.msg import Contacts as contacts_msg
 
-# radius of centauro wheels
+# radius of centauro wheels/ must set to zero if control the contact point position
 R = 0.078
-#task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
 task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
+#task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
+#R = 0.0
 
 
 def contacts_callback (msg):

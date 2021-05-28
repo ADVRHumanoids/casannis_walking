@@ -10,10 +10,10 @@ from matplotlib import pyplot as plt
 
 # radius of centauro wheels
 R = 0.078
-
+#R = 0.0
 # map feet to a string for publishing to the corresponding topic
 id_name = ['FL', 'FR', 'HL', 'HR']
-#task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]
+#task_name_contact = ["contact1", "contact2", "contact3", "contact4"]
 task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 leg_num = len(id_name)
 
