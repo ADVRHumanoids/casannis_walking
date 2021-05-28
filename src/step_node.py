@@ -8,7 +8,7 @@ from centauro_contact_detection.msg import Contacts as contacts_msg
 
 # radius of centauro wheels
 R = 0.078
-
+task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]  # FL_wheel
 
 def contacts_callback (msg):
 
@@ -31,19 +31,19 @@ def casannis(int_freq):
 
     # accept one message for com and feet initial position
     com_init = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
-    fl_init = rospy.wait_for_message("/cartesian/FL_wheel/current_reference", PoseStamped, timeout=None)
-    fr_init = rospy.wait_for_message("/cartesian/FR_wheel/current_reference", PoseStamped, timeout=None)
-    hl_init = rospy.wait_for_message("/cartesian/HL_wheel/current_reference", PoseStamped, timeout=None)
-    hr_init = rospy.wait_for_message("/cartesian/HR_wheel/current_reference", PoseStamped, timeout=None)
+    fl_init = rospy.wait_for_message("/cartesian/" + task_name_contact[0] + "/current_reference", PoseStamped, timeout=None)
+    fr_init = rospy.wait_for_message("/cartesian/" + task_name_contact[1] + "/current_reference", PoseStamped, timeout=None)
+    hl_init = rospy.wait_for_message("/cartesian/" + task_name_contact[2] + "/current_reference", PoseStamped, timeout=None)
+    hr_init = rospy.wait_for_message("/cartesian/" + task_name_contact[3] + "/current_reference", PoseStamped, timeout=None)
 
     # all current feet info in a list to be used after selecting the swing leg
     f_init = [fl_init, fr_init, hl_init, hr_init]
 
     # define contacts, take into account the radius of the wheels
-    fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z - R]
-    fr_cont = [fr_init.pose.position.x, fr_init.pose.position.y, fr_init.pose.position.z - R]
-    hl_cont = [hl_init.pose.position.x, hl_init.pose.position.y, hl_init.pose.position.z - R]
-    hr_cont = [hr_init.pose.position.x, hr_init.pose.position.y, hr_init.pose.position.z - R]
+    fl_cont = [fl_init.pose.position.x, fl_init.pose.position.y, fl_init.pose.position.z] # - R]
+    fr_cont = [fr_init.pose.position.x, fr_init.pose.position.y, fr_init.pose.position.z] # - R]
+    hl_cont = [hl_init.pose.position.x, hl_init.pose.position.y, hl_init.pose.position.z] # - R]
+    hr_cont = [hr_init.pose.position.x, hr_init.pose.position.y, hr_init.pose.position.z] # - R]
 
     contacts = [np.array(fl_cont), np.array(fr_cont), np.array(hl_cont), np.array(hr_cont)]
 
@@ -85,7 +85,8 @@ def casannis(int_freq):
     cont_detection = rospy.get_param("~cont_det")  # from command line as contact_det:=True/False
 
     # Publishers for the swing foot, com in the cartesian space
-    f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id-1] + '_wheel/reference', PoseStamped, queue_size=10)
+    #f_pub_ = rospy.Publisher('/cartesian/' + id_name[swing_id-1] + '_wheel/reference', PoseStamped, queue_size=10)
+    f_pub_ = rospy.Publisher('/cartesian/' + task_name_contact[swing_id-1] + '/reference', PoseStamped, queue_size=10)
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
     # Subscriber for contact flags
@@ -144,7 +145,7 @@ def casannis(int_freq):
             f_msg.pose.position.x = interpl['sw']['x'][counter]
             f_msg.pose.position.y = interpl['sw']['y'][counter]
             # add radius as origin of the wheel frame is in the center
-            f_msg.pose.position.z = interpl['sw']['z'][counter] + R
+            f_msg.pose.position.z = interpl['sw']['z'][counter]# + R
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()

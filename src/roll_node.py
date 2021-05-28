@@ -13,6 +13,7 @@ R = 0.078
 
 # map feet to a string for publishing to the corresponding topic
 id_name = ['FL', 'FR', 'HL', 'HR']
+task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]
 leg_num = len(id_name)
 
 
@@ -33,7 +34,10 @@ def roll_feet(freq):
     for i in range(leg_num):
 
         # initial wheel frame
-        f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
+        '''f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
+                                             PoseStamped,
+                                             timeout=None))'''
+        f_init.append(rospy.wait_for_message("/cartesian/" + task_name_contact[i] + "/current_reference",
                                              PoseStamped,
                                              timeout=None))
         # initial contact position
@@ -90,7 +94,9 @@ def roll_feet(freq):
         swing_t[i] = [float(swing_t[i][0]), float(swing_t[i][1])]
 
         # swing feet trj publishers
-        foot_topic = '/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference'
+        #foot_topic = '/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference'
+        foot_topic = '/cartesian/' + task_name_contact[swing_id[i] - 1] + '/reference'
+
         f_pub_.append(rospy.Publisher(foot_topic, PoseStamped, queue_size=10))
 
         # feet trj messages

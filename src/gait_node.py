@@ -8,6 +8,7 @@ from gait import Gait
 
 # radius of centauro wheels
 R = 0.078
+task_name_contact = ["contact1_rp", "contact2_rp", "contact3_rp", "contact4_rp"]
 
 
 def contacts_callback(msg):
@@ -43,10 +44,15 @@ def casannis(int_freq):
 
     # loop for all feet
     for i in range(len(id_name)):
-        f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
+        '''f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
                                              PoseStamped,
                                              timeout=None))
-        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z - R])
+        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z - R])'''
+
+        f_init.append(rospy.wait_for_message("/cartesian/" + task_name_contact[i] + "/current_reference",
+                                             PoseStamped,
+                                             timeout=None))
+        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z])
 
     # contact points as array
     contacts = [np.array(x) for x in f_cont]
@@ -99,7 +105,11 @@ def casannis(int_freq):
         swing_t[i] = [float(i) for i in swing_t[i]]
 
         # swing feet trj publishers
-        f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
+        '''f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
+                                      PoseStamped,
+                                      queue_size=10))'''
+
+        f_pub_.append(rospy.Publisher('/cartesian/' + task_name_contact[swing_id[i] - 1] + '/reference',
                                       PoseStamped,
                                       queue_size=10))
 
@@ -190,7 +200,7 @@ def casannis(int_freq):
             f_msg[swing_phase].pose.position.x = interpl['sw'][swing_phase]['x'][counter]
             f_msg[swing_phase].pose.position.y = interpl['sw'][swing_phase]['y'][counter]
             # add radius as origin of the wheel frame is in the center
-            f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] + R
+            f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] #+ R
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
