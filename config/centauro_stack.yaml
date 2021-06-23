@@ -4,8 +4,8 @@ solver_options:
 
 stack:
     - ["Wheel1", "Wheel2", "Wheel3","Wheel4","ComXYZ"]
-    - ["LeftArm", "RightArm"]
-    - ["Postural", "PelvisRPY"]
+    - ["LeftArm", "RightArm", "PelvisRPY"]
+    - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
 
@@ -13,9 +13,10 @@ PelvisRPY:
     type: "Cartesian"
     lambda: 0.1
     indices: [3, 4, 5]
-    name: "Pelvis"
+    name: "PelvisRPY"
     distal_link: "pelvis"
     weight: 0.1
+    active: false
 
 ComXYZ:
     type: "Com"
