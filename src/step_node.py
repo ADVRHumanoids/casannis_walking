@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
-from walking import Walking
+from step_with_payload import Walking
 import numpy as np
 from centauro_contact_detection.msg import Contacts as contacts_msg
 
@@ -13,7 +13,7 @@ task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 #R = 0.0
 
 
-def contacts_callback (msg):
+def contacts_callback(msg):
 
     # pass to global scope
     global sw_contact_msg
