@@ -8,7 +8,7 @@ solver_options:
 
 stack:
     - ["WheelXY1", "WheelXY2", "WheelXY3", "WheelXY4", "ComXY", "Steering1", "Steering2", "Steering3", "Steering4"]
-    - ["LeftArm", "RightArm", "ComZ", "Waist", "WheelZ1", "WheelZ2", "WheelZ3", "WheelZ4", "Rolling1", "Rolling2", "Rolling3", "Rolling4", "Cont1RP", "Cont2RP", "Cont3RP", "Cont4RP"]
+    - ["LeftArm", "RightArm", "ComZ", "WheelZ1", "WheelZ2", "WheelZ3", "WheelZ4", "Rolling1", "Rolling2", "Rolling3", "Rolling4"]
     - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
