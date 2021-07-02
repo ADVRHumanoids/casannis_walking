@@ -73,7 +73,7 @@ class Walking:
         J = list()  # list of cost function expressions
 
         # extra moving contact to model payload
-        f_pay = [0, 0, -100]
+        f_pay = [0, 0, -200]
         P_mov = sym_t.sym('P_mov', N * 3)
 
         self._trj = {

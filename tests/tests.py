@@ -22,7 +22,7 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
         plt.title(name)
     plt.xlabel('Time [s]')
 
-    feet_labels = ['fl', 'fr', 'hl', 'hr']
+    feet_labels = ['FL', 'FR', 'HL', 'HR']
 
     # Interpolated force plot
     plt.figure()
