@@ -103,7 +103,8 @@ class Spline_optimization_z:
             g_terms['g4'][2][i, i] = 1
 
         # all 4 matrices in one list
-        self._g = [sum(g_terms[ii]) for ii in g_terms]
+        # not done with iterator because in python2 dictionaries do not keep the insertion order
+        self._g = [sum(g_terms['g1']), sum(g_terms['g2']), sum(g_terms['g3']), sum(g_terms['g4'])]
 
         # constraints - objective function
         g = []  # list of constraint expressions
@@ -141,7 +142,7 @@ class Spline_optimization_z:
         # QP solver
         self._qp = {'x': cs.vertcat(x, dx, ddx, x_mid, dx_mid),
                     'f': sum(J),
-                    'g': cs.vertcat(*g)
+                    'g': cs.horzcat(*g)
                     }
 
         self._solver = cs.qpsol('solver', 'qpoases', self._qp)
