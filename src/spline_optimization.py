@@ -31,7 +31,7 @@ class Spline_optimization_z:
         dx_mid = sym_t.sym('dx_mid', self._N - 1)
 
         # time intervals for midpoints
-        delta_t_midpoint = [0.5 * x for x in delta_t]
+        delta_t_midpoint = [0.5 * ii for ii in delta_t]
 
         # matrices (CasADi type)
         # hi matrices are derived from the cubic polynomials and their conditions
@@ -103,7 +103,7 @@ class Spline_optimization_z:
             g_terms['g4'][2][i, i] = 1
 
         # all 4 matrices in one list
-        self._g = [sum(g_terms[x]) for x in g_terms]
+        self._g = [sum(g_terms[ii]) for ii in g_terms]
 
         # constraints - objective function
         g = []  # list of constraint expressions
@@ -168,10 +168,10 @@ class Spline_optimization_z:
         DDXu = [0] * self._N #[]  # acceleration upper bounds
 
         # midpoints
-        X_mid_u = [0] * self._N #[]
-        X_mid_l = [0] * self._N #[]
-        DX_mid_u = [0] * self._N #[]
-        DX_mid_l = [0] * self._N #[]
+        X_mid_u = [0] * (self._N - 1) #[]
+        X_mid_l = [0] * (self._N - 1) #[]
+        DX_mid_u = [0] * (self._N - 1) #[]
+        DX_mid_l = [0] * (self._N - 1) #[]
 
         gl = []  # constraint lower bounds
         gu = []  # constraint upper bounds
