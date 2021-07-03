@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import trj_interpolation as interpol
 import time
+import cubic_hermite_polynomial as cubic_spline
 
 
 class Walking:
@@ -73,14 +74,16 @@ class Walking:
         J = list()  # list of cost function expressions
 
         # extra moving contact to model payload
-        f_pay = [0, 0, -200]
-        P_mov = sym_t.sym('P_mov', N * 3)
+        f_pay = [0, 0, -200]    # virtual force
+        P_mov = sym_t.sym('P_mov', N * 3)   # position knots for the virtual contact
+        DP_mov = sym_t.sym('DP_mov', N * 3)   # velocity knots for the virtual contact
 
         self._trj = {
             'x': X,
             'u': U,
             'F': F,
-            'P_mov': P_mov
+            'P_mov': P_mov,
+            'DP_mov': DP_mov
         }
 
         # iterate over knots starting from k = 0
@@ -143,7 +146,7 @@ class Walking:
 
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov),
+            'x': cs.vertcat(X, U, F, P_mov, DP_mov),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -180,8 +183,10 @@ class Walking:
         Uu = [0] * self._dimu * self._N  # control upper bounds
         Fl = [0] * self._dimf_tot * self._N  # force lower bounds
         Fu = [0] * self._dimf_tot * self._N  # force upper bounds
-        P_movl = [0] * self._dimu * self._N  # moving contact lower bounds
-        P_movu = [0] * self._dimu * self._N  # moving contact upper bounds
+        P_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
+        P_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
+        DP_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
+        DP_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
@@ -239,7 +244,7 @@ class Walking:
             Fu[f_slice1:f_slice2] = f_max
             Fl[f_slice1:f_slice2] = f_min
 
-            # Moving contact bounds
+            # Moving contact position bounds
             if k == 0:
                 p_mov_max = np.array([0.53, 0.0, 0.3])
                 p_mov_min = np.array([0.53, 0.0, 0.3])
@@ -249,6 +254,17 @@ class Walking:
 
             P_movu[u_slice1:u_slice2] = p_mov_max
             P_movl[u_slice1:u_slice2] = p_mov_min
+
+            # Moving contact velocity bounds
+            if k == 0:
+                dp_mov_max = np.zeros(3)
+                dp_mov_min = np.zeros(3)
+            else:
+                dp_mov_max = np.full(3, cs.inf)
+                dp_mov_min = np.full(3, -cs.inf)
+
+            DP_movu[u_slice1:u_slice2] = dp_mov_max
+            DP_movl[u_slice1:u_slice2] = dp_mov_min
 
             # contact positions
             p_k = np.hstack(contacts)  # start with initial contacts (4x3), but not the moving one
@@ -284,8 +300,8 @@ class Walking:
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, P_movl)
-        ubv = cs.vertcat(Xu, Uu, Fu, P_movu)
+        lbv = cs.vertcat(Xl, Ul, Fl, P_movl, DP_movl)
+        ubv = cs.vertcat(Xu, Uu, Fu, P_movu, DP_movu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -298,13 +314,15 @@ class Walking:
         f_trj = cs.horzcat(self._trj['F'])  # pack forces in a desired matrix
         u_trj = cs.horzcat(self._trj['u'])  # pack control inputs in a desired matrix
         P_mov_trj = cs.horzcat(self._trj['P_mov'])  # pack moving contact trj in a desired matrix
+        DP_mov_trj = cs.horzcat(self._trj['DP_mov'])  # pack moving contact trj in a desired matrix
 
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
             'F': self.evaluate(sol['x'], f_trj),
             'u': self.evaluate(sol['x'], u_trj),
-            'P_mov': self.evaluate(sol['x'], P_mov_trj)
+            'P_mov': self.evaluate(sol['x'], P_mov_trj),
+            'DP_mov': self.evaluate(sol['x'], DP_mov_trj)
         }
 
     def evaluate(self, solution, expr):
@@ -403,19 +421,19 @@ class Walking:
             int_force[i] = force_func[i][0](self._t)
 
         # ----------- moving contact trajectory interpolation --------------
-        p_mov_func = [[] for i in range(self._dimu)]  # list to store the splines
-        int_p_mov = [[] for i in range(self._dimu)]  # list to store lists of points
+        mov_cont_splines = []
+        mov_cont_polynomials = []
+        mov_cont_points = []
+        for i in range(3):
+            mov_cont_splines.append(cubic_spline.CubicSpline(solution['P_mov'][i::self._dimu],
+                                                             solution['DP_mov'][i::self._dimu],
+                                                             self._time))
+            mov_cont_polynomials.append(mov_cont_splines[i].get_polys())
+            mov_cont_points.append(mov_cont_splines[i].get_point_list(resol))
 
-        for i in range(self._dimu):  # loop for each component of the force vector
-
-            # append the spline (by casadi) in the i element of the list force_func
-            p_mov_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._time],
-                                                solution['P_mov'][i::self._dimu]))
-
-            # store the interpolation points for each force component in the i element of the list int_force
-            # primary dimension = number of force components
-            int_p_mov[i] = p_mov_func[i][0](self._t)
+        #poly_object = CubicSpline([0.0, 2.0, 3.5, 8.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.5, 4])
+        #polynomials = poly_object.get_polys()
+        #points = poly_object.get_point_list(300)
 
         # ----------- swing leg trajectory interpolation --------------
         # swing trajectory with intemediate point
@@ -428,7 +446,7 @@ class Walking:
             't': self._t,
             'x': int_state,
             'f': int_force,
-            'p_mov': int_p_mov,
+            'p_mov': [i['p'] for i in mov_cont_points],
             'sw': sw_interpl
         }
 
@@ -475,10 +493,17 @@ class Walking:
         # plt.savefig('../plots/step_forces.png')
 
         # Interpolated moving contact trajectory
+        mov_contact_labels = ['position', 'velocity']
         plt.figure()
+        #for i, name in enumerate(mov_contact_labels):
+        plt.subplot(2, 1, 1)
         for k in range(3):
             plt.plot(results['t'], results['p_mov'][k], '-')
-        plt.grid()
+            plt.grid()
+        plt.subplot(2, 1, 2)
+        for k in range(3):
+            plt.plot(self._time, solution['DP_mov'][k::self._dimu], '-')
+            plt.grid()
         plt.title('Moving Contact trajectory')
         plt.legend(['x', 'y', 'z'])
         plt.xlabel('Time [s]')

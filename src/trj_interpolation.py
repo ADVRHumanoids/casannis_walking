@@ -364,6 +364,9 @@ def swing_trj_gaussian(sw_curr, sw_tgt, sw_t, total_t, resol):
 def cubic_splines(dt, init_cond, fin_cond):
     """
     This function computes the polynomial of 3rd order between two points with 4 given conditions
+    In fact, this could be just replaced by:
+    p0 + t*v0 + (t^3*(2*p0 - 2*p1 + T*v0 + T*v1))/T^3 - (t^2*(3*p0 - 3*p1 + 2*T*v0 + T*v1))/T^2
+    instead of solving the linear system every time
     Args:
         dt: time interval that the polynomial applies
         init_cond: list with initial position, velocity conditions
