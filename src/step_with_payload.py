@@ -94,8 +94,10 @@ class Walking:
             # slice indices for variables at knot k
             x_slice1 = k * dimx
             x_slice2 = (k + 1) * dimx
+            u_slice0 = (k - 1) * dimu   # referring to previous knot
             u_slice1 = k * dimu
             u_slice2 = (k + 1) * dimu
+            u_slice3 = (k + 2) * dimu
             f_slice1 = k * dimf_tot
             f_slice2 = (k + 1) * dimf_tot
 
@@ -146,6 +148,38 @@ class Walking:
                 euler += cs.cross(f_i_k, c_k - p_i_k)
             g.append(euler)
 
+            # moving contact spline acceleration continuity
+            if 0 < k < (self._N - 1):
+
+                for i in range(3):
+                    # current polynomial
+                    p_mov_previous = P_mov[u_slice0 + i]
+                    dp_mov_previous = DP_mov[u_slice0 + i]
+                    dp_mov_current = DP_mov[u_slice1 + i]
+
+                    current_polynomial = {
+                        'p_list': [p_mov_previous, p_mov[i]],
+                        'v_list': [dp_mov_previous, dp_mov_current],
+                        'T': self._dt,
+                        't0': (k - 1) * self._dt
+                    }
+
+                    # next polynomial
+                    p_mov_next = P_mov[u_slice2 + i]
+                    dp_mov_next = DP_mov[u_slice2 + i]
+
+                    next_polynomial = {
+                        'p_list': [p_mov[i], p_mov_next],
+                        'v_list': [dp_mov_current, dp_mov_next],
+                        'T': self._dt,
+                        't0': k * self._dt
+                    }
+
+                    mov_contact_spline_acc_constraint = cubic_spline.spline_acc_constraint(
+                        current_polynomial, next_polynomial, k * dt
+                    )
+                    g.append(mov_contact_spline_acc_constraint)
+
         # construct the solver
         self._nlp = {
             'x': cs.vertcat(X, U, F, P_mov, DP_mov),
@@ -179,6 +213,8 @@ class Walking:
         """
 
         # lists for assigning bounds
+
+        # variables
         Xl = [0] * self._dimx * self._N  # state lower bounds (for all knots)
         Xu = [0] * self._dimx * self._N  # state upper bounds
         Ul = [0] * self._dimu * self._N  # control lower bounds
@@ -189,8 +225,12 @@ class Walking:
         P_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
         DP_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
         DP_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+
+        # constraints
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
+
+        # parameters
         P = list()  # parameter values
 
         # time that maximum clearance occurs
@@ -291,6 +331,10 @@ class Walking:
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
+
+            if 0 < k < (self._N - 1):
+                gl.append(np.zeros(3))
+                gu.append(np.zeros(3))
 
             # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -426,29 +470,14 @@ class Walking:
         mov_cont_splines = []
         mov_cont_polynomials = []
         mov_cont_points = []
-        aa = []
-        bb = []
-        cc = []
+
         for i in range(3):
-
-            # debug
-            aa.append(solution['P_mov'][i::self._dimu])
-            bb.append(solution['DP_mov'][i::self._dimu])
-            cc.append(self._time)
-
             mov_cont_splines.append(cubic_spline.CubicSpline(solution['P_mov'][i::self._dimu],
                                                              solution['DP_mov'][i::self._dimu],
                                                              self._tjunctions))
 
-            mov_cont_polynomials.append(mov_cont_splines[i].get_polys())
-            mov_cont_points.append(mov_cont_splines[i].get_point_list(resol))
-
-
-        # dense spline
-        # poly_object = CubicSpline(randomlist, deriv, tim)
-        # polynomials = poly_object.get_polys()
-        # points = poly_object.get_point_list(300)
-        # plot_spline(points)
+            mov_cont_polynomials.append(mov_cont_splines[i].get_poly_objects())
+            mov_cont_points.append(mov_cont_splines[i].get_spline_trajectory(resol))
 
         # ----------- swing leg trajectory interpolation --------------
         # swing trajectory with intemediate point
@@ -462,6 +491,8 @@ class Walking:
             'x': int_state,
             'f': int_force,
             'p_mov': [i['p'] for i in mov_cont_points],
+            'dp_mov': [i['dp'] for i in mov_cont_points],
+            'ddp_mov': [i['ddp'] for i in mov_cont_points],
             'sw': sw_interpl
         }
 
@@ -508,17 +539,13 @@ class Walking:
         # plt.savefig('../plots/step_forces.png')
 
         # Interpolated moving contact trajectory
-        mov_contact_labels = ['position', 'velocity']
+        mov_contact_labels = ['p_mov', 'dp_mov', 'ddp_mov']
         plt.figure()
-        #for i, name in enumerate(mov_contact_labels):
-        plt.subplot(2, 1, 1)
-        for k in range(3):
-            plt.plot(results['t'], results['p_mov'][k], '-')
-            plt.grid()
-        plt.subplot(2, 1, 2)
-        for k in range(3):
-            plt.plot(self._time, solution['DP_mov'][k::self._dimu], '-')
-            plt.grid()
+        for i, name in enumerate(mov_contact_labels):
+            plt.subplot(3, 1, i+1)
+            for k in range(3):
+                plt.plot(results['t'], results[name][k], '-')
+                plt.grid()
         plt.title('Moving Contact trajectory')
         plt.legend(['x', 'y', 'z'])
         plt.xlabel('Time [s]')
