@@ -41,47 +41,6 @@ def plot_spline(point_list):
     plt.show()
 
 
-def spline_acc_constraint(poly1, poly2, t):
-
-    # poly1 = {
-    #     'p_list': p_list,
-    #     'v_list': v_list,
-    #     'T': T,
-    #     't0': t0
-    # }
-
-    # junction values and times for polynomial 1
-    p10 = poly1['p_list'][0]
-    p11 = poly1['p_list'][1]
-    v10 = poly1['v_list'][0]
-    v11 = poly1['v_list'][1]
-    T1 = poly1['T']
-    t10 = poly1['t0']
-
-    # junction values and times for polynomial 2
-    p20 = poly2['p_list'][0]
-    p21 = poly2['p_list'][1]
-    v20 = poly2['v_list'][0]
-    v21 = poly2['v_list'][1]
-    T2 = poly2['T']
-    t20 = poly2['t0']
-
-    # c, d coefficients of polynomial 1
-    d1 = (2 * p10 - 2 * p11 + T1 * v10 + T1 * v11) / T1 ** 3
-    c1 = - (3 * p10 - 3 * p11 + 2 * T1 * v10 + T1 * v11) / T1 ** 2 - 3 * d1 * t10
-
-    # c, d coefficients of polynomial 2
-    d2 = (2 * p20 - 2 * p21 + T2 * v20 + T2 * v21) / T2 ** 3
-    c2 = - (3 * p20 - 3 * p21 + 2 * T2 * v20 + T2 * v21) / T2 ** 2 - 3 * d2 * t20
-
-    acceleration1 = 2.0 * c1 + 6.0 * d1 * t
-    acceleration2 = 2.0 * c2 + 6.0 * d2 * t
-
-    continuity_violation = acceleration1 - acceleration2
-
-    return continuity_violation
-
-
 class CubicPolynomial:
     '''
     Construct a class of a cubic polynomial from zero and first derivative values
