@@ -34,7 +34,9 @@ class Walking:
         self._N = N
         self._dt = dt  # dt used for optimization knots
         self._mass = mass
-        self._time = [(i * dt) for i in range(self._N)]
+        self._time = [(i * dt) for i in range(self._N)]         # time junctions w/o the last one
+        self._tjunctions = [(i * dt) for i in range(self._N + 1)]   # time junctions from first to last
+
 
         gravity = np.array([0, 0, -9.81])
 
@@ -424,16 +426,29 @@ class Walking:
         mov_cont_splines = []
         mov_cont_polynomials = []
         mov_cont_points = []
+        aa = []
+        bb = []
+        cc = []
         for i in range(3):
+
+            # debug
+            aa.append(solution['P_mov'][i::self._dimu])
+            bb.append(solution['DP_mov'][i::self._dimu])
+            cc.append(self._time)
+
             mov_cont_splines.append(cubic_spline.CubicSpline(solution['P_mov'][i::self._dimu],
                                                              solution['DP_mov'][i::self._dimu],
-                                                             self._time))
+                                                             self._tjunctions))
+
             mov_cont_polynomials.append(mov_cont_splines[i].get_polys())
             mov_cont_points.append(mov_cont_splines[i].get_point_list(resol))
 
-        #poly_object = CubicSpline([0.0, 2.0, 3.5, 8.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.5, 4])
-        #polynomials = poly_object.get_polys()
-        #points = poly_object.get_point_list(300)
+
+        # dense spline
+        # poly_object = CubicSpline(randomlist, deriv, tim)
+        # polynomials = poly_object.get_polys()
+        # points = poly_object.get_point_list(300)
+        # plot_spline(points)
 
         # ----------- swing leg trajectory interpolation --------------
         # swing trajectory with intemediate point

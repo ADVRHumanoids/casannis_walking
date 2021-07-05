@@ -82,24 +82,19 @@ class CubicPolynomial:
 
         return self._polynomial_object
 
-    def get_point_list(self, polynomial, point_number):
+    def get_point_list(self, polynomial, timings):
         '''
         Generate a list of points (pairs of time and value) by sampling the cubic polynomial
         :param polynomial: the polynomial object
-        :param point_number: number of points to be generated
+        :param timings: timings at which the polynomial should be sampled
         :return: dictionary with list of timings and list of values of the generated points
         '''
 
-        end_time = self._t0 + self._T
-
-        # sample time
-        point_tlist = np.linspace(self._t0, end_time, point_number)
-
         # sample values
-        point_list = polynomial(point_tlist)
+        point_list = polynomial(np.array(timings))
 
         return {
-            't': point_tlist,
+            't': timings,
             'p': point_list
         }
 
@@ -116,6 +111,7 @@ class CubicSpline:
         :param T_list: list of global times at junctions (not durations)
         '''
 
+        self._junction_num = len(p_list)
         self._poly_num = len(p_list) - 1    # number of polynomials
         self._p_list = p_list
         self._v_list = v_list
@@ -150,24 +146,40 @@ class CubicSpline:
         :return: dictionary that includes list of points and list of timings
         '''
 
+        # number of points to be generated
+        point_num = int(resolution * self._t_total)
+
+        # sample evenly the spline time
+        point_tlist = np.linspace(self._T_list[0], self._T_list[-1], point_num).tolist()
+
+        # find indices to split point_tlist based on the corresponding polynomial
+        indice_list = []
+        for i in range(self._poly_num):
+            indice_list.append(next(x[0] for x in enumerate(point_tlist) if x[1] >= self._T_list[i]))
+        indice_list.append(point_num)
+
+        # list of of lists for timings, #sublists = #polynomials
+        timings_lists = []
+        for i in range(self._poly_num):
+            timings_lists.append(point_tlist[(indice_list[i]):(indice_list[i+1])])
+
+        # list of points using the CubicSpline class
         point_list = []
         for i in range(self._poly_num):
 
-            # number of points to be generated for each polynomial
-            point_num = round(self._durations[i] * resolution)
-
             # Use the methods of CubicPolynomial class
-            point_list.append(self._polynomials[i].get_point_list(self._polynomials[i].get_poly_from_coeffs(), point_num))
+            point_list.append(
+                self._polynomials[i].get_point_list(self._polynomials[i].get_poly_from_coeffs(),
+                timings_lists[i])['p']
+            )
 
-        point_tlist = [i['t'].tolist() for i in point_list]
-        point_tlist_flat = [item for sublist in point_tlist for item in sublist]
-
-        point_list = [i['p'].tolist() for i in point_list]
+        # keep only values and make it flat
+        point_list = [i.tolist() for i in point_list]
         point_list_flat = [item for sublist in point_list for item in sublist]
 
         return {
-            't': point_tlist_flat,
-            'p': point_list_flat
+           't': point_tlist,
+           'p': point_list_flat
         }
 
 
@@ -188,7 +200,8 @@ if __name__ == "__main__":
     # dense polynomial
     '''poly_object = CubicPolynomial([0.0, 2.0], [0.0, 0.0], 1)
     polynomials = poly_object.get_poly_from_coeffs()
-    points = poly_object.get_point_list(10)
+    timelist = np.linspace(0, 1, 10).tolist()
+    points = poly_object.get_point_list(polynomials, 10, timelist)
     plot_poly(points)'''
 
     # dense spline
