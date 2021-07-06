@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="swing_id" default="1"/>
+    <arg name="target_dx" default="0.0"/>
+    <arg name="target_dy" default="0.0"/>
+    <arg name="target_dz" default="0.0"/>
+    <arg name="swing_t" default="[2.0, 6.0]"/>
+    <arg name="contact_det" default="False"/>
+    <arg name="plots" default="False"/>
+    <arg name="clearance" default="0.1"/>
+    <arg name="min_force" default="100"/>
+
+    <node name="casannis" pkg="casannis_walking" type="step_payload_node.py" output="screen">
+        <param name="sw_id" value="$(arg swing_id)"/>
+        <param name="tgt_dx" value="$(arg target_dx)"/>
+        <param name="tgt_dy" value="$(arg target_dy)"/>
+        <param name="tgt_dz" value="$(arg target_dz)"/>
+        <param name="sw_t" value="$(arg swing_t)"/>
+        <param name="cont_det" value="$(arg contact_det)"/>
+        <param name="plots" value="$(arg plots)"/>
+        <param name="clear" value="$(arg clearance)"/>
+        <param name="min_for" value="$(arg min_force)"/>
+    </node>
+</launch>
