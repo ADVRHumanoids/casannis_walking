@@ -54,14 +54,14 @@ LeftArm:
     name: "left_hand"
     distal_link: "arm1_8"
     lambda: 0.1
-    base_link: "pelvis"
+#    base_link: "pelvis"
 
 RightArm:
     type: "Cartesian"
     name: "right_hand"
     distal_link: "arm2_8"
     lambda: 0.1
-    base_link: "pelvis"
+#    base_link: "pelvis"
     
 Postural:
     type: "Postural"

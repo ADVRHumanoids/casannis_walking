@@ -77,7 +77,7 @@ class Walking:
         F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
         P_mov = sym_t.sym('P_mov', N * dimp_mov)   # position knots for the virtual contact
         DP_mov = sym_t.sym('DP_mov', N * dimp_mov)   # velocity knots for the virtual contact
-        f_pay = [0, 0, -200]    # virtual force
+        f_pay = [0, 0, -100]    # virtual force
         P = list()  # parameters
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
@@ -111,7 +111,12 @@ class Walking:
             cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM jerk, that is the control
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
+            if k > 0:
+                cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2] - DP_mov[u_slice0:u_slice1]))    # penalize CoM control
+            if k == self._N - 1:
+                default_mov_contact = P_mov[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
+                cost_function += costs.penalize_quantity(1e0, default_mov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -140,6 +145,13 @@ class Walking:
                 g.append(mov_contact_spline_acc_constraint['y'])
                 g.append(mov_contact_spline_acc_constraint['z'])
 
+            # box constraint - moving contact
+            mov_contact_box_constraint = constraints.moving_contact_box_constraint(
+                P_mov[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
+            g.append(mov_contact_box_constraint['x'])
+            g.append(mov_contact_box_constraint['y'])
+            g.append(mov_contact_box_constraint['z'])
+
         # construct the solver
         self._nlp = {
             'x': cs.vertcat(X, U, F, P_mov, DP_mov),
@@ -159,7 +171,7 @@ class Walking:
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
-    def solve(self, x0, contacts, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
+    def solve(self, x0, contacts, mov_contact_initial, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
         """Solve the stepping problem
 
         Args:
@@ -230,10 +242,12 @@ class Walking:
             Fu[f_slice1:f_slice2] = force_bounds['max']
             Fl[f_slice1:f_slice2] = force_bounds['min']
 
-            # Moving contact position bounds
+            # Moving contact position bounds - only initial condition
             mov_contact_bounds = constraints.bound_moving_contact_variables(
-                [np.array([0.53, -0.2, 0.3]), np.array([0.7, 0.2, 0.3])],
+                mov_contact_initial[0],
+                mov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
+                [np.full(3, -0.3), np.full(3, 0.3)],
                 k)
             P_movu[u_slice1:u_slice2] = mov_contact_bounds['p_mov_max']
             P_movl[u_slice1:u_slice2] = mov_contact_bounds['p_mov_min']
@@ -246,9 +260,19 @@ class Walking:
             )
             P.append(contact_params)
 
-        # bound constraints to zero
-        gl.append(np.zeros(self._nconstr))
-        gu.append(np.zeros(self._nconstr))
+            # constraints' bounds
+            gl.append(np.zeros(6))  # newton-euler
+            gu.append(np.zeros(6))
+            if k > 0:
+                gl.append(np.zeros(self._dimx))     # state constraint
+                gu.append(np.zeros(self._dimx))
+            if 0 < k < self._N - 1:
+                gl.append(np.zeros(3))      # moving contact
+                gu.append(np.zeros(3))
+
+            # box constraint - moving contact bounds
+            gl.append(np.array([0.4, 0.0, 0.3]))
+            gu.append(np.array([0.48, 0.23, 0.3]))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -524,7 +548,6 @@ class Walking:
         plt.title('Trajectory Z- X')
         plt.xlabel('X [m]')
         plt.ylabel('Z [m]')
-        # plt.savefig('../plots/step_swing_zx.png')
 
         # Support polygon and CoM motion in the plane
         SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
@@ -532,14 +555,13 @@ class Walking:
         SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
         SuP_y_coords.append(SuP_y_coords[0])
         plt.figure()
-        plt.plot(results['x'][1], results['x'][0], '-')
-        plt.plot(SuP_x_coords, SuP_y_coords, 'ro-')
+        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)
+        plt.plot(SuP_x_coords, SuP_y_coords, 'ro-', linewidth=0.8)
         plt.grid()
         plt.title('Support polygon and CoM')
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
         plt.xlim(0.5, -0.5)
-        # plt.savefig('../plots/mov_contact.png')
         plt.show()
 
 
@@ -561,8 +583,12 @@ if __name__ == "__main__":
         np.array([-0.35, -0.35, -0.7187])  # hr
     ]
 
+    moving_contact = [
+        np.array([0.53, 0.0, 0.3]),
+        np.zeros(3),
+    ]
     # swing id from 0 to 3
-    sw_id = 1
+    sw_id = 0
 
     step_clear = 0.05
 
@@ -576,8 +602,10 @@ if __name__ == "__main__":
     swing_time = [2.0, 5.0]
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
-                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
+    sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
+                  swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
+                  swing_t=swing_time, min_f=100)
+
     # check time needed
     end_time = time.time()
     print('Total time is:', (end_time - start_time) * 1000, 'ms')

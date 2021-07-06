@@ -145,10 +145,7 @@ def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, nc
     }
 
 
-def bound_moving_contact_variables(p_mov_bound, dp_mov_bound, knot):
-
-    p_mov_initial = np.array([0.53, 0.0, 0.3])
-    dp_mov_initial = np.zeros(3)
+def bound_moving_contact_variables(p_mov_initial, dp_mov_initial, p_mov_bound, dp_mov_bound, knot):
 
     if knot == 0:
         p_mov_max = p_mov_initial
@@ -157,11 +154,11 @@ def bound_moving_contact_variables(p_mov_bound, dp_mov_bound, knot):
         dp_mov_max = dp_mov_initial
         dp_mov_min = dp_mov_initial
     else:
-        p_mov_max = p_mov_bound[1]
         p_mov_min = p_mov_bound[0]
+        p_mov_max = p_mov_bound[1]
 
-        dp_mov_max = dp_mov_bound[1]
         dp_mov_min = dp_mov_bound[0]
+        dp_mov_max = dp_mov_bound[1]
 
     return {
         'p_mov_min': p_mov_min,
@@ -170,6 +167,16 @@ def bound_moving_contact_variables(p_mov_bound, dp_mov_bound, knot):
         'dp_mov_max': dp_mov_max
     }
 
+
+def moving_contact_box_constraint(p_mov, CoM_pos):
+
+    constraint_violation = p_mov - CoM_pos
+
+    return {
+        'x': constraint_violation[0],
+        'y': constraint_violation[1],
+        'z': constraint_violation[2],
+    }
 
 def bound_state_variables(initial_state, state_bound, knot):
 

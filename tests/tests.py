@@ -80,6 +80,11 @@ if __name__ == "__main__":
         np.array([-0.35, -0.35, -0.7187])  # hr
     ]
 
+    moving_contact = [
+        np.array([0.53, 0.0, 0.3]),
+        np.zeros(3),
+    ]
+
     # swing id from 0 to 3
     sw_id = 1
 
@@ -112,8 +117,9 @@ if __name__ == "__main__":
     w2 = adaptable(mass=95, N=40, dt=0.2)
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol2 = w2.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
-                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
+    sol2 = w2.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
+                    swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
+                    swing_t=swing_time, min_f=100)
 
 
     # interpolate the values, pass values and interpolation resolution
