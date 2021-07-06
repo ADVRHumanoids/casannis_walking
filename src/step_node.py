@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
-from step_with_payload import Walking
+from walking import Walking
 import numpy as np
 from centauro_contact_detection.msg import Contacts as contacts_msg
 

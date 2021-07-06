@@ -275,7 +275,7 @@ if __name__ == "__main__":
     points = poly_object.get_trajectory(timelist)
     plot_poly(points)
     value = poly_object.evaluate_second_derivative(0.0)
-    print value
+    print(value)
 
     # dense spline
     # poly_object = CubicSpline([0.0, 2.0, 3.5, 8.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.5, 4])

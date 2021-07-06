@@ -6,9 +6,10 @@ def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, re
     if reference_position is None:
 
         contacts_horizontal_mean_position = 0.25 * (contact_positions[0:2] +
-                                         contact_positions[3:5] +
-                                         contact_positions[6:8] +
-                                         contact_positions[9:11])
+                                                    contact_positions[3:5] +
+                                                    contact_positions[6:8] +
+                                                    contact_positions[9:11]
+                                                    )
         reference_position = contacts_horizontal_mean_position
 
     horizontal_dist = CoM_position[0:2] - reference_position
