@@ -43,3 +43,5 @@ src/roll_node.pyc
 src/walking.pyc
 
 src/tf_listener.pyc
+
+src/__pycache__/step_with_payload.cpython-36.pyc

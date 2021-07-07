@@ -12,17 +12,9 @@ import constraints
 
 class Walking:
     """
-    Assumptions:
-      1) mass concentrated at com
-      2) zero angular momentum
-      3) point contacts
-
-    Dynamics:
-      1) input is com jerk
-      2) dynamics is a triple integrator of com jerk
-      3) there must be contact forces that
-        - realize the motion
-        - fulfil contact constraints (i.e. unilateral constraint)
+    TODO: 1) Setup the simulator with payloads
+    2) Formulate the same payload-aware planning for multiple steps.
+    3) Expand for two moving contacts
     """
 
     def __init__(self, mass, N, dt):
