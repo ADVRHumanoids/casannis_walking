@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:if value="${ADD_LEGS}">
+
+<gazebo reference="wheel_1">
+	<kp>1000000.0</kp>
+	<kd>100.0</kd>
+	<mu1>1.0</mu1>
+	<mu2>1.0</mu2>
+	<fdir1>1 0 0</fdir1>
+	<maxVel>1.0</maxVel>
+	<minDepth>0.00</minDepth>
+</gazebo>
+
+<gazebo reference="wheel_2">
+	<kp>1000000.0</kp>
+	<kd>100.0</kd>
+	<mu1>1.0</mu1>
+	<mu2>1.0</mu2>
+	<fdir1>1 0 0</fdir1>
+	<maxVel>1.0</maxVel>
+	<minDepth>0.00</minDepth>
+</gazebo>
+
+<gazebo reference="wheel_3">
+	<kp>1000000.0</kp>
+	<kd>100.0</kd>
+	<mu1>1.0</mu1>
+	<mu2>1.0</mu2>
+	<fdir1>1 0 0</fdir1>
+	<maxVel>1.0</maxVel>
+	<minDepth>0.00</minDepth>
+</gazebo>
+
+<gazebo reference="wheel_4">
+	<kp>1000000.0</kp>
+	<kd>100.0</kd>
+	<mu1>1.0</mu1>
+	<mu2>1.0</mu2>
+	<fdir1>1 0 0</fdir1>
+	<maxVel>1.0</maxVel>
+	<minDepth>0.00</minDepth>
+</gazebo>
+
+
+<gazebo reference="hip_yaw_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="hip_pitch_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="knee_pitch_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_pitch_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_yaw_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_wheel_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+<gazebo reference="hip_yaw_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="hip_pitch_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="knee_pitch_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_pitch_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_yaw_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_wheel_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+<gazebo reference="hip_yaw_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="hip_pitch_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="knee_pitch_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_pitch_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_yaw_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_wheel_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+<gazebo reference="hip_yaw_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="hip_pitch_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="knee_pitch_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_pitch_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="ankle_yaw_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_wheel_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+</xacro:if>
+
+<xacro:if value="${ADD_UPPER_BODY}">
+
+<gazebo reference="torso_yaw">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+<gazebo reference="j_arm1_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_5">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_6">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm1_7">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+
+<gazebo reference="j_arm2_1">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_2">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_3">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_4">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_5">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_6">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+<gazebo reference="j_arm2_7">
+    <implicitSpringDamper>1</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+</gazebo>
+
+</xacro:if>
+
+</robot>

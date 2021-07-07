@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- LINKS -->
+<!-- TODO: FINISH IMPLEMENTATION WITH CORRECT NUMBERS -->
+<link name="neck_1">
+    <inertial>
+      <origin xyz="0.040479674 0.021377573 -0.014595112"/>
+      <mass value="0.33878686"/>
+      <inertia ixx="0.0003718568" ixy="-9.42983e-05" ixz="-2.80644e-05" iyy="0.0001886879" iyz="-1.54534e-05" izz="0.0005023443"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/neck_yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/simple/neck_yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+</link>
+
+<link name="neck_2">
+    <inertial>
+      <origin xyz="0.048466918 -0.059852318 -0.0085314894"/>
+      <mass value="0.78526942"/>
+      <inertia ixx="0.0004682345" ixy="-1.05438e-05" ixz="7.24398e-05" iyy="0.0002635246" iyz="1.6904e-06" izz="0.0003763351"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/neck_pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/simple/neck_pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+</link>
+
+<!-- LINKS -->
+<link name="neck_3">
+    <inertial>
+      <origin xyz="0.048466918 -0.059852318 -0.0085314894"/>
+      <mass value="0.78526942"/>
+      <inertia ixx="0.0004682345" ixy="-1.05438e-05" ixz="7.24398e-05" iyy="0.0002635246" iyz="1.6904e-06" izz="0.0003763351"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/lidar.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/simple/lidar.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+</link>
+
+<!--JOINTS -->
+<joint name="neck_yaw" type="revolute">
+    <parent link="torso_2"/>
+    <origin xyz="0.0 0.0 0.2795"/>
+    <child link="neck_1"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="35" lower="-0.78539816" upper="0.78539816" velocity="5.7"/>
+    <dynamics friction="10.0"/>
+</joint>
+
+<joint name="neck_pitch" type="revolute">
+    <parent link="neck_1"/>
+    <origin xyz="0.054 0.0596 -0.0124975"/>
+    <child link="neck_2"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="35" lower="-0.34906585" upper="0.78539816" velocity="5.7"/>
+    <dynamics friction="10.0"/>
+</joint>
+
+<joint name="neck_velodyne" type="continuous">
+    <parent link="torso_2"/>
+    <origin xyz="0.055 0.0 0.473262" rpy="0 0 0"/>
+    <child link="neck_3"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="35" velocity="5.7"/>
+    <dynamics damping="0.2" friction="10.0"/>
+</joint>
+
+
+</robot>

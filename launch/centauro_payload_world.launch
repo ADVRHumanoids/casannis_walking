@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="use_sim_time" type="bool" value="true"/>
+  <arg name="gazebo" default="true"/>
+  
+  
+  <!-- gazebo configuration parameters -->
+  <arg name="paused" default="true"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="physics" default="ode"/>
+  <arg name="verbose" default="false"/>
+  <arg name="extra_gazebo_args" default=""/>
+  
+  <!-- centauro configuration parameters -->
+  <arg name="arms" default="true"/>
+  <arg name="legs" default="true"/>
+
+
+  <!-- Internal arguments, rewrite human-readable gazebo arguments to it's internal arguments -->
+  <arg unless="$(arg paused)" name="command_arg1" value=""/>
+  <arg     if="$(arg paused)" name="command_arg1" value="-u"/>
+  <arg unless="$(arg headless)" name="command_arg2" value=""/>
+  <arg     if="$(arg headless)" name="command_arg2" value="-r"/>
+  <arg unless="$(arg verbose)" name="command_arg3" value=""/>
+  <arg     if="$(arg verbose)" name="command_arg3" value="--verbose"/>
+  <arg unless="$(arg debug)" name="script_type" value="gzserver"/>
+  <arg     if="$(arg debug)" name="script_type" value="debug"/>
+
+  <!--arg name="robot_namespace" default="centauro"/-->
+  <!-- from where the simulation enviornment will be loaded:
+       WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
+  <arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro.world"/>
+
+
+  <!-- Load the URDF/SRDF into the ROS Parameter Server -->
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder '$(find casannis_walking)/urdf_srdf/2x5kg/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/>
+
+  <param name="robot_semantic_description" textfile="$(find casannis_walking)/urdf_srdf/2x5kg/srdf/centauro.srdf"/>
+
+  
+  <!-- run gazebo -->
+  <group if="$(arg gazebo)">
+  <!-- start gazebo server-->
+  	<node name="gazebo" pkg="gazebo_ros" type="$(arg script_type)" respawn="false" output="screen"
+		args="$(arg command_arg1) $(arg command_arg2) $(arg command_arg3) -e $(arg physics) $(arg extra_gazebo_args) $(arg world_name) -namespace centauro" />
+
+  	<!-- start gazebo client -->
+    	<node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" output="screen" if="$(arg gui)"/>
+
+
+  	<!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+	<node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+		args="-urdf -model centauro -param robot_description"/>
+  </group>
+
+</launch>

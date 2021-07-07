@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="centauro">
+
+<!-- 
+  ROS urdf definition of the CENTAURO humanoid robot by Istituto Italiano di Tecnologia
+  
+  Author: Enrico Mingo Hoffman
+-->
+
+<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/utils.urdf.xacro" />
+<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/kinematics_properties.urdf.xacro" />
+<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/inertial_properties.urdf.xacro" />
+<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/limits.urdf.xacro" />
+
+
+<link name="base_link"/>
+
+<link name="pelvis">
+
+      <inertial>
+         <origin xyz="${Pelvis_x} ${Pelvis_y} ${Pelvis_z}"/>
+         <mass value="${Pelvis_mass}"/>
+         <inertia ixx="${Pelvis_xx}" ixy="${Pelvis_xy}" ixz="${Pelvis_xz}" iyy="${Pelvis_yy}" iyz="${Pelvis_yz}" izz="${Pelvis_zz}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+        <geometry>
+         <mesh filename="package://centauro_urdf/meshes/pelvis.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+
+      <collision>
+         <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+        <geometry>
+         <mesh filename="package://centauro_urdf/meshes/simple/pelvis.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+
+   </link>
+
+
+<link name="imu_link"/>
+
+<joint name="imu_joint" type="fixed">
+    <parent link="pelvis"/>
+    <origin xyz="${Imu_Ox} ${Imu_Oy} ${Imu_Oz}" rpy="${Imu_raw} ${Imu_pitch} ${Imu_yaw}"/>
+    <child link="imu_link"/>
+</joint>
+
+
+<joint name="base_joint" type="fixed">
+    <parent link="pelvis"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+</joint>
+
+
+<xacro:if value="${ADD_UPPER_BODY}">
+	<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/centauro_torso.urdf.xacro" />
+    <xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/arms.urdf.xacro" />
+	
+	<xacro:if value="${ADD_BALL_END_EFFECTOR}">
+		<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/ball.urdf.xacro" />
+
+		<xacro:ball_end_effector arm_num="1"  parent_link="arm1_7">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:ball_end_effector>
+
+		<xacro:ball_end_effector arm_num="2"  parent_link="arm2_7">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:ball_end_effector>
+	</xacro:if>
+	<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/head.urdf.xacro" />
+    
+        
+    <xacro:if value="${ADD_VELODYNE}">
+        <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+        <xacro:VLP-16 parent="neck_3" name="velodyne_calib" topic="/velodyne_points" hz="10" samples="440">
+            <origin xyz="0.032768 -0.01 0.048219" rpy="0 1.5709 -0.316519  " />
+        </xacro:VLP-16>
+    </xacro:if>
+
+
+    <xacro:if value="${ADD_INTEL_D435I}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_d435i.urdf.xacro" />
+        
+       <!-- <xacro:sensor_d435i parent="torso_2" name="d435i_camera" topics_ns="d435i_camera" 
+                            enable_pointCloud="true" align_depth="true">
+            <origin xyz="0.13 0 0.03" rpy="0 0.25 0"/> 
+        </xacro:sensor_d435i>-->
+        
+        <xacro:sensor_d435i parent="pelvis" name="D435i_camera" topics_ns="D435i/D435i_camera"
+                      enable_pointCloud="true" align_depth="true"
+                      unite_imu_method="false"
+                    
+                      visualize="true"
+                                                  
+                            
+                      accel_fps="300"
+                      gyro_fps="300"
+
+                      depth_width="1280"
+                      depth_height="720"
+                      depth_fps="90"
+
+                      infra_width="1280"
+                      infra_height="720"
+                      infra_fps="90"
+
+                      color_width="1280"
+                      color_height="720"
+                      color_fps="30">
+            
+            <origin xyz="0.219831 0 -0.0613293" rpy="0.0 0.5585052 0.0"/>
+        </xacro:sensor_d435i>
+
+        
+        
+    </xacro:if>
+    
+    
+    <xacro:if value="${ADD_INTEL_T265}">
+        <xacro:include filename="$(find realsense_gazebo_description)/urdf/_t265.urdf.xacro" />
+
+        <!-- unite_imu_method can be false, copy or linear_interpolation -->
+
+        <!--<xacro:sensor_t265  parent="torso_2" name="T265_camera" topics_ns="T265_camera"
+                      xyz="0.125 0.0 0" rpy="0.0 0.25 0.0"
+                      unite_imu_method="false"> 
+            <origin xyz="0.125 0.0 0" rpy="0.0 0.25 0.0"/>  
+        </xacro:sensor_t265>-->
+        
+        <xacro:sensor_t265  parent="pelvis" name="T265_camera" topics_ns="T265/T265_camera"                  
+                           
+                      odom_xyz="0.0 0.0 0.25"
+                      odom_rpy="0.0 0.0 0.0"
+                      odom_fps="262"
+
+                      fisheye_width="848"
+                      fisheye_height="800"
+                      fisheye_fps="30"
+
+                      unite_imu_method="false"
+                      accel_fps="62.5"
+                      gyro_fps="200">
+            
+            <origin xyz="0.252619 0.00775 -0.0206926" rpy="0.0 0.2617993 0.0" />  
+        </xacro:sensor_t265>
+    </xacro:if>
+    
+</xacro:if>
+
+<xacro:if value="${ADD_LEGS}">
+	<xacro:include filename="$(find casannis_walking)/urdf_srdf/2x5kg/urdf/parts/legs.urdf.xacro" />
+</xacro:if>
+
+
+
+
+</robot>
+

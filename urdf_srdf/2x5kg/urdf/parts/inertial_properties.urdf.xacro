@@ -1,0 +1,342 @@
+<!--<?xml version="1.0"?>-->
+<robot  xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- General Data -->
+<xacro:property name="link_width" value=" 0.100000 "/>
+<xacro:property name="link_visual" value=" 0.050000 "/>
+<xacro:property name="motors_radius" value=" 0.050000 "/>
+<xacro:property name="motors_length" value=" 0.100000 "/>
+<xacro:property name="motors_weight" value=" 1.500000 "/>
+
+<xacro:property name="wheel_radius" value=" 0.100000 "/>
+<xacro:property name="wheel_length" value=" 0.050000 "/>
+<xacro:property name="wheel_weight" value=" 2.000000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Pelvis_x" value=" 0.0013890071 "/>
+<xacro:property name="Pelvis_y" value=" -0.0015989148 "/>
+<xacro:property name="Pelvis_z" value=" 0.0631010120 "/>
+<!-- Inertia -->
+<xacro:property name="Pelvis_xx" value=" 0.2391262700 "/>
+<xacro:property name="Pelvis_yy" value=" 0.7143007800 "/>
+<xacro:property name="Pelvis_zz" value=" 0.8187044800 "/>
+<xacro:property name="Pelvis_xy" value=" -0.0050541269 "/>
+<xacro:property name="Pelvis_xz" value=" -0.0197460550 "/>
+<xacro:property name="Pelvis_yz" value=" 0.0002131204 "/>
+<!-- Mass -->
+<xacro:property name="Pelvis_mass" value=" 16.0975740000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Leg_1_x" value=" 0.0102141990 "/>
+<xacro:property name="Leg_1_y" value=" 0.0183483590 "/>
+<xacro:property name="Leg_1_z" value=" 0.0380909870 "/>
+<!-- Inertia -->
+<xacro:property name="Leg_1_xx" value=" 0.0047439572 "/>
+<xacro:property name="Leg_1_yy" value=" 0.0040551878 "/>
+<xacro:property name="Leg_1_zz" value=" 0.0034146219 "/>
+<xacro:property name="Leg_1_xy" value=" -0.0005747047 "/>
+<xacro:property name="Leg_1_xz" value=" -0.0003784138 "/>
+<xacro:property name="Leg_1_yz" value=" -0.0007407508 "/>
+<!-- Mass -->
+<xacro:property name="Leg_1_mass" value=" 1.9194403000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Leg_2_x" value=" 0.0000257966 "/>
+<xacro:property name="Leg_2_y" value=" 0.1810266000 "/>
+<xacro:property name="Leg_2_z" value=" 0.0856697560 "/>
+<!-- Inertia -->
+<xacro:property name="Leg_2_xx" value=" 0.0485186900 "/>
+<xacro:property name="Leg_2_yy" value=" 0.0042420550 "/>
+<xacro:property name="Leg_2_zz" value=" 0.0482558300 "/>
+<xacro:property name="Leg_2_xy" value=" -0.0000411894 "/>
+<xacro:property name="Leg_2_xz" value=" -0.0000168778 "/>
+<xacro:property name="Leg_2_yz" value=" 0.0032243188 "/>
+<!-- Mass -->
+<xacro:property name="Leg_2_mass" value=" 2.7264471000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Leg_3_x" value="0.1088166700 "/>
+<xacro:property name="Leg_3_y" value="0.0001089081 "/>
+<xacro:property name="Leg_3_z" value="-0.0226389960 "/>
+<!-- Inertia -->
+<xacro:property name="Leg_3_xx" value=" 0.0030534242 "/>
+<xacro:property name="Leg_3_yy" value=" 0.0196033210 "/>
+<xacro:property name="Leg_3_zz" value=" 0.0198498170 "/>
+<xacro:property name="Leg_3_xy" value=" -0.0000422079 "/>
+<xacro:property name="Leg_3_xz" value=" 0.0013679297 "/>
+<xacro:property name="Leg_3_yz" value=" 0.0000069941 "/>
+<!-- Mass -->
+<xacro:property name="Leg_3_mass" value="1.9356754000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Ankle_1_x" value=" 0.0321373180 "/>
+<xacro:property name="Ankle_1_y" value=" 0.0000973572 "/>
+<xacro:property name="Ankle_1_z" value=" -0.0044222206 "/>
+<!-- Inertia -->
+<xacro:property name="Ankle_1_xx" value=" 0.0015610452 "/>
+<xacro:property name="Ankle_1_yy" value=" 0.0037423211 "/>
+<xacro:property name="Ankle_1_zz" value=" 0.0038312442 "/>
+<xacro:property name="Ankle_1_xy" value=" 0.0000330597 "/>
+<xacro:property name="Ankle_1_xz" value=" -0.0001314174 "/>
+<xacro:property name="Ankle_1_yz" value=" -0.0000212589 "/>
+<!-- Mass -->
+<xacro:property name="Ankle_1_mass" value="1.2380744000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Ankle_2_x" value=" 0.0004435803 "/>
+<xacro:property name="Ankle_2_y" value=" 0.0004389911 "/>
+<xacro:property name="Ankle_2_z" value=" 0.1939209200 "/>
+<!-- Inertia -->
+<xacro:property name="Ankle_2_xx" value=" 0.0049019475 "/>
+<xacro:property name="Ankle_2_yy" value=" 0.0038724162 "/>
+<xacro:property name="Ankle_2_zz" value=" 0.0021783198 "/>
+<xacro:property name="Ankle_2_xy" value=" 0.0000043032 "/>
+<xacro:property name="Ankle_2_xz" value=" 0.0000346491 "/>
+<xacro:property name="Ankle_2_yz" value=" 0.0000170990 "/>
+<!-- Mass -->
+<xacro:property name="Ankle_2_mass" value=" 1.1565926000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Wheel_x" value=" 0.0000000000 "/>
+<xacro:property name="Wheel_y" value=" 0.000000 "/>
+<xacro:property name="Wheel_z" value=" 0.0024271906 "/>
+<!-- Inertia -->
+<xacro:property name="Wheel_xx" value=" 0.0046864297 "/>
+<xacro:property name="Wheel_yy" value=" 0.0046713489 "/>
+<xacro:property name="Wheel_zz" value=" 0.0053126029 "/>
+<xacro:property name="Wheel_xy" value=" 0.000000 "/>
+<xacro:property name="Wheel_xz" value=" 0.000000 "/>
+<xacro:property name="Wheel_yz" value=" 0.000000 "/>
+<!-- Mass -->
+<xacro:property name="Wheel_mass" value=" 1.7289003000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Torso_2_x" value=" -0.0194977940 "/>
+<xacro:property name="Torso_2_y" value=" 0.0045317835 "/>
+<xacro:property name="Torso_2_z" value=" 0.1376828300 "/>
+<!-- Inertia -->
+<xacro:property name="Torso_2_xx" value=" 0.063643392 "/>
+<xacro:property name="Torso_2_yy" value=" 0.02680235 "/>
+<xacro:property name="Torso_2_zz" value=" 0.04743015 "/>
+<xacro:property name="Torso_2_xy" value=" 0.00008939 "/>
+<xacro:property name="Torso_2_xz" value=" -0.00086873 "/>
+<xacro:property name="Torso_2_yz" value=" -0.00004657 "/>
+<!-- Mass -->
+<xacro:property name="Torso_2_mass" value=" 11.4926890000 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Neck_1_x" value=" 0.0404796740 "/>
+<xacro:property name="Neck_1_y" value=" 0.0213775730 "/>
+<xacro:property name="Neck_1_z" value=" -0.0145951120 "/>
+<!-- Inertia -->
+<xacro:property name="Neck_1_xx" value=" 0.0003718568 "/>
+<xacro:property name="Neck_1_yy" value=" 0.0001886879 "/>
+<xacro:property name="Neck_1_zz" value=" 0.0005023443 "/>
+<xacro:property name="Neck_1_xy" value=" -0.0000942983 "/>
+<xacro:property name="Neck_1_xz" value=" -0.0000280644 "/>
+<xacro:property name="Neck_1_yz" value=" -0.0000154534 "/>
+<!-- Mass -->
+<xacro:property name="Neck_1_mass" value=" 0.3387868600 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Neck_2_x" value=" 0.0484669180 "/>
+<xacro:property name="Neck_2_y" value=" -0.0598523180 "/>
+<xacro:property name="Neck_2_z" value=" -0.0085314894 "/>
+<!-- Inertia -->
+<xacro:property name="Neck_2_xx" value=" 0.0004682345 "/>
+<xacro:property name="Neck_2_yy" value=" 0.0002635246 "/>
+<xacro:property name="Neck_2_zz" value=" 0.0003763351 "/>
+<xacro:property name="Neck_2_xy" value=" -0.0000105438 "/>
+<xacro:property name="Neck_2_xz" value=" 0.0000724398 "/>
+<xacro:property name="Neck_2_yz" value=" 0.0000016904 "/>
+<!-- Mass -->
+<xacro:property name="Neck_2_mass" value=" 0.7852694200 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Neck_3_x" value=" 0.0484669180 "/>
+<xacro:property name="Neck_3_y" value=" -0.0598523180 "/>
+<xacro:property name="Neck_3_z" value=" -0.0085314894 "/>
+<!-- Inertia -->
+<xacro:property name="Neck_3_xx" value=" 0.0004682345 "/>
+<xacro:property name="Neck_3_yy" value=" 0.0002635246 "/>
+<xacro:property name="Neck_3_zz" value=" 0.0003763351 "/>
+<xacro:property name="Neck_3_xy" value=" -0.0000105438 "/>
+<xacro:property name="Neck_3_xz" value=" 0.0000724398 "/>
+<xacro:property name="Neck_3_yz" value=" 0.0000016904 "/>
+<!-- Mass -->
+<xacro:property name="Neck_3_mass" value=" 0.7852694200 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Shoulder_1_x" value=" -0.0074457212 "/>
+<xacro:property name="Shoulder_1_y" value=" 0.034107960 "/>
+<xacro:property name="Shoulder_1_z" value=" 0.00010978102 "/>
+<!-- Inertia -->
+<xacro:property name="Shoulder_1_xx" value=" 0.0053547717"/>
+<xacro:property name="Shoulder_1_yy" value=" 0.0033923328 "/>
+<xacro:property name="Shoulder_1_zz" value=" 0.0068921413 "/>
+<xacro:property name="Shoulder_1_xy" value=" 0.00036428926 "/> 
+<xacro:property name="Shoulder_1_xz" value=" 0.000015089568 "/>
+<xacro:property name="Shoulder_1_yz" value=" 0.000055692312 "/> 
+<!-- Mass -->
+<xacro:property name="Shoulder_1_mass" value=" 1.9628675 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Shoulder_2_x" value=" 0.058142302 "/>
+<xacro:property name="Shoulder_2_y" value=" 0.000057450803 "/> 
+<xacro:property name="Shoulder_2_z" value=" -0.077477683 "/>
+<!-- Inertia -->
+<xacro:property name="Shoulder_2_xx" value=" 0.013776643 "/>
+<xacro:property name="Shoulder_2_yy" value=" 0.015677464 "/>
+<xacro:property name="Shoulder_2_zz" value=" 0.0046317657 "/>
+<xacro:property name="Shoulder_2_xy" value=" 0.0000377886750 "/> 
+<xacro:property name="Shoulder_2_xz" value=" 0.0037690171 "/>
+<xacro:property name="Shoulder_2_yz" value=" -0.0000094893549 "/> 
+<!-- Mass -->
+<xacro:property name="Shoulder_2_mass" value=" 1.8595811 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Shoulder_3_x" value=" 0.014625194 "/>
+<xacro:property name="Shoulder_3_y" value=" 0.0008172672 "/> 
+<xacro:property name="Shoulder_3_z" value=" -0.028333545 "/>
+<!-- Inertia -->
+<xacro:property name="Shoulder_3_xx" value=" 0.0064480435 "/>
+<xacro:property name="Shoulder_3_yy" value=" 0.0073372077 "/>
+<xacro:property name="Shoulder_3_zz" value=" 0.0036738448 "/>
+<xacro:property name="Shoulder_3_xy" value=" -0.00015639093 "/> 
+<xacro:property name="Shoulder_3_xz" value=" 0.0012205359 "/>
+<xacro:property name="Shoulder_3_yz" value=" 0.000089941532 "/> 
+<!-- Mass -->
+<xacro:property name="Shoulder_3_mass" value=" 1.6678109 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Elbow_1_x" value=" -0.0076833067 "/>
+<xacro:property name="Elbow_1_y" value=" -0.040302205 "/> 
+<xacro:property name="Elbow_1_z" value=" -0.043492779 "/>
+<!-- Inertia -->
+<xacro:property name="Elbow_1_xx" value=" 0.004330394 "/>
+<xacro:property name="Elbow_1_yy" value=" 0.0038539919 "/>
+<xacro:property name="Elbow_1_zz" value=" 0.0017594689 "/>
+<xacro:property name="Elbow_1_xy" value=" -0.00011737391 "/> 
+<xacro:property name="Elbow_1_xz" value=" -0.00041923199 "/>
+<xacro:property name="Elbow_1_yz" value=" -0.00079573038 "/> 
+<!-- Mass -->
+<xacro:property name="Elbow_1_mass" value=" 1.3157289 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Wrist_1_x" value=" -0.00011079615 "/>
+<xacro:property name="Wrist_1_y" value=" 0.011590836 "/> 
+<xacro:property name="Wrist_1_z" value=" -0.07816026 "/>
+<!-- Inertia -->
+<xacro:property name="Wrist_1_xx" value=" 0.0085692128 "/>
+<xacro:property name="Wrist_1_yy" value=" 0.0077454159 "/>
+<xacro:property name="Wrist_1_zz" value=" 0.0027441921 "/>
+<xacro:property name="Wrist_1_xy" value=" 0.000017856252 "/> 
+<xacro:property name="Wrist_1_xz" value=" 0.000019379365 "/>
+<xacro:property name="Wrist_1_yz" value=" -0.00032860094 "/> 
+<!-- Mass -->
+<xacro:property name="Wrist_1_mass" value=" 1.4908547 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Wrist_2_x" value=" -0.0000046502396 "/>
+<xacro:property name="Wrist_2_y" value=" -0.038014094 "/> 
+<xacro:property name="Wrist_2_z" value=" -0.069926878 "/>
+<!-- Inertia -->
+<xacro:property name="Wrist_2_xx" value=" 0.0051871784 "/>
+<xacro:property name="Wrist_2_yy" value=" 0.0048037789 "/>
+<xacro:property name="Wrist_2_zz" value=" 0.0012771388 "/>
+<xacro:property name="Wrist_2_xy" value=" 0.00002724437 "/> 
+<xacro:property name="Wrist_2_xz" value=" 0.0000022833496 "/>
+<xacro:property name="Wrist_2_yz" value=" -0.00072165653 "/> 
+<!-- Mass -->
+<xacro:property name="Wrist_2_mass" value=" 1.1263612 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Wrist_3_x" value=" 0.0 "/>
+<xacro:property name="Wrist_3_y" value=" 0.0 "/>
+<xacro:property name="Wrist_3_z" value=" 0.031270570 "/>
+<!-- Inertia -->
+<xacro:property name="Wrist_3_xx" value=" 0.00014415192 "/>
+<xacro:property name="Wrist_3_yy" value=" 0.0001441701 "/>
+<xacro:property name="Wrist_3_zz" value=" 0.000060500616 "/>
+<xacro:property name="Wrist_3_xy" value=" 0.000000098651826 "/> <!-- ?? sign ?? -->
+<xacro:property name="Wrist_3_xz" value=" 0 "/>
+<xacro:property name="Wrist_3_yz" value=" 0 "/>
+<!-- Mass -->
+<xacro:property name="Wrist_3_mass" value=" 0.27966428 "/> <!-- ??? -->
+
+<!-- FT-SENSOR-->
+<!-- Center of Mass -->
+<xacro:property name="Ft_arm_x" value=" 0.000082161929 "/>
+<xacro:property name="Ft_arm_y" value=" 0.0026334189 "/> 
+<xacro:property name="Ft_arm_z" value=" -0.016465877 "/>
+<!-- Inertia -->
+<xacro:property name="Ft_arm_xx" value=" 0.00023321716 "/>
+<xacro:property name="Ft_arm_yy" value=" 0.00020626291 "/>
+<xacro:property name="Ft_arm_zz" value=" 0.00027399881 "/>
+<xacro:property name="Ft_arm_xy" value=" 0.0000023681435 "/> 
+<xacro:property name="Ft_arm_xz" value=" -0.0000018039102 "/>
+<xacro:property name="Ft_arm_yz" value=" 0.00003158829 "/> 
+<!-- Mass -->
+<xacro:property name="Ft_arm_mass" value=" 0.37827821 "/> <!-- ??? -->
+
+<!-- END-EFFECTORS-->
+<!-- SOFT HAND-->
+<!-- Center of Mass -->
+<xacro:property name="Hand_x" value=" 0 "/>
+<xacro:property name="Hand_y" value=" 0 "/>
+<xacro:property name="Hand_z" value=" -0.07 "/>
+<!-- Inertia -->
+<xacro:property name="Hand_xx" value=" 0.00024500 "/>
+<xacro:property name="Hand_yy" value=" 0.00024500 "/>
+<xacro:property name="Hand_zz" value=" 0.00024500 "/>
+<xacro:property name="Hand_xy" value=" 0 "/>
+<xacro:property name="Hand_xz" value=" 0 "/>
+<xacro:property name="Hand_yz" value=" 0 "/>
+<!-- Mass -->
+<xacro:property name="Hand_mass" value=" 0.3 "/>
+
+<!-- STICK-->
+<!-- Center of Mass -->
+<xacro:property name="Stick_x" value=" 0.001 "/>
+<xacro:property name="Stick_y" value=" 0.0 "/>
+<xacro:property name="Stick_z" value=" 0.006 "/>
+<!-- Inertia -->
+<xacro:property name="Stick_xx" value=" 0.0002 "/>
+<xacro:property name="Stick_yy" value=" 0.0002 "/>
+<xacro:property name="Stick_zz" value=" 0.00001 "/>
+<xacro:property name="Stick_xy" value=" 0.0 "/>
+<xacro:property name="Stick_xz" value=" 0.0 "/>
+<xacro:property name="Stick_yz" value=" 0.0 "/>
+<!-- Mass -->
+<xacro:property name="Stick_mass" value=" 0.150 "/>
+
+<!-- Center of Mass -->
+<xacro:property name="Heri_x" value=" 0.00270235 "/>
+<xacro:property name="Heri_y" value=" -0.01411486 "/>
+<xacro:property name="Heri_z" value=" 0.05023455 "/>
+<!-- Inertia -->
+<xacro:property name="Heri_xx" value=" 0.0062253159 "/>
+<xacro:property name="Heri_yy" value=" 0.0046306594 "/>
+<xacro:property name="Heri_zz" value=" 0.0037732152 "/>
+<xacro:property name="Heri_xy" value=" 0.0003312435 "/>
+<xacro:property name="Heri_xz" value=" 0.0000517232 "/>
+<xacro:property name="Heri_yz" value=" 0.0001950252 "/>
+<!-- Mass -->
+<xacro:property name="Heri_mass" value=" 1.8366865000 "/>
+
+<!-- DUMMY-->
+<!-- Center of Mass -->
+<xacro:property name="Dummy_x" value=" 0.0 "/>
+<xacro:property name="Dummy_y" value=" 0.0 "/>
+<xacro:property name="Dummy_z" value=" 0.0 "/>
+<!-- Inertia -->
+<xacro:property name="Dummy_xx" value=" 1e-6 "/>
+<xacro:property name="Dummy_yy" value=" 1e-6 "/>
+<xacro:property name="Dummy_zz" value=" 1e-6 "/>
+<xacro:property name="Dummy_xy" value=" 0.0 "/>
+<xacro:property name="Dummy_xz" value=" 0.0 "/>
+<xacro:property name="Dummy_yz" value=" 0.0 "/>
+<!-- Mass -->
+<xacro:property name="Dummy_mass" value=" 0.100 "/>
+
+</robot>
