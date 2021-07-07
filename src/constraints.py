@@ -126,18 +126,34 @@ def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
     }
 
 
-def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, ncontacts, dt):
-
+def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, ncontacts, dt, steps_number=1):
+    """
+    Assigns bounds for the force decision variables
+    :param min_fz:
+    :param max_f:
+    :param knot:
+    :param swing_time_integral: a list of lists with time integrals (list in a list for one step)
+    :param swing_id: a list with the ids (list with one element for one step)
+    :param ncontacts:
+    :param dt:
+    :param steps_number:
+    :return:
+    """
     # force bounds
     f_max = np.array([max_f, max_f, max_f] * ncontacts)
     f_min = np.array([-max_f, -max_f, min_fz] * ncontacts)  # bound only the z component
 
-    # swing phase
-    is_swing = swing_time_integral[0] / dt <= knot <= swing_time_integral[1] / dt
-    if is_swing:
-        # we are in swing phase
-        f_max[3 * swing_id:3 * (swing_id + 1)] = np.zeros(3)  # overwrite forces for the swing leg
-        f_min[3 * swing_id:3 * (swing_id + 1)] = np.zeros(3)
+    # swing phases
+    is_swing = []
+
+    for i in range(steps_number):
+        is_swing.append(swing_time_integral[i][0] / dt <= knot <= swing_time_integral[i][1] / dt)
+
+        if is_swing[i]:
+            # we are in swing phase
+            f_max[3 * swing_id[i]:3 * (swing_id[i] + 1)] = np.zeros(3)  # overwrite forces for the swing leg
+            f_min[3 * swing_id[i]:3 * (swing_id[i] + 1)] = np.zeros(3)
+            break
 
     return {
         'min': f_min,
@@ -178,6 +194,7 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
         'z': constraint_violation[2],
     }
 
+
 def bound_state_variables(initial_state, state_bound, knot):
 
     # state bounds
@@ -195,22 +212,32 @@ def bound_state_variables(initial_state, state_bound, knot):
     }
 
 
-def set_contact_parameters(contacts, swing_t, swing_id, swing_target, pos_at_max_clearance, knot, dt):
+def set_contact_parameters(contacts, swing_id, swing_target, clearance_times, pos_at_max_clearance, knot, dt, steps_number=1):
+    """
+    Assign the footholds to the parameter vector of the optimization problem
+    :param contacts:
+    :param swing_id: list of swing ids (list of one integer for a single step)
+    :param swing_target: list of swing targets (arrays) for the swing feet (list of one array for a single step)
+    :param clearance_times: list of maximum clearance timings (list of one float for a single step)
+    :param pos_at_max_clearance: list of lists for the position of the maximum clearance point
+           (list of one list for a single step)
+    :param knot:
+    :param dt:
+    :param steps_number:
+    :return:
+    """
+    p_k = np.hstack(contacts)  # start with initial contacts (4x3)
 
-    # time that maximum clearance occurs
-    clearance_time = 0.5 * (swing_t[0] + swing_t[1])  # not accurate
+    # for all swing legs overwrite with target positions
+    for i in range(steps_number):
+        # time region around max clearance time
+        clearance_region = (clearance_times[i] / dt - 4 <= knot <= clearance_times[i] / dt + 4)
 
-    # contact positions
-    p_k = np.hstack(contacts)  # start with initial contacts (4x3), but not the moving one
+        if clearance_region:
+            p_k[3 * swing_id[i]:3 * (swing_id[i] + 1)] = pos_at_max_clearance[i]
 
-    # time region around max clearance time
-    clearance_region = (clearance_time / dt - 4 <= knot <= clearance_time / dt + 4)
-
-    if clearance_region:
-        p_k[3 * swing_id:3 * (swing_id + 1)] = pos_at_max_clearance
-
-    elif knot > clearance_time / dt + 4:
-        # after the swing, the swing foot is now at swing_tgt
-        p_k[3 * swing_id:3 * (swing_id + 1)] = swing_target
+        elif knot > clearance_times[i] / dt + 4:
+            # after the swing, the swing foot is now at swing_tgt
+            p_k[3 * swing_id[i]:3 * (swing_id[i] + 1)] = swing_target[i]
 
     return p_k

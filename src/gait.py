@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 import trj_interpolation as interpol
 
+import costs
+import constraints
 
 class Gait:
     """
@@ -86,57 +88,35 @@ class Gait:
             f_slice1 = k * dimf_tot
             f_slice2 = (k + 1) * dimf_tot
 
-            # create k-th state
-            # x_k = sym_t.sym('x_' + str(k), dimx)
-            # X.append(x_k)
-            #
-            # # create k-th control
-            # u_k = sym_t.sym('u_' + str(k), dimu)
-            # U.append(u_k)
-
-            # dynamics constraint
-            if k > 0:
-                x_old = X[(k - 1) * dimx: x_slice1]  # save previous state
-                u_old = U[(k - 1) * dimu: u_slice1]  # prev control
-                dyn_k = self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'] - X[x_slice1:x_slice2]
-                g.append(dyn_k)
-
             # contact points
             p_k = sym_t.sym('p_' + str(k), ncontacts * dimc)
             P.append(p_k)
 
             # cost  function
+            cost_function = 0.0
+            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3],
+                                                                    p_k)  # penalize CoM position
+            cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
+            cost_function += costs.penalize_quantity(1e-0,
+                                                     U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
+            J.append(cost_function)
 
-            # horizontal distance of CoM from the mean of contact points
-            h_horz = X[x_slice1:x_slice2][0:2] - 0.25 * (p_k[0:2] + p_k[3:5] + p_k[6:8] + p_k[9:11])  # xy
+            # newton - euler dynamic constraints
+            newton_euler_constraint = constraints.newton_euler_constraint(
+                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2], p_k
+            )
+            g.append(newton_euler_constraint['newton'])
+            g.append(newton_euler_constraint['euler'])
 
-            # vertical distance between CoM and mean of feet
-            h_vert = X[x_slice1:x_slice2][2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.66
-
-            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
-                  1e-0 * cs.sumsqr(U[u_slice1:u_slice2]) + 1e-3 * cs.sumsqr(F[f_slice1:f_slice2][0::3]) + \
-                  1e-3 * cs.sumsqr(F[f_slice1:f_slice2][1::3])
-
-            J.append(j_k)
-
-            # newton
-            ddc_k = X[x_slice1:x_slice2][6:9]
-            newton = mass * ddc_k - mass * gravity
-            for i in range(ncontacts):
-                f_i_k = F[f_slice1:f_slice2][3 * i:3 * (i + 1)]  # force of i-th contact
-                newton -= f_i_k
-
-            g.append(newton)
-
-            # euler
-            c_k = X[x_slice1:x_slice2][0:3]
-            euler = np.zeros(dimf)
-            for i in range(ncontacts):
-                f_i_k = F[f_slice1:f_slice2][3 * i:3 * (i + 1)]  # force of i-th contact
-                p_i_k = p_k[3*i:3*(i+1)]  # contact of i-th contact
-                euler += cs.cross(p_i_k - c_k, f_i_k)
-
-            g.append(euler)
+            # state constraint (triple integrator)
+            if k > 0:
+                x_old = X[(k - 1) * dimx: x_slice1]  # save previous state
+                u_old = U[(k - 1) * dimu: u_slice1]  # prev control
+                x_curr = X[x_slice1:x_slice2]
+                state_constraint = constraints.state_constraint(
+                    self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
+                g.append(state_constraint)
 
         # construct the solver
         self._nlp = {
@@ -182,7 +162,7 @@ class Gait:
         P = list()  # parameter values
 
         # time that maximum clearance occurs
-        clearance_time = [0.5 * (x[0] + x[1]) for x in swing_t]
+        clearance_times = [0.5 * (x[0] + x[1]) for x in swing_t]
 
         # number of steps
         step_num = len(swing_id)
@@ -190,8 +170,13 @@ class Gait:
         # swing feet positions at maximum clearance
         clearance_swing_position = []
 
+        print("Contacts are:", contacts)
+        print("swing target:", swing_tgt)
+        print("swing id:", swing_id)
+        print("step number:", step_num)
+
         for i in range(step_num):
-            if contacts[swing_id[i]][2] >= swing_tgt[swing_id[i]][2]:
+            if contacts[swing_id[i]][2] >= swing_tgt[i][2]:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [contacts[swing_id[i]][2] + swing_clearance])
             else:
@@ -210,19 +195,9 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            if k == 0:
-                x_max = x0 
-                x_min = x0
-
-            else:
-                #x_max = np.full(self._dimx, cs.inf) # do not bound state
-
-                # constraining com z coordinate
-                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
-                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
-
-            Xu[x_slice1:x_slice2] = x_max
-            Xl[x_slice1:x_slice2] = x_min
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k)
+            Xu[x_slice1:x_slice2] = state_bounds['max']
+            Xl[x_slice1:x_slice2] = state_bounds['min']
 
             # ctrl bounds
             u_max = np.full(self._dimu, cs.inf) # do not bound control
@@ -232,43 +207,17 @@ class Gait:
             Ul[u_slice1:u_slice2] = u_min
 
             # force bounds
-            f_max = np.full(self._dimf * self._ncontacts, cs.inf)
-            f_min = np.array([-cs.inf, -cs.inf, min_f] * self._ncontacts)   # bound only the z component
-
-            # swing phases
-            is_swing = []
-
-            for i in range(step_num):
-                is_swing.append(k >= swing_t[i][0]/self._dt and k <= swing_t[i][1]/self._dt)
-
-            for i in range(step_num):
-                if is_swing[i]:
-                    # we are in swing phase
-                    f_max[3*swing_id[i]:3*(swing_id[i]+1)] = np.zeros(self._dimf)   # overwrite forces for the swing leg
-                    f_min[3*swing_id[i]:3*(swing_id[i]+1)] = np.zeros(self._dimf)
-                    break
-
-            Fu[f_slice1:f_slice2] = f_max
-            Fl[f_slice1:f_slice2] = f_min
+            force_bounds = constraints.bound_force_variables(min_f, 1500, k, swing_t, swing_id, self._ncontacts,
+                                                             self._dt, step_num)
+            Fu[f_slice1:f_slice2] = force_bounds['max']
+            Fl[f_slice1:f_slice2] = force_bounds['min']
 
             # contact positions
-            p_k = np.hstack(contacts)  # start with initial contacts (4x3)
+            contact_params = constraints.set_contact_parameters(
+                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt
+            )
+            P.append(contact_params)
 
-            # for all swing legs overwrite with target positions
-            for i in range(step_num):
-                # time region around max clearance time
-                clearance_region = (clearance_time[i] / self._dt - 4 <= k <= clearance_time[i] / self._dt + 4)
-
-                if clearance_region:
-                    p_k[3*swing_id[i]:3*(swing_id[i]+1)] = clearance_swing_position[i]
-
-                elif k > clearance_time[i] / self._dt + 4:
-                    # after the swing, the swing foot is now at swing_tgt
-                    p_k[3*swing_id[i]:3*(swing_id[i]+1)] = swing_tgt[i]
-
-            P.append(p_k)
-            
-            # dynamics bounds
             if k > 0:
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
@@ -353,67 +302,82 @@ class Gait:
         # start and end times of optimization problem
         t_tot = [0.0, self._N * self._dt]
 
-        delta_t = 1.0 / resol  # dt for interpolation
+        # state
+        state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
 
-        # -------- state trajectory interpolation ------------
+        # forces
+        forces_trajectory = self.forces_interpolation(solution=solution)
 
-        # intermediate points between two knots --> time interval * resolution
-        self._n = int(self._dt * resol)
-
-        x_old = solution['x'][0:9]  # initial state
-        x_all = []  # list to append all states
-
-        for ii in range(self._N):   # loop for knots
-
-            # control input to change in every knot
-            u_old = solution['u'][self._dimu*ii:self._dimu*(ii + 1)]
-
-            for j in range(self._n):     # loop for interpolation points
-
-                x_all.append(x_old)  # storing state in the list 600x9
-
-                x_next = self._integrator(x_old, u_old, delta_t)    # next state
-                x_old = x_next     # refreshing the current state
-
-        # initialize state and time lists to gather the data
-        int_state = [[] for i in range(self._dimx)]     # primary dimension = number of state components
-        self._t = [(ii*delta_t) for ii in range(self._N * self._n)]
-
-        for i in range(self._dimx): # loop for every component of the state vector
-            for j in range(self._N * self._n):    # loop for every point of interpolation
-
-                # append the value of x_i component on j point of interpolation
-                # in the element i of the list int_state
-                int_state[i].append(x_all[j][i])
-
-        # ----------- force trajectory interpolation --------------
-        force_func = [[] for i in range(self._dimf_tot)]  # list to store the splines
-        int_force = [[] for i in range(self._dimf_tot)]  # list to store lists of points
-
-        for i in range(self._dimf_tot): # loop for each component of the force vector
-
-            # append the spline (by casadi) in the i element of the list force_func
-            force_func[i].append(cs.interpolant('X_CONT', 'linear', [self._time], solution['F'][i::self._dimf_tot]))
-            # store the interpolation points for each force component in the i element of the list int_force
-            # primary dimension = number of force components
-            int_force[i] = force_func[i][0](self._t)
-
-        # ----------- swing leg trajectory interpolation --------------
-
-        # swing trajectories with one intemediate point
+        # swing leg trajectory planning & interpolation
         sw_interpl = []
         for i in range(len(sw_curr)):
+            # swing trajectories with one intemediate point
             sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
-
             # spline optimization
             #sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
 
         return {
             't': self._t,
-            'x': int_state,
-            'f': int_force,
+            'x': state_trajectory,
+            'f': forces_trajectory,
             'sw': sw_interpl
         }
+
+    def state_interpolation(self, solution, resolution):
+        """
+        Interpolate the state vector of the problem using the state equation
+        :param solution: optimal solution
+        :param resolution: resolution of the trajectory, points per secong
+        :return: list of list with state trajectory points
+        """
+
+        delta_t = 1.0 / resolution  # dt for interpolation
+
+        # intermediate points between two knots --> time interval * resolution
+        self._n = int(self._dt * resolution)
+
+        x_old = solution['x'][0:9]  # initial state
+        x_all = []  # list to append all states
+
+        for ii in range(self._N):  # loop for knots
+            # control input to change in every knot
+            u_old = solution['u'][self._dimu * ii:self._dimu * (ii + 1)]
+            for j in range(self._n):  # loop for interpolation points
+                x_all.append(x_old)  # storing state in the list 600x9
+                x_next = self._integrator(x_old, u_old, delta_t)  # next state
+                x_old = x_next  # refreshing the current state
+            # initialize state and time lists to gather the data
+        int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
+        self._t = [(ii * delta_t) for ii in range(self._N * self._n)]
+        for i in range(self._dimx):  # loop for every component of the state vector
+            for j in range(self._N * self._n):  # loop for every point of interpolation
+                # append the value of x_i component on j point of interpolation
+                # in the element i of the list int_state
+                int_state[i].append(x_all[j][i])
+
+        return int_state
+
+    def forces_interpolation(self, solution):
+        """
+        Linear interpolation of the optimal forces
+        :param solution: optimal solution
+        :return: list of lists with the force trajectories
+        """
+
+        force_func = [[] for i in range(self._dimf_tot)]  # list to store the splines
+        int_force = [[] for i in range(self._dimf_tot)]  # list to store lists of points
+
+        for i in range(self._dimf_tot):  # loop for each component of the force vector
+
+            # append the spline (by casadi) in the i element of the list force_func
+            force_func[i].append(cs.interpolant('X_CONT', 'linear',
+                                                [self._time],
+                                                solution['F'][i::self._dimf_tot]))
+            # store the interpolation points for each force component in the i element of the list int_force
+            # primary dimension = number of force components
+            int_force[i] = force_func[i][0](self._t)
+
+        return int_force
 
     def print_trj(self, solution, results, resol, t_exec=[0, 0, 0, 0]):
         '''
@@ -518,8 +482,8 @@ if __name__ == "__main__":
     dx = 0.1
     dy = 0.0
     dz = 0.0
-    swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[1]][2] + dz]\
-                            , [foot_contacts[sw_id[1]][0] + dx, foot_contacts[sw_id[1]][1] + dy, foot_contacts[sw_id[1]][2] + dz]])
+    swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[0]][2] + dz],
+                             [foot_contacts[sw_id[1]][0] + dx, foot_contacts[sw_id[1]][1] + dy, foot_contacts[sw_id[1]][2] + dz]])
 
     # swing_time
     #swing_time = [[1.0, 4.0], [5.0, 8.0]]

@@ -12,9 +12,8 @@ import constraints
 
 class Walking:
     """
-    TODO: 1) Setup the simulator with payloads
-    2) Formulate the same payload-aware planning for multiple steps.
-    3) Expand for two moving contacts
+    TODO: 1) Formulate the same payload-aware planning for multiple steps.
+    2) Expand for two moving contacts
     """
 
     def __init__(self, mass, N, dt):
@@ -230,7 +229,7 @@ class Walking:
             Ul[u_slice1:u_slice2] = u_min
 
             # force bounds
-            force_bounds = constraints.bound_force_variables(min_f, 1500, k, swing_t, swing_id, self._ncontacts, self._dt)
+            force_bounds = constraints.bound_force_variables(min_f, 1500, k, [swing_t], [swing_id], self._ncontacts, self._dt)
             Fu[f_slice1:f_slice2] = force_bounds['max']
             Fl[f_slice1:f_slice2] = force_bounds['min']
 
@@ -248,7 +247,7 @@ class Walking:
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
-                contacts, swing_t, swing_id, swing_tgt, clearance_swing_position, k, self._dt
+                contacts, [swing_id], [swing_tgt], [clearance_time], [clearance_swing_position], k, self._dt
             )
             P.append(contact_params)
 
