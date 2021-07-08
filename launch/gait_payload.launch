@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="dynamic" default="False"/>
+
+    <arg name="swing_id" default="[3, 4, 1, 2]"/>
+    <arg name="target_dx" default="0.1"/>
+    <arg name="target_dy" default="0.0"/>
+    <arg name="target_dz" default="0.0"/>
+
+    <arg name="swing_t1" default="[2.0, 6.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[7.0, 11.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[12.0, 16.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[17.0, 21.0]" unless="$(arg dynamic)"/>
+
+    <arg name="swing_t1" default="[1.0, 2.0]" if="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[3.0, 4.0]" if="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
+
+    <arg name="contact_det" default="False"/>
+    <arg name="plots" default="False"/>
+    <arg name="clearance" default="0.1"/>
+    <arg name="min_force" default="100"/>
+
+    <!--group if="$(arg dynamic)">
+        <arg name="swing_t1" value="[2.0, 4.5]"/>
+        <arg name="swing_t2" value="[5.5, 8.0]"/>
+        <arg name="swing_t3" value="[9.0, 11.5]"/>
+        <arg name="swing_t4" value="[12.5, 15.0]"/>
+    </--group-->
+
+    <node name="casannis" pkg="casannis_walking" type="gait_payload_node.py" output="screen">
+        <param name="sw_id" value="$(arg swing_id)"/>
+        <param name="tgt_dx" value="$(arg target_dx)"/>
+        <param name="tgt_dy" value="$(arg target_dy)"/>
+        <param name="tgt_dz" value="$(arg target_dz)"/>
+        <param name="sw_t1" value="$(arg swing_t1)"/>
+        <param name="sw_t2" value="$(arg swing_t2)"/>
+        <param name="sw_t3" value="$(arg swing_t3)"/>
+        <param name="sw_t4" value="$(arg swing_t4)"/>
+        <param name="cont_det" value="$(arg contact_det)"/>
+        <param name="plots" value="$(arg plots)"/>
+        <param name="clear" value="$(arg clearance)"/>
+        <param name="min_for" value="$(arg min_force)"/>
+    </node>
+</launch>

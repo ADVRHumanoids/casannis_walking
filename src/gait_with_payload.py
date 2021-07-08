@@ -1,25 +1,31 @@
 import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
+import trj_interpolation as interpol
 
 import costs
-import trj_interpolation as interpol
-import time
-
-import cubic_hermite_polynomial as cubic_spline
 import constraints
 
+import cubic_hermite_polynomial as cubic_spline
 
-class Walking:
+
+class Gait:
     """
-    TODO: 1) Formulate the same payload-aware planning for multiple steps.
-    2) Expand for two moving contacts
-    3) Add XY force components
-    4) Optimize virtual force
+    Assumptions:
+      1) mass concentrated at com
+      2) zero angular momentum
+      3) point contacts
+
+    Dynamics:
+      1) input is com jerk
+      2) dynamics is a triple integrator of com jerk
+      3) there must be contact forces that
+        - realize the motion
+        - fulfil contact constraints (i.e. unilateral constraint)
     """
 
     def __init__(self, mass, N, dt):
-        """Walking class constructor
+        """Gait class constructor
 
         Args:
             mass (float): robot mass
@@ -30,8 +36,8 @@ class Walking:
         self._N = N
         self._dt = dt  # dt used for optimization knots
         self._mass = mass
-        self._time = [(i * dt) for i in range(self._N)]         # time junctions w/o the last one
-        self._tjunctions = [(i * dt) for i in range(self._N + 1)]   # time junctions from first to last
+        self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
+        self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
         gravity = np.array([0, 0, -9.81])
 
@@ -60,7 +66,7 @@ class Walking:
             ddc + u * delta_t  # acceleration
         )
 
-        # wrap the state expression into a function
+        # wrap the expression into a function
         self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
 
         # construct the optimization problem (variables, cost, constraints, bounds)
@@ -69,11 +75,11 @@ class Walking:
         F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
 
         # moving contact
-        P_mov = sym_t.sym('P_mov', N * dimp_mov)   # position knots for the virtual contact
-        DP_mov = sym_t.sym('DP_mov', N * dimp_mov)   # velocity knots for the virtual contact
-        f_pay = [0, 0, -100]    # virtual force
+        P_mov = sym_t.sym('P_mov', N * dimp_mov)  # position knots for the virtual contact
+        DP_mov = sym_t.sym('DP_mov', N * dimp_mov)  # velocity knots for the virtual contact
+        f_pay = [0, 0, -100]  # virtual force
 
-        P = list()  # parameters
+        P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
 
@@ -86,9 +92,8 @@ class Walking:
         }
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(N):
 
-            # slice indices for variables at knot k
             x_slice1 = k * dimx
             x_slice2 = (k + 1) * dimx
             u_slice0 = (k - 1) * dimu   # referring to previous knot
@@ -103,10 +108,10 @@ class Walking:
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
+            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
             if k > 0:
                 cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2] - DP_mov[u_slice0:u_slice1]))    # penalize CoM control
             if k == self._N - 1:
@@ -173,16 +178,14 @@ class Walking:
             x0 ([type]): initial state (com position, velocity, acceleration)
             contacts ([type]): list of contact point positions
             mov_contact_initial: initial position and velocity of the moving contact
-            swing_id ([type]): the index of the swing leg from 0 to 3
-            swing_tgt ([type]): the target foothold for the swing leg
+            swing_id ([type]): the indexes of the legs to be swinged from 0 to 3
+            swing_tgt ([type]): the target footholds for the swing legs
             swing_clearance: clearance achieved from the highest point between initial and target position
-            swing_t ([type]): pair (t_lift, t_touch) in secs
+            swing_t ([type]): list of lists with swing times in secs
             min_f: minimum threshold for forces in z direction
         """
 
         # lists for assigning bounds
-
-        # variables
         Xl = [0] * self._dimx * self._N  # state lower bounds (for all knots)
         Xu = [0] * self._dimx * self._N  # state upper bounds
         Ul = [0] * self._dimu * self._N  # control lower bounds
@@ -193,22 +196,31 @@ class Walking:
         P_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
         DP_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
         DP_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
-
-        # constraints
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
-
-        # parameters
         P = list()  # parameter values
 
         # time that maximum clearance occurs
-        clearance_time = 0.5 * (swing_t[0] + swing_t[1])  # not accurate
+        clearance_times = [0.5 * (x[0] + x[1]) for x in swing_t]
 
-        # swing foot position at maximum clearance
-        if contacts[swing_id][2] >= swing_tgt[2]:
-            clearance_swing_position = contacts[swing_id][0:2].tolist() + [contacts[swing_id][2] + swing_clearance]
-        else:
-            clearance_swing_position = swing_tgt[0:2].tolist() + [swing_tgt[2] + swing_clearance]
+        # number of steps
+        step_num = len(swing_id)
+
+        # swing feet positions at maximum clearance
+        clearance_swing_position = []
+
+        print("Contacts are:", contacts)
+        print("swing target:", swing_tgt)
+        print("swing id:", swing_id)
+        print("step number:", step_num)
+
+        for i in range(step_num):
+            if contacts[swing_id[i]][2] >= swing_tgt[i][2]:
+                clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
+                                                [contacts[swing_id[i]][2] + swing_clearance])
+            else:
+                clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
+                                                [swing_tgt[i][2] + swing_clearance])
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -228,13 +240,14 @@ class Walking:
 
             # ctrl bounds
             u_max = np.full(self._dimu, cs.inf)  # do not bound control
-            u_min = - u_max
+            u_min = -u_max
 
             Uu[u_slice1:u_slice2] = u_max
             Ul[u_slice1:u_slice2] = u_min
 
             # force bounds
-            force_bounds = constraints.bound_force_variables(min_f, 1500, k, [swing_t], [swing_id], self._ncontacts, self._dt)
+            force_bounds = constraints.bound_force_variables(min_f, 1500, k, swing_t, swing_id, self._ncontacts,
+                                                             self._dt, step_num)
             Fu[f_slice1:f_slice2] = force_bounds['max']
             Fl[f_slice1:f_slice2] = force_bounds['min']
 
@@ -252,15 +265,15 @@ class Walking:
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
-                contacts, [swing_id], [swing_tgt], [clearance_time], [clearance_swing_position], k, self._dt
+                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt
             )
             P.append(contact_params)
 
-            # constraints' bounds
-            gl.append(np.zeros(6))  # newton-euler
+            # constraint bounds (newton-euler eq.)
+            gl.append(np.zeros(6))
             gu.append(np.zeros(6))
             if k > 0:
-                gl.append(np.zeros(self._dimx))     # state constraint
+                gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
             if 0 < k < self._N - 1:
                 gl.append(np.zeros(3))      # moving contact
@@ -274,7 +287,7 @@ class Walking:
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
         Xu[-6:] = [0.0 for i in range(6)]
 
-        DP_movl[-3:] = [0.0 for i in range(3)]   # zero velocity of the moving contact
+        DP_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
         DP_movu[-3:] = [0.0 for i in range(3)]
 
         # initial guess
@@ -336,19 +349,18 @@ class Walking:
                 solution['x'] 9x30 --> optimized states
                 solution['f'] 12x30 --> optimized forces
                 solution['u'] 9x30 --> optimized control
-                ...
-            sw_curr: current position of the foot to be swinged
-            sw_tgt: target position of the foot to be swinged
+            sw_curr: initial position of the feet to be swinged
+            sw_tgt: target position of the feet to be swinged
             clearance: swing clearance
-            sw_t: (start, stop) period of foot swinging in a global manner wrt to optimization problem
+            sw_t: list of lists with swing times in secs e.g. [[a, b], [c, d]]
             resol: interpolation resolution (points per second)
 
         Returns: a dictionary with:
             time list for interpolation times (in sec)
             list of list with state trajectory points
             list of lists with forces' trajectory points
-            list of lists with the swinging foot's trajectory points
-            the moving contact trajectory (cubic spline) and first and second derivative
+            list of lists with the swinging feet's trajectory points
+
         """
 
         # start and end times of optimization problem
@@ -363,11 +375,13 @@ class Walking:
         # moving contact
         moving_contact_trajectory = self.moving_contact_interpolation(solution=solution, resolution=resol)
 
-        # swing leg trajectory planning and interpolation
-        # swing trajectory with intemediate point
-        sw_interpl = interpol.swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
-        # swing trajectory with spline optimization for z coordinate
-        # sw_interpl = interpol.swing_trj_optimal_spline(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
+        # swing leg trajectory planning & interpolation
+        sw_interpl = []
+        for i in range(len(sw_curr)):
+            # swing trajectories with one intemediate point
+            sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
+            # spline optimization
+            # sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
 
         return {
             't': self._t,
@@ -396,24 +410,17 @@ class Walking:
         x_all = []  # list to append all states
 
         for ii in range(self._N):  # loop for knots
-
             # control input to change in every knot
             u_old = solution['u'][self._dimu * ii:self._dimu * (ii + 1)]
-
             for j in range(self._n):  # loop for interpolation points
-
                 x_all.append(x_old)  # storing state in the list 600x9
-
                 x_next = self._integrator(x_old, u_old, delta_t)  # next state
                 x_old = x_next  # refreshing the current state
-
-        # initialize state and time lists to gather the data
+            # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
         self._t = [(ii * delta_t) for ii in range(self._N * self._n)]
-
         for i in range(self._dimx):  # loop for every component of the state vector
             for j in range(self._N * self._n):  # loop for every point of interpolation
-
                 # append the value of x_i component on j point of interpolation
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
@@ -436,7 +443,6 @@ class Walking:
             force_func[i].append(cs.interpolant('X_CONT', 'linear',
                                                 [self._time],
                                                 solution['F'][i::self._dimf_tot]))
-
             # store the interpolation points for each force component in the i element of the list int_force
             # primary dimension = number of force components
             int_force[i] = force_func[i][0](self._t)
@@ -464,15 +470,17 @@ class Walking:
 
         return mov_cont_points
 
-    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=0):
+    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
         '''
 
         Args:
-            t_exec: time that trj execution stopped (because of early contact or other)
+            solution: optimized decision variables
+            t_exec: list of last trj points that were executed (because of early contact or other)
             results: results from interpolation
             resol: interpolation resol
-            contacts: contact points
-            swing_id: the id of the leg to be swinged
+            publish_freq: publish frequency - applies only when trajectories are interfaced with rostopics,
+                else publish_freq = resol
+
         Returns: prints the nominal interpolated trajectories
 
         '''
@@ -484,13 +492,12 @@ class Walking:
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
                 plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
-                # plt.plot(self._time, solution['x'][self._dimc * i + j::self._dimx], 'o')
+                # plt.plot([i * self._dt for i in range(self._N)], solution['x'][self._dimc * i + j], '.')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
-            # plt.legend(['x', 'xopt', 'y', 'yopt', 'z', 'zopt'])
             plt.title(name)
         plt.xlabel('Time [s]')
-        # plt.savefig('../plots/step_state_trj.png')
+        # plt.savefig('../plots/gait_state_trj.png')
 
         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
 
@@ -504,13 +511,13 @@ class Walking:
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
-        # plt.savefig('../plots/step_forces.png')
+        # plt.savefig('../plots/gait_forces.png')
 
         # Interpolated moving contact trajectory
         mov_contact_labels = ['p_mov', 'dp_mov', 'ddp_mov']
         plt.figure()
         for i, name in enumerate(mov_contact_labels):
-            plt.subplot(3, 1, i+1)
+            plt.subplot(3, 1, i + 1)
             for k in range(3):
                 plt.plot(results['t'], results[name][k], '-')
                 plt.grid()
@@ -524,35 +531,46 @@ class Walking:
         N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
         s = np.linspace(0, self._dt * self._N, N_total)
         coord_labels = ['x', 'y', 'z']
+        for j in range(len(results['sw'])):
+            plt.figure()
+            for i, name in enumerate(coord_labels):
+                plt.subplot(3, 1, i + 1)
+                plt.plot(s, results['sw'][j][name])  # nominal trj
+                plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+                plt.grid()
+                plt.legend(['nominal', 'real'])
+                plt.title('Trajectory ' + name)
+            plt.xlabel('Time [s]')
+            # plt.savefig('../plots/gait_swing.png')
+
+        # plot swing trajectory in two dimensions Z - X
         plt.figure()
-        for i, name in enumerate(coord_labels):
-            plt.subplot(3, 1, i + 1)
-            plt.plot(s, results['sw'][name])  # nominal trj
-            plt.plot(s[0:t_exec], results['sw'][name][0:t_exec])  # executed trj
+        for j in range(len(results['sw'])):
+            plt.subplot(2, 2, j + 1)
+            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
+            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
             plt.grid()
             plt.legend(['nominal', 'real'])
-            plt.title('Trajectory ' + name)
-        plt.xlabel('Time [s]')
-        # plt.savefig('../plots/step_swing.png')
-
-        # plot swing trajectory in two dimensions Z- X
-        plt.figure()
-        plt.plot(results['sw']['x'], results['sw']['z'])  # nominal trj
-        plt.plot(results['sw']['x'][0:t_exec], results['sw']['z'][0:t_exec])  # real trj
-        plt.grid()
-        plt.legend(['nominal', 'real'])
-        plt.title('Trajectory Z- X')
-        plt.xlabel('X [m]')
-        plt.ylabel('Z [m]')
+            plt.title('Trajectory Z- X')
+            plt.xlabel('X [m]')
+            plt.ylabel('Z [m]')
+            # plt.savefig('../plots/gait_swing_zx.png')
 
         # Support polygon and CoM motion in the plane
-        SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
-        SuP_x_coords.append(SuP_x_coords[0])
-        SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
-        SuP_y_coords.append(SuP_y_coords[0])
+        # SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
+        # SuP_x_coords.append(SuP_x_coords[0])
+        # SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
+        # SuP_y_coords.append(SuP_y_coords[0])
+        color_labels = ['red', 'green', 'blue', 'yellow']
+        line_labels = ['-', '--', '-.', ':']
         plt.figure()
+        for i in range(len(swing_id)):
+            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id[i]]]
+            SuP_x_coords.append(SuP_x_coords[0])
+            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
+            SuP_y_coords.append(SuP_y_coords[0])
+            plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2-0.4*i, color=color_labels[i])
         plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)
-        plt.plot(SuP_x_coords, SuP_y_coords, 'ro-', linewidth=0.8)
         plt.grid()
         plt.title('Support polygon and CoM')
         plt.xlabel('Y [m]')
@@ -562,12 +580,12 @@ class Walking:
 
 
 if __name__ == "__main__":
-    start_time = time.time()
+    w = Gait(mass=95, N=100, dt=0.1)
 
-    w = Walking(mass=95, N=40, dt=0.2)
-
-    # initial state =
+    # initial state
+    # c0 = np.array([-0.00629, -0.03317, 0.01687])
     c0 = np.array([0.107729, 0.0000907, -0.02118])
+    # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
     x_init = np.hstack([c0, dc0, ddc0])
@@ -583,50 +601,47 @@ if __name__ == "__main__":
         np.array([0.53, 0.0, 0.3]),
         np.zeros(3),
     ]
-    # swing id from 0 to 3
-    sw_id = 0
 
-    step_clear = 0.05
+    # swing id from 0 to 3
+    # sw_id = 2
+    sw_id = [0, 1, 2, 3]
+
+    step_num = len(sw_id)
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
     dx = 0.1
     dy = 0.0
-    dz = -0.05
-    swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
+    dz = 0.0
 
-    # swing_time = (1.5, 3.0)
-    swing_time = [2.0, 5.0]
+    swing_target = []
+    for i in range(step_num):
+        swing_target.append([foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz])
+
+    swing_target = np.array(swing_target)
+
+    # swing_time
+    # swing_time = [[1.0, 4.0], [5.0, 8.0]]
+    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
+
+    step_clear = 0.05
 
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
-                  swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
-                  swing_t=swing_time, min_f=100)
-
-    # check time needed
-    end_time = time.time()
-    print('Total time is:', (end_time - start_time) * 1000, 'ms')
-
+    sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
+                  swing_tgt=swing_target, swing_clearance=step_clear, swing_t=swing_time, min_f=100)
     # debug
     print("X0 is:", x_init)
     print("contacts is:", foot_contacts)
     print("swing id is:", sw_id)
     print("swing target is:", swing_target)
     print("swing time:", swing_time)
-
     # interpolate the values, pass values and interpolation resolution
     res = 300
-    interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
 
-    # check time needed
-    end_time = time.time()
-    print('Total time for nlp formulation, solution and interpolation:', (end_time - start_time) * 1000, 'ms')
+    swing_currents = []
+    for i in range(step_num):
+        swing_currents.append(foot_contacts[sw_id[i]])
+    interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
-    print("Solution is:")
-    print("State is:", sol['x'])
-    print("Control is:", sol['u'])
-    print("Forces are:", sol['F'])
-    print("Moving contact is:", sol['P_mov'])
-    print("Moving contact velocity is:", sol['DP_mov'])
     # print the results
     w.print_trj(sol, interpl, res, foot_contacts, sw_id)
 
