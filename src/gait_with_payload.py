@@ -113,7 +113,7 @@ class Gait:
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2] - DP_mov[u_slice0:u_slice1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2-1] - DP_mov[u_slice0:u_slice1-1]))    # penalize CoM control
             if k == self._N - 1:
                 default_mov_contact = P_mov[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
                 cost_function += costs.penalize_quantity(1e0, default_mov_contact)
@@ -280,8 +280,8 @@ class Gait:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.4, 0.0, 0.3]))
-            gu.append(np.array([0.48, 0.23, 0.3]))
+            gl.append(np.array([0.30, -0.1, 0.25]))
+            gu.append(np.array([0.48, 0.23, 0.35]))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -557,10 +557,6 @@ class Gait:
             # plt.savefig('../plots/gait_swing_zx.png')
 
         # Support polygon and CoM motion in the plane
-        # SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
-        # SuP_x_coords.append(SuP_x_coords[0])
-        # SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
-        # SuP_y_coords.append(SuP_y_coords[0])
         color_labels = ['red', 'green', 'blue', 'yellow']
         line_labels = ['-', '--', '-.', ':']
         plt.figure()
@@ -583,7 +579,6 @@ if __name__ == "__main__":
     w = Gait(mass=95, N=100, dt=0.1)
 
     # initial state
-    # c0 = np.array([-0.00629, -0.03317, 0.01687])
     c0 = np.array([0.107729, 0.0000907, -0.02118])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
@@ -609,7 +604,7 @@ if __name__ == "__main__":
     step_num = len(sw_id)
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.0
     dy = 0.0
     dz = 0.0
 

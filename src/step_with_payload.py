@@ -12,7 +12,7 @@ import constraints
 
 class Walking:
     """
-    TODO: 1) Formulate the same payload-aware planning for multiple steps.
+    TODO: 1) Pass everything developed for single step to multiple steps
     2) Expand for two moving contacts
     3) Add XY force components
     4) Optimize virtual force
@@ -71,7 +71,7 @@ class Walking:
         # moving contact
         P_mov = sym_t.sym('P_mov', N * dimp_mov)   # position knots for the virtual contact
         DP_mov = sym_t.sym('DP_mov', N * dimp_mov)   # velocity knots for the virtual contact
-        f_pay = [0, 0, -100]    # virtual force
+        f_pay = np.array([0, 0, -100])   # virtual force
 
         P = list()  # parameters
         g = list()  # list of constraint expressions
@@ -108,9 +108,9 @@ class Walking:
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2] - DP_mov[u_slice0:u_slice1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e-3, (DP_mov[u_slice1:u_slice2-1] - DP_mov[u_slice0:u_slice1-1]))    # penalize CoM control
             if k == self._N - 1:
-                default_mov_contact = P_mov[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
+                default_mov_contact = P_mov[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 cost_function += costs.penalize_quantity(1e0, default_mov_contact)
             J.append(cost_function)
 
@@ -267,8 +267,8 @@ class Walking:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.4, 0.0, 0.3]))
-            gu.append(np.array([0.48, 0.23, 0.3]))
+            gl.append(np.array([0.3, 0.0, 0.25]))
+            gu.append(np.array([0.48, 0.23, 0.35]))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -580,7 +580,7 @@ if __name__ == "__main__":
     ]
 
     moving_contact = [
-        np.array([0.53, 0.0, 0.3]),
+        np.array([0.53, 0.179, 0.3]),
         np.zeros(3),
     ]
     # swing id from 0 to 3
@@ -589,9 +589,9 @@ if __name__ == "__main__":
     step_clear = 0.05
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.0
     dy = 0.0
-    dz = -0.05
+    dz = 0.0
     swing_target = np.array([foot_contacts[sw_id][0] + dx, foot_contacts[sw_id][1] + dy, foot_contacts[sw_id][2] + dz])
 
     # swing_time = (1.5, 3.0)
