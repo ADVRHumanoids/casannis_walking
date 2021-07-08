@@ -5,7 +5,9 @@ gravity = np.array([0, 0, -9.81])
 
 
 def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_positions,
-                            moving_contact=cs.SX.zeros(3), virtual_force=[0.0, 0.0, 0.0]):
+                            lmoving_contact=cs.SX.zeros(3), rmoving_contact=cs.SX.zeros(3),
+                            virtual_force=[0.0, 0.0, 0.0]
+                            ):
     # newton
     CoM_acc = CoM_state[6:9]
     newton_violation = mass * CoM_acc - mass * gravity
@@ -13,6 +15,7 @@ def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_posit
     for i in range(contacts_num):
         f_i_k = forces[3 * i:3 * (i + 1)]  # force of i-th contact
         newton_violation -= f_i_k
+    newton_violation -= virtual_force
     newton_violation -= virtual_force
 
     # euler
@@ -24,7 +27,8 @@ def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_posit
         p_i_k = contact_positions[3 * i:3 * (i + 1)]  # contact of i-th contact
 
         euler_violation += cs.cross(f_i_k, CoM_pos - p_i_k)
-    euler_violation += cs.cross(virtual_force, CoM_pos - moving_contact)    # payload addition
+    euler_violation += cs.cross(virtual_force, CoM_pos - lmoving_contact)    # payload addition
+    euler_violation += cs.cross(virtual_force, CoM_pos - rmoving_contact)    # payload addition
 
     return {
         'newton': newton_violation,

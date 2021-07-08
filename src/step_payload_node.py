@@ -64,7 +64,7 @@ def casannis(int_freq):
     contacts = [np.array(fl_cont), np.array(fr_cont), np.array(hl_cont), np.array(hr_cont)]
 
     # hands
-    moving_contact = [np.array(lh_mov), np.zeros(3)]
+    moving_contact = [[np.array(lh_mov), np.zeros(3)], [np.array(rh_mov), np.zeros(3)]]
 
     # state vector
     c0 = np.array([com_init.pose.position.x, com_init.pose.position.y, com_init.pose.position.z])
@@ -166,13 +166,13 @@ def casannis(int_freq):
             com_msg.pose.position.z = interpl['x'][2][counter]
 
             # hands trajectory
-            lh_msg.pose.position.x = interpl['p_mov'][0][counter]
-            lh_msg.pose.position.y = interpl['p_mov'][1][counter]
-            lh_msg.pose.position.z = interpl['p_mov'][2][counter]
+            lh_msg.pose.position.x = interpl['p_mov_l'][0][counter]
+            lh_msg.pose.position.y = interpl['p_mov_l'][1][counter]
+            lh_msg.pose.position.z = interpl['p_mov_l'][2][counter]
 
-            rh_msg.pose.position.x = interpl['p_mov'][0][counter]
-            rh_msg.pose.position.y = interpl['p_mov'][1][counter] - 0.3
-            rh_msg.pose.position.z = interpl['p_mov'][2][counter]
+            rh_msg.pose.position.x = interpl['p_mov_r'][0][counter]
+            rh_msg.pose.position.y = interpl['p_mov_r'][1][counter]# - 0.3
+            rh_msg.pose.position.z = interpl['p_mov_r'][2][counter]
 
             # swing foot trajectory
             f_msg.pose.position.x = interpl['sw']['x'][counter]
