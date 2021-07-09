@@ -75,9 +75,11 @@ class Gait:
         F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
 
         # moving contact
-        P_mov = sym_t.sym('P_mov', N * dimp_mov)  # position knots for the virtual contact
-        DP_mov = sym_t.sym('DP_mov', N * dimp_mov)  # velocity knots for the virtual contact
-        f_pay = [0, 0, -100]  # virtual force
+        P_mov_l = sym_t.sym('P_mov_l', N * dimp_mov)  # position knots for the virtual contact
+        P_mov_r = sym_t.sym('P_mov_r', N * dimp_mov)  # position knots for the virtual contact
+        DP_mov_l = sym_t.sym('DP_mov_l', N * dimp_mov)  # velocity knots for the virtual contact
+        DP_mov_r = sym_t.sym('DP_mov_r', N * dimp_mov)  # velocity knots for the virtual contact
+        f_pay = np.array([0, 0, -50.0])  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -87,8 +89,10 @@ class Gait:
             'x': X,
             'u': U,
             'F': F,
-            'P_mov': P_mov,
-            'DP_mov': DP_mov
+            'P_mov_l': P_mov_l,
+            'P_mov_r': P_mov_r,
+            'DP_mov_l': DP_mov_l,
+            'DP_mov_r': DP_mov_r
         }
 
         # iterate over knots starting from k = 0
@@ -113,15 +117,23 @@ class Gait:
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e0, (DP_mov[u_slice1:u_slice2-1] - DP_mov[u_slice0:u_slice1-1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(
+                    1e0, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                )
+                cost_function += costs.penalize_quantity(
+                    1e0, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                )
             if k == self._N - 1:
-                default_mov_contact = P_mov[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
-                cost_function += costs.penalize_quantity(1e0, default_mov_contact)
+                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
+                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
+                cost_function += costs.penalize_quantity(1e0, default_lmov_contact)
+                cost_function += costs.penalize_quantity(1e0, default_rmov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2], p_k, P_mov[u_slice1:u_slice2], f_pay
+                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], f_pay
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -137,24 +149,40 @@ class Gait:
 
             # moving contact spline acceleration continuity
             if 0 < k < (self._N - 1):
-                mov_contact_spline_acc_constraint = constraints.spline_acc_constraint_3D(
-                    P_mov[u_slice0:u_slice2 + 3], DP_mov[u_slice0:u_slice2 + 3], dt, k
+                left_mov_contact_spline_acc_constraint = constraints.spline_acc_constraint_3D(
+                    P_mov_l[u_slice0:u_slice2 + 3], DP_mov_l[u_slice0:u_slice2 + 3], dt, k
                 )
 
-                g.append(mov_contact_spline_acc_constraint['x'])
-                g.append(mov_contact_spline_acc_constraint['y'])
-                g.append(mov_contact_spline_acc_constraint['z'])
+                right_mov_contact_spline_acc_constraint = constraints.spline_acc_constraint_3D(
+                    P_mov_r[u_slice0:u_slice2 + 3], DP_mov_r[u_slice0:u_slice2 + 3], dt, k
+                )
+
+                g.append(left_mov_contact_spline_acc_constraint['x'])
+                g.append(left_mov_contact_spline_acc_constraint['y'])
+                g.append(left_mov_contact_spline_acc_constraint['z'])
+
+                g.append(right_mov_contact_spline_acc_constraint['x'])
+                g.append(right_mov_contact_spline_acc_constraint['y'])
+                g.append(right_mov_contact_spline_acc_constraint['z'])
 
             # box constraint - moving contact
-            mov_contact_box_constraint = constraints.moving_contact_box_constraint(
-                P_mov[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
-            g.append(mov_contact_box_constraint['x'])
-            g.append(mov_contact_box_constraint['y'])
-            g.append(mov_contact_box_constraint['z'])
+            left_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
+                P_mov_l[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
+
+            right_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
+                P_mov_r[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
+
+            g.append(left_mov_contact_box_constraint['x'])
+            g.append(left_mov_contact_box_constraint['y'])
+            g.append(left_mov_contact_box_constraint['z'])
+
+            g.append(right_mov_contact_box_constraint['x'])
+            g.append(right_mov_contact_box_constraint['y'])
+            g.append(right_mov_contact_box_constraint['z'])
 
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov, DP_mov),
+            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -185,6 +213,10 @@ class Gait:
             min_f: minimum threshold for forces in z direction
         """
 
+        # grab moving contacts from the list
+        lmov_contact_initial = mov_contact_initial[0]
+        rmov_contact_initial = mov_contact_initial[1]
+
         # lists for assigning bounds
         Xl = [0] * self._dimx * self._N  # state lower bounds (for all knots)
         Xu = [0] * self._dimx * self._N  # state upper bounds
@@ -192,10 +224,16 @@ class Gait:
         Uu = [0] * self._dimu * self._N  # control upper bounds
         Fl = [0] * self._dimf_tot * self._N  # force lower bounds
         Fu = [0] * self._dimf_tot * self._N  # force upper bounds
-        P_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
-        P_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
-        DP_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
-        DP_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+        Pl_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
+        Pl_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
+        DPl_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
+        DPl_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+        # right
+        Pr_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
+        Pr_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
+        DPr_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
+        DPr_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
@@ -208,11 +246,6 @@ class Gait:
 
         # swing feet positions at maximum clearance
         clearance_swing_position = []
-
-        print("Contacts are:", contacts)
-        print("swing target:", swing_tgt)
-        print("swing id:", swing_id)
-        print("step number:", step_num)
 
         for i in range(step_num):
             if contacts[swing_id[i]][2] >= swing_tgt[i][2]:
@@ -252,16 +285,27 @@ class Gait:
             Fl[f_slice1:f_slice2] = force_bounds['min']
 
             # Moving contact position bounds - only initial condition
-            mov_contact_bounds = constraints.bound_moving_contact_variables(
-                mov_contact_initial[0],
-                mov_contact_initial[1],
+            left_mov_contact_bounds = constraints.bound_moving_contact_variables(
+                lmov_contact_initial[0],
+                lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.3), np.full(3, 0.3)],
                 k)
-            P_movu[u_slice1:u_slice2] = mov_contact_bounds['p_mov_max']
-            P_movl[u_slice1:u_slice2] = mov_contact_bounds['p_mov_min']
-            DP_movu[u_slice1:u_slice2] = mov_contact_bounds['dp_mov_max']
-            DP_movl[u_slice1:u_slice2] = mov_contact_bounds['dp_mov_min']
+            Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
+            Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
+            DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
+            DPl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_min']
+
+            right_mov_contact_bounds = constraints.bound_moving_contact_variables(
+                rmov_contact_initial[0],
+                rmov_contact_initial[1],
+                [np.full(3, -cs.inf), np.full(3, cs.inf)],
+                [np.full(3, -0.3), np.full(3, 0.3)],
+                k)
+            Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
+            Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
+            DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
+            DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
@@ -272,30 +316,39 @@ class Gait:
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
-            if k > 0:
+            if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
             if 0 < k < self._N - 1:
-                gl.append(np.zeros(3))      # moving contact
+                gl.append(np.zeros(3))  # 2 moving contacts
+                gu.append(np.zeros(3))
+
+                gl.append(np.zeros(3))
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
             gl.append(np.array([0.30, -0.1, 0.25]))
             gu.append(np.array([0.48, 0.23, 0.35]))
 
+            gl.append(np.array([0.3, -0.23, 0.25]))
+            gu.append(np.array([0.48, 0.0, 0.35]))
+
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
         Xu[-6:] = [0.0 for i in range(6)]
 
-        DP_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
-        DP_movu[-3:] = [0.0 for i in range(3)]
+        DPl_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
+        DPl_movu[-3:] = [0.0 for i in range(3)]
+
+        DPr_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
+        DPr_movu[-3:] = [0.0 for i in range(3)]
 
         # initial guess
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, P_movl, DP_movl)
-        ubv = cs.vertcat(Xu, Uu, Fu, P_movu, DP_movu)
+        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl)
+        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -307,16 +360,20 @@ class Gait:
         x_trj = cs.horzcat(self._trj['x'])  # pack states in a desired matrix
         f_trj = cs.horzcat(self._trj['F'])  # pack forces in a desired matrix
         u_trj = cs.horzcat(self._trj['u'])  # pack control inputs in a desired matrix
-        p_mov_trj = cs.horzcat(self._trj['P_mov'])  # pack moving contact trj in a desired matrix
-        dp_mov_trj = cs.horzcat(self._trj['DP_mov'])  # pack moving contact trj in a desired matrix
+        p_lmov_trj = cs.horzcat(self._trj['P_mov_l'])  # pack moving contact trj in a desired matrix
+        dp_lmov_trj = cs.horzcat(self._trj['DP_mov_l'])  # pack moving contact trj in a desired matrix
+        p_rmov_trj = cs.horzcat(self._trj['P_mov_r'])  # pack moving contact trj in a desired matrix
+        dp_rmov_trj = cs.horzcat(self._trj['DP_mov_r'])  # pack moving contact trj in a desired matrix
 
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
             'F': self.evaluate(sol['x'], f_trj),
             'u': self.evaluate(sol['x'], u_trj),
-            'P_mov': self.evaluate(sol['x'], p_mov_trj),
-            'DP_mov': self.evaluate(sol['x'], dp_mov_trj)
+            'Pl_mov': self.evaluate(sol['x'], p_lmov_trj),
+            'Pr_mov': self.evaluate(sol['x'], p_rmov_trj),
+            'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
+            'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj)
         }
 
     def evaluate(self, solution, expr):
@@ -372,9 +429,14 @@ class Gait:
         # forces
         forces_trajectory = self.forces_interpolation(solution=solution)
 
-        # moving contact
-        moving_contact_trajectory = self.moving_contact_interpolation(solution=solution, resolution=resol)
+        # moving contacts
+        left_moving_contact_trajectory = self.moving_contact_interpolation(
+            p_mov_optimal=solution['Pl_mov'], dp_mov_optimal=solution['DPl_mov'], resolution=resol
+        )
 
+        right_moving_contact_trajectory = self.moving_contact_interpolation(
+            p_mov_optimal=solution['Pr_mov'], dp_mov_optimal=solution['DPr_mov'], resolution=resol
+        )
         # swing leg trajectory planning & interpolation
         sw_interpl = []
         for i in range(len(sw_curr)):
@@ -387,9 +449,12 @@ class Gait:
             't': self._t,
             'x': state_trajectory,
             'f': forces_trajectory,
-            'p_mov': [i['p'] for i in moving_contact_trajectory],
-            'dp_mov': [i['dp'] for i in moving_contact_trajectory],
-            'ddp_mov': [i['ddp'] for i in moving_contact_trajectory],
+            'p_mov_l': [i['p'] for i in left_moving_contact_trajectory],
+            'dp_mov_l': [i['dp'] for i in left_moving_contact_trajectory],
+            'ddp_mov_l': [i['ddp'] for i in left_moving_contact_trajectory],
+            'p_mov_r': [i['p'] for i in right_moving_contact_trajectory],
+            'dp_mov_r': [i['dp'] for i in right_moving_contact_trajectory],
+            'ddp_mov_r': [i['ddp'] for i in right_moving_contact_trajectory],
             'sw': sw_interpl
         }
 
@@ -449,10 +514,11 @@ class Gait:
 
         return int_force
 
-    def moving_contact_interpolation(self, solution, resolution):
+    def moving_contact_interpolation(self, p_mov_optimal, dp_mov_optimal, resolution):
         """
         Interpolation of the moving contact trajectory as cubic spline.
-        :param solution: optimal solution
+        :param p_mov_optimal: optimal solution for mov. contact position
+        :param dp_mov_optimal: optimal solution for mov. contact velocity
         :param resolution: resolution for the trajectory, points per sec
         :return: Trajectories generated from the cubic spline and its 1st and 2nd derivatives
         """
@@ -461,8 +527,8 @@ class Gait:
         mov_cont_points = []
 
         for i in range(3):
-            mov_cont_splines.append(cubic_spline.CubicSpline(solution['P_mov'][i::self._dimu],
-                                                             solution['DP_mov'][i::self._dimu],
+            mov_cont_splines.append(cubic_spline.CubicSpline(p_mov_optimal[i::self._dimu],
+                                                             dp_mov_optimal[i::self._dimu],
                                                              self._tjunctions))
 
             mov_cont_polynomials.append(mov_cont_splines[i].get_poly_objects())
@@ -514,10 +580,10 @@ class Gait:
         # plt.savefig('../plots/gait_forces.png')
 
         # Interpolated moving contact trajectory
-        mov_contact_labels = ['p_mov', 'dp_mov', 'ddp_mov']
+        mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
         plt.figure()
         for i, name in enumerate(mov_contact_labels):
-            plt.subplot(3, 1, i + 1)
+            plt.subplot(2, 3, i + 1)
             for k in range(3):
                 plt.plot(results['t'], results[name][k], '-')
                 plt.grid()
@@ -592,10 +658,18 @@ if __name__ == "__main__":
         np.array([-0.35, -0.35, -0.7187])  # hr
     ]
 
-    moving_contact = [
-        np.array([0.53, 0.0, 0.3]),
+    # mov contacts
+    lmoving_contact = [
+        np.array([0.53, 0.179, 0.3]),
         np.zeros(3),
     ]
+
+    rmoving_contact = [
+        np.array([0.53, -0.179, 0.3]),
+        np.zeros(3),
+    ]
+
+    moving_contact = [lmoving_contact, rmoving_contact]
 
     # swing id from 0 to 3
     # sw_id = 2
