@@ -13,9 +13,8 @@ import constraints
 class Walking:
     """
     TODO: 1) Pass everything developed for single step to multiple steps
-    2) Expand for two moving contacts
-    3) Add XY force components
-    4) Optimize virtual force
+    2) Add XY force components
+    3) Optimize virtual force
     """
 
     def __init__(self, mass, N, dt):
@@ -112,13 +111,13 @@ class Walking:
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e-3, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]))    # penalize CoM control
-                cost_function += costs.penalize_quantity(1e-3, (DP_mov_r[u_slice1:u_slice2-1] - DP_mov_r[u_slice0:u_slice1-1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (DP_mov_r[u_slice1:u_slice2-1] - DP_mov_r[u_slice0:u_slice1-1]))    # penalize CoM control
             if k == self._N - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e0, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e0, default_rmov_contact)
+                cost_function += costs.penalize_quantity(1e2, default_lmov_contact)
+                cost_function += costs.penalize_quantity(1e2, default_rmov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints

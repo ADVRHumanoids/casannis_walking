@@ -11,17 +11,7 @@ import cubic_hermite_polynomial as cubic_spline
 
 class Gait:
     """
-    Assumptions:
-      1) mass concentrated at com
-      2) zero angular momentum
-      3) point contacts
-
-    Dynamics:
-      1) input is com jerk
-      2) dynamics is a triple integrator of com jerk
-      3) there must be contact forces that
-        - realize the motion
-        - fulfil contact constraints (i.e. unilateral constraint)
+    TODO: 1)
     """
 
     def __init__(self, mass, N, dt):
@@ -118,16 +108,17 @@ class Gait:
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
             if k > 0:
                 cost_function += costs.penalize_quantity(
-                    1e0, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
                 )
                 cost_function += costs.penalize_quantity(
-                    1e0, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
             if k == self._N - 1:
-                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
-                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.17, 0.3]
-                cost_function += costs.penalize_quantity(1e0, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e0, default_rmov_contact)
+                #cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
+                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
+                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
+                cost_function += costs.penalize_quantity(1e2, default_lmov_contact)
+                cost_function += costs.penalize_quantity(1e2, default_rmov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -327,10 +318,10 @@ class Gait:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.30, 0.0, 0.25]))
-            gu.append(np.array([0.48, 0.23, 0.35]))
+            gl.append(np.array([0.35, 0.0, 0.25]))
+            gu.append(np.array([0.48, 0.3, 0.35]))
 
-            gl.append(np.array([0.3, -0.23, 0.25]))
+            gl.append(np.array([0.35, -0.3, 0.25]))
             gu.append(np.array([0.48, 0.0, 0.35]))
 
         # final constraints
