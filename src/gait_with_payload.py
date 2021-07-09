@@ -327,7 +327,7 @@ class Gait:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.30, -0.1, 0.25]))
+            gl.append(np.array([0.30, 0.0, 0.25]))
             gu.append(np.array([0.48, 0.23, 0.35]))
 
             gl.append(np.array([0.3, -0.23, 0.25]))
