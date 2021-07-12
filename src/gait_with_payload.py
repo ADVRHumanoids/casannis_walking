@@ -102,23 +102,22 @@ class Gait:
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
+            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
-            if k > 0:
+            if k > 0:       # moving contact velocity difference, aka a kind of acceleration
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                    1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
                 )
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                    1e2, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
             if k == self._N - 1:
-                #cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e2, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e2, default_rmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -246,6 +245,17 @@ class Gait:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [swing_tgt[i][2] + swing_clearance])
 
+        # compute mean horizontal position of final contacts
+        final_contacts = []
+        for i in range(4):
+            if i in swing_id:
+                final_contacts.append(swing_tgt[swing_id.index(i)])
+            else:
+                final_contacts.append(contacts[i])
+        print("Final contacts are", final_contacts)
+
+        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
+
         # iterate over knots starting from k = 0
         for k in range(self._N):
 
@@ -258,7 +268,7 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k)
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._N, final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -280,7 +290,7 @@ class Gait:
                 lmov_contact_initial[0],
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                [np.full(3, -0.3), np.full(3, 0.3)],
+                [np.full(3, -0.5), np.full(3, 0.5)],
                 k)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
@@ -291,16 +301,16 @@ class Gait:
                 rmov_contact_initial[0],
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                [np.full(3, -0.3), np.full(3, 0.3)],
+                [np.full(3, -0.5), np.full(3, 0.5)],
                 k)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
-            # contact positions
+            # foothold positions
             contact_params = constraints.set_contact_parameters(
-                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt
+                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
             )
             P.append(contact_params)
 
@@ -311,7 +321,7 @@ class Gait:
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
             if 0 < k < self._N - 1:
-                gl.append(np.zeros(3))  # 2 moving contacts
+                gl.append(np.zeros(3))  # 2 moving contacts spline acc continuity
                 gu.append(np.zeros(3))
 
                 gl.append(np.zeros(3))
