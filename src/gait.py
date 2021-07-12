@@ -225,7 +225,7 @@ class Gait:
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
-                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt
+                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
             )
             P.append(contact_params)
 
