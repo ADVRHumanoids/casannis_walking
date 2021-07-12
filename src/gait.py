@@ -131,7 +131,8 @@ class Gait:
         self._nparams = self._nlp['p'].size1()
 
         solver_options = {
-            'ipopt.linear_solver': 'ma57'
+            'ipopt.linear_solver': 'ma57',
+            'ipopt.print_level': 5
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)

@@ -259,8 +259,8 @@ def get_nominal_CoM_bounds_from_contacts(contacts):
                                             sum([sublist[2] for sublist in contacts])]
                          ]
 
-    final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.66]
-    final_position_u = [mean_hor_foothold[0] + 0.05] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.70]
+    final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.65]
+    final_position_u = [mean_hor_foothold[0] + 0.05] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.67]
 
     final_state_bounds = [np.concatenate([final_position_l, np.zeros(6)]),
                           np.concatenate([final_position_u, np.zeros(6)])]

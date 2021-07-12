@@ -1,6 +1,7 @@
 import casadi as cs
 import numpy as np
 
+
 def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, reference_position=None):
 
     if reference_position is None:
@@ -10,7 +11,7 @@ def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, re
                                                     contact_positions[6:8] +
                                                     contact_positions[9:11]
                                                     )
-        reference_position = contacts_horizontal_mean_position + np.array([0.1, 0.0])
+        reference_position = contacts_horizontal_mean_position #+ np.array([0.1, 0.0])
 
     horizontal_dist = CoM_position[0:2] - reference_position
 
@@ -22,7 +23,7 @@ def penalize_vertical_CoM_position(weight, CoM_position, contact_positions, refe
     if reference_position is None:
         contacts_vertical_mean_position = 0.25 * (contact_positions[2] + contact_positions[5]
                                                   + contact_positions[8] + contact_positions[11])\
-                                          + 0.68
+                                          + 0.66
         reference_position = contacts_vertical_mean_position
 
     vertical_dist = CoM_position[2] - reference_position
