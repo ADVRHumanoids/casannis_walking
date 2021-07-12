@@ -94,8 +94,7 @@ class Gait:
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3],
-                                                                    p_k)  # penalize CoM position
+            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0,
@@ -182,6 +181,16 @@ class Gait:
             else:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [swing_tgt[i][2] + swing_clearance])
+        # compute mean horizontal position of final contacts
+        final_contacts = []
+        for i in range(4):
+            if i in swing_id:
+                final_contacts.append(swing_tgt[swing_id.index(i)])
+            else:
+                final_contacts.append(contacts[i])
+        print("Final contacts are", final_contacts)
+
+        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # iterate over knots starting from k = 0
         for k in range(self._N):
@@ -195,7 +204,8 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k)
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._N,
+                                                             final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -381,7 +391,6 @@ class Gait:
 
     def print_trj(self, solution, results, resol, t_exec=[0, 0, 0, 0]):
         '''
-
         Args:
             solution: optimized decision variables
             t_exec: list of last trj points that were executed (because of early contact or other)
@@ -457,8 +466,6 @@ class Gait:
 
 if __name__ == "__main__":
 
-    w = Gait(mass=95, N=80, dt=0.1)
-
     # initial state
     #c0 = np.array([-0.00629, -0.03317, 0.01687])
     c0 = np.array([0.107729, 0.0000907, -0.02118])
@@ -476,20 +483,22 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     #sw_id = 2
-    sw_id = [0, 1]
+    sw_id = [2, 3, 0, 1]
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.2
     dy = 0.0
     dz = 0.0
-    swing_target = np.array([[foot_contacts[sw_id[0]][0] + dx, foot_contacts[sw_id[0]][1] + dy, foot_contacts[sw_id[0]][2] + dz],
-                             [foot_contacts[sw_id[1]][0] + dx, foot_contacts[sw_id[1]][1] + dy, foot_contacts[sw_id[1]][2] + dz]])
+    swing_target = np.array([[foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz]
+                             for i in range(len(sw_id))])
 
     # swing_time
     #swing_time = [[1.0, 4.0], [5.0, 8.0]]
-    swing_time = [[1.0, 2.5], [3.5, 5.0]]
+    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
 
     step_clear = 0.05
+
+    w = Gait(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
@@ -500,6 +509,8 @@ if __name__ == "__main__":
     print("swing id is:", sw_id)
     print("swing target is:", swing_target)
     print("swing time:", swing_time)
+    print("Solution:", sol)
+
     # interpolate the values, pass values and interpolation resolution
     res = 300
 

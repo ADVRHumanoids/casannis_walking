@@ -199,12 +199,16 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
     }
 
 
-def bound_state_variables(initial_state, state_bound, knot):
+def bound_state_variables(initial_state, state_bound, knot, knot_num, final_state=None):
 
     # state bounds
     if knot == 0:
         x_max = initial_state
         x_min = initial_state
+
+    elif knot == knot_num-1 and final_state is not None:
+        x_max = final_state[1]
+        x_min = final_state[0]
 
     else:
         x_max = state_bound[1]
@@ -245,3 +249,20 @@ def set_contact_parameters(contacts, swing_id, swing_target, clearance_times, po
             p_k[3 * swing_id[i]:3 * (swing_id[i] + 1)] = swing_target[i]
 
     return p_k
+
+
+def get_nominal_CoM_bounds_from_contacts(contacts):
+
+    mean_hor_foothold = [0.25 * coordinate
+                         for coordinate in [sum([sublist[0] for sublist in contacts]),
+                                            sum([sublist[1] for sublist in contacts]),
+                                            sum([sublist[2] for sublist in contacts])]
+                         ]
+
+    final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.66]
+    final_position_u = [mean_hor_foothold[0] + 0.05] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.70]
+
+    final_state_bounds = [np.concatenate([final_position_l, np.zeros(6)]),
+                          np.concatenate([final_position_u, np.zeros(6)])]
+
+    return final_state_bounds
