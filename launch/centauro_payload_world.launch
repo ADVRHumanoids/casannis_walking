@@ -33,8 +33,8 @@
   <!--arg name="robot_namespace" default="centauro"/-->
   <!-- from where the simulation enviornment will be loaded:
        WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
-  <arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro.world"/>
-
+  <!--arg name="world_name" default="$(find casannis_walking)/worlds/centauro_platform.world"/-->
+  <arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro_inclined_10.world"/>
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->
   <param name="robot_description"

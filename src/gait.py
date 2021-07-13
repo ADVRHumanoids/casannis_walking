@@ -35,7 +35,7 @@ class Gait:
         self._mass = mass
         self._time = [(i * dt) for i in range(N)]
 
-        gravity = np.array([0, 0, -9.81])
+        #gravity = np.array([0, 0, -9.81])
 
         # define dimensions
         sym_t = cs.SX

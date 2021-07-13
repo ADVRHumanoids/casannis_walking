@@ -1,7 +1,9 @@
 import numpy as np
 import casadi as cs
 
-gravity = np.array([0, 0, -9.81])
+gravity = np.array([0.0, 0.0, -9.81])
+# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
 def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_positions,
