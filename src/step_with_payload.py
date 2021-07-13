@@ -106,7 +106,7 @@ class Walking:
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e2, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
+            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
@@ -116,8 +116,8 @@ class Walking:
             if k == self._N - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e2, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e2, default_rmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -253,7 +253,7 @@ class Walking:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k)
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._N)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -312,10 +312,10 @@ class Walking:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.3, 0.0, 0.25]))
-            gu.append(np.array([0.48, 0.23, 0.35]))
+            gl.append(np.array([0.35, 0.0, 0.25]))
+            gu.append(np.array([0.48, 0.3, 0.35]))
 
-            gl.append(np.array([0.3, -0.23, 0.25]))
+            gl.append(np.array([0.35, -0.3, 0.25]))
             gu.append(np.array([0.48, 0.0, 0.35]))
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration

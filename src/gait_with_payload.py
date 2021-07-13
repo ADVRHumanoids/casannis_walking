@@ -11,7 +11,9 @@ import cubic_hermite_polynomial as cubic_spline
 
 class Gait:
     """
-    TODO: 1)
+    TODO: 1) Try optimizing the virtual force
+    2) try with arms in the back configuration
+
     """
 
     def __init__(self, mass, N, dt):

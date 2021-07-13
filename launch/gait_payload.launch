@@ -20,7 +20,7 @@
 
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
-    <arg name="clearance" default="0.1"/>
+    <arg name="clearance" default="0.05"/>
     <arg name="min_force" default="100"/>
 
     <!--group if="$(arg dynamic)">
