@@ -9,6 +9,9 @@ import time
 import cubic_hermite_polynomial as cubic_spline
 import constraints
 
+from step_with_payload import Walking as nominal_payload
+from tests import compare_print
+
 
 class Walking:
     """
@@ -29,8 +32,8 @@ class Walking:
         self._N = N
         self._dt = dt  # dt used for optimization knots
         self._mass = mass
-        self._time = [(i * dt) for i in range(self._N)]         # time junctions w/o the last one
-        self._tjunctions = [(i * dt) for i in range(self._N + 1)]   # time junctions from first to last
+        self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
+        self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
         gravity = np.array([0, 0, -9.81])
 
@@ -68,13 +71,14 @@ class Walking:
         F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
 
         # moving contact
-        P_mov_l = sym_t.sym('P_mov_l', N * dimp_mov)   # position knots for the virtual contact
+        P_mov_l = sym_t.sym('P_mov_l', N * dimp_mov)  # position knots for the virtual contact
         P_mov_r = sym_t.sym('P_mov_r', N * dimp_mov)  # position knots for the virtual contact
-        DP_mov_l = sym_t.sym('DP_mov_l', N * dimp_mov)   # velocity knots for the virtual contact
+        DP_mov_l = sym_t.sym('DP_mov_l', N * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', N * dimp_mov)  # velocity knots for the virtual contact
 
         # virtual force
-        f_pay = np.array([0, 0, -50.0])   # virtual force
+        # f_pay = np.array([0, 0, -50.0])   # virtual force
+        Fz_pay = sym_t.sym('Fz_pay', N)
 
         P = list()  # parameters
         g = list()  # list of constraint expressions
@@ -87,7 +91,8 @@ class Walking:
             'P_mov_l': P_mov_l,
             'P_mov_r': P_mov_r,
             'DP_mov_l': DP_mov_l,
-            'DP_mov_r': DP_mov_r
+            'DP_mov_r': DP_mov_r,
+            'Fz_pay': Fz_pay
         }
 
         # iterate over knots starting from k = 0
@@ -96,7 +101,7 @@ class Walking:
             # slice indices for variables at knot k
             x_slice1 = k * dimx
             x_slice2 = (k + 1) * dimx
-            u_slice0 = (k - 1) * dimu   # referring to previous knot
+            u_slice0 = (k - 1) * dimu  # referring to previous knot
             u_slice1 = k * dimu
             u_slice2 = (k + 1) * dimu
             f_slice1 = k * dimf_tot
@@ -108,19 +113,25 @@ class Walking:
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
+            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3],
+                                                                    p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]))    # penalize CoM control
-                cost_function += costs.penalize_quantity(1e2, (DP_mov_r[u_slice1:u_slice2-1] - DP_mov_r[u_slice0:u_slice1-1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (
+                            DP_mov_l[u_slice1:u_slice2 - 1] - DP_mov_l[u_slice0:u_slice1 - 1]))  # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (
+                            DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1]))  # penalize CoM control
             if k == self._N - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
                 cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
                 cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
+
+            # virtual force
+            f_pay = np.array([0.0, 0.0, Fz_pay[k]])
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
@@ -172,9 +183,13 @@ class Walking:
             g.append(right_mov_contact_box_constraint['y'])
             g.append(right_mov_contact_box_constraint['z'])
 
+            # newton's second law for the payload mass
+            payload_mass = 50.0
+            #newtons_law = -Fz_pay[k] - payload_mass * 9.81 - payload_mass * ddp
+
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r),
+            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, Fz_pay),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -227,6 +242,10 @@ class Walking:
         DPr_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
         DPr_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
 
+        # moving contact
+        Fz_payl = [0] * self._N  # force lower bounds
+        Fz_payu = [0] * self._N  # force upper bounds
+
         # constraints
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
@@ -267,7 +286,8 @@ class Walking:
             Ul[u_slice1:u_slice2] = u_min
 
             # force bounds
-            force_bounds = constraints.bound_force_variables(min_f, 1500, k, [swing_t], [swing_id], self._ncontacts, self._dt)
+            force_bounds = constraints.bound_force_variables(min_f, 1500, k, [swing_t], [swing_id], self._ncontacts,
+                                                             self._dt)
             Fu[f_slice1:f_slice2] = force_bounds['max']
             Fl[f_slice1:f_slice2] = force_bounds['min']
 
@@ -294,6 +314,10 @@ class Walking:
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
+            # virtual force bounds
+            Fz_payu[k] = -40.0
+            Fz_payl[k] = -60.0
+
             # contact positions
             contact_params = constraints.set_contact_parameters(
                 contacts, [swing_id], [swing_tgt], [clearance_time], [clearance_swing_position], k, self._dt
@@ -304,10 +328,10 @@ class Walking:
             gl.append(np.zeros(6))  # newton-euler
             gu.append(np.zeros(6))
             if k > 0:
-                gl.append(np.zeros(self._dimx))     # state constraint
+                gl.append(np.zeros(self._dimx))  # state constraint
                 gu.append(np.zeros(self._dimx))
             if 0 < k < self._N - 1:
-                gl.append(np.zeros(3))      # 2 moving contacts
+                gl.append(np.zeros(3))  # 2 moving contacts
                 gu.append(np.zeros(3))
 
                 gl.append(np.zeros(3))
@@ -323,7 +347,7 @@ class Walking:
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
         Xu[-6:] = [0.0 for i in range(6)]
 
-        DPl_movl[-3:] = [0.0 for i in range(3)]   # zero velocity of the moving contact
+        DPl_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
         DPl_movu[-3:] = [0.0 for i in range(3)]
 
         DPr_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
@@ -333,8 +357,8 @@ class Walking:
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl)
-        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu)
+        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, Fz_payl)
+        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, Fz_payu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -351,6 +375,9 @@ class Walking:
         p_rmov_trj = cs.horzcat(self._trj['P_mov_r'])  # pack moving contact trj in a desired matrix
         dp_rmov_trj = cs.horzcat(self._trj['DP_mov_r'])  # pack moving contact trj in a desired matrix
 
+        # virtual force
+        fz_pay_trj = cs.horzcat(self._trj['Fz_pay'])  # pack moving contact trj in a desired matrix
+
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
@@ -359,7 +386,8 @@ class Walking:
             'Pl_mov': self.evaluate(sol['x'], p_lmov_trj),
             'Pr_mov': self.evaluate(sol['x'], p_rmov_trj),
             'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
-            'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj)
+            'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj),
+            'Fz_pay': self.evaluate(sol['x'], fz_pay_trj)  # virtual force
         }
 
     def evaluate(self, solution, expr):
@@ -576,13 +604,21 @@ class Walking:
         mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
         plt.figure()
         for i, name in enumerate(mov_contact_labels):
-            plt.subplot(2, 3, i+1)
+            plt.subplot(2, 3, i + 1)
             for k in range(3):
                 plt.plot(results['t'], results[name][k], '-')
                 plt.grid()
                 plt.legend(['x', 'y', 'z'])
             plt.ylabel(name)
             plt.suptitle('Moving Contact trajectory')
+        plt.xlabel('Time [s]')
+
+        # plot virtual force
+        plt.figure()
+        plt.plot(self._time, solution['Fz_pay'], '.')
+        plt.grid()
+        plt.ylabel("[Newton]")
+        plt.title('Virtual force')
         plt.xlabel('Time [s]')
 
         # plot swing trajectory
@@ -624,13 +660,11 @@ class Walking:
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
         plt.xlim(0.5, -0.5)
-        plt.show()
+        #plt.show()
 
 
 if __name__ == "__main__":
     start_time = time.time()
-
-    w = Walking(mass=95, N=40, dt=0.2)
 
     # initial state =
     c0 = np.array([0.107729, 0.0000907, -0.02118])
@@ -672,37 +706,40 @@ if __name__ == "__main__":
     # swing_time = (1.5, 3.0)
     swing_time = [2.0, 5.0]
 
+    w = Walking(mass=95, N=40, dt=0.2)
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
+                  swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
+                  swing_t=swing_time, min_f=100)
+    # check time needed
+    end_time = time.time()
+    print('Total time is:', (end_time - start_time) * 1000, 'ms')
+    # interpolate the values, pass values and interpolation resolution
+    res = 300
+    interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
+    # check time needed
+    end_time = time.time()
+    print('Total time for nlp formulation, solution and interpolation:', (end_time - start_time) * 1000, 'ms')
+    #w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+
+    # without optimizing virtual force
+    w2 = nominal_payload(mass=95, N=40, dt=0.2)
+    # sol is the directory returned by solve class function contains state, forces, control values
+    sol2 = w2.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
                   swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
                   swing_t=swing_time, min_f=100)
 
     # check time needed
     end_time = time.time()
     print('Total time is:', (end_time - start_time) * 1000, 'ms')
-
-    # debug
-    print("X0 is:", x_init)
-    print("contacts is:", foot_contacts)
-    print("swing id is:", sw_id)
-    print("swing target is:", swing_target)
-    print("swing time:", swing_time)
-
     # interpolate the values, pass values and interpolation resolution
     res = 300
-    interpl = w.interpolate(sol, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
-
+    interpl2 = w2.interpolate(sol2, foot_contacts[sw_id], swing_target, step_clear, swing_time, res)
     # check time needed
     end_time = time.time()
     print('Total time for nlp formulation, solution and interpolation:', (end_time - start_time) * 1000, 'ms')
+    #w2.print_trj(sol2, interpl2, res, foot_contacts, sw_id)
 
-    print("Solution is:")
-    print("State is:", sol['x'])
-    print("Control is:", sol['u'])
-    print("Forces are:", sol['F'])
-    #print("Moving contact is:", sol['P_mov'])
-    #print("Moving contact velocity is:", sol['DP_mov'])
-    # print the results
-    w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+    compare_print(interpl2, interpl, foot_contacts, sw_id)
 
 

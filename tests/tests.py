@@ -41,7 +41,8 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
     # Interpolated moving contact trajectory
     plt.figure()
     for k in range(3):
-        plt.plot(payl_results['t'], payl_results['p_mov'][k], '-')
+        plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
+        plt.plot(payl_results['t'], nom_results['p_mov_l'][k], '-')
     plt.grid()
     plt.title('Moving Contact trajectory')
     plt.legend(['x', 'y', 'z'])
