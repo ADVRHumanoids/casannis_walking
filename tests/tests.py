@@ -44,9 +44,9 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
     for k, name in enumerate(cartesian_labels):
         plt.plot(nom_results['t'], nom_results['p_mov_l'][k], '-')
         plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
-    plt.legend([str(name) + '_nom', str(name),
-                str(name) + '_nom', str(name),
-                str(name) + '_nom', str(name)])
+    plt.legend([str(cartesian_labels[0]) + '_nom', str(cartesian_labels[0]),
+                str(cartesian_labels[1]) + '_nom', str(cartesian_labels[1]),
+                str(cartesian_labels[2]) + '_nom', str(cartesian_labels[2])])
     plt.grid()
     plt.title('Moving Contact trajectory')
     plt.xlabel('Time [s]')

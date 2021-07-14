@@ -38,6 +38,58 @@ def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_posit
     }
 
 
+def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, virtual_force):
+
+    dimensions = 3
+    #t_current = junction_index * dt
+
+    p_mov_previous = p_mov_list[0:dimensions]
+    p_mov_current = p_mov_list[dimensions:2 * dimensions]
+
+    dp_mov_previous = dp_mov_list[0:dimensions]
+    dp_mov_current = dp_mov_list[dimensions:2 * dimensions]
+
+    p10 = []
+    p11 = []
+    v10 = []
+    v11 = []
+    T1 = []
+    t10 = []
+    d1 = []
+    c1 = []
+    acceleration_at_start = []
+    for i in range(3):
+        polynomial = {
+            'p_list': [p_mov_previous[i], p_mov_current[i]],
+            'v_list': [dp_mov_previous[i], dp_mov_current[i]],
+            'T': dt,
+            't0': (junction_index - 1) * dt
+        }
+
+        # junction values and times for polynomial
+        p10.append(polynomial['p_list'][0])
+        p11.append(polynomial['p_list'][1])
+        v10.append(polynomial['v_list'][0])
+        v11.append(polynomial['v_list'][1])
+        T1.append(polynomial['T'])
+        t10.append(polynomial['t0'])
+
+        # c, d coefficients of polynomial 1
+        d1.append((2 * p10[i] - 2 * p11[i] + T1[i] * v10[i] + T1[i] * v11[i]) / T1[i] ** 3)
+        c1.append(- (3 * p10[i] - 3 * p11[i] + 2 * T1[i] * v10[i] + T1[i] * v11[i]) / T1[i] ** 2 - 3 * d1[i] * t10[i])
+
+        # acceleration = 2.0 * c1 + 6.0 * d1 * t
+        acceleration_at_start.append(2.0 * c1[i])
+
+    newton_violation = payload_mass * np.array(acceleration_at_start) - np.array(gravity) * payload_mass - virtual_force
+
+    return {
+        'x': newton_violation[0],
+        'y': newton_violation[1],
+        'z': newton_violation[2]
+    }
+
+
 def state_constraint(state_function, current_state):
 
     # state constraint (triple integrator)
