@@ -8,6 +8,7 @@ from step_with_payload import Walking as adaptable
 def compare_print(nom_results, payl_results, contacts, swing_id):
 
     cartesian_dim = 3
+    cartesian_labels = ['X', 'Y', 'Z']
 
     # Interpolated state plot
     state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
@@ -40,12 +41,14 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
 
     # Interpolated moving contact trajectory
     plt.figure()
-    for k in range(3):
+    for k, name in enumerate(cartesian_labels):
+        plt.plot(nom_results['t'], nom_results['p_mov_l'][k], '-')
         plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
-        plt.plot(payl_results['t'], nom_results['p_mov_l'][k], '-')
+    plt.legend([str(name) + '_nom', str(name),
+                str(name) + '_nom', str(name),
+                str(name) + '_nom', str(name)])
     plt.grid()
     plt.title('Moving Contact trajectory')
-    plt.legend(['x', 'y', 'z'])
     plt.xlabel('Time [s]')
 
     # Support polygon and CoM motion in the plane

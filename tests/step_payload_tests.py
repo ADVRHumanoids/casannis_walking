@@ -35,7 +35,7 @@ class Walking:
         self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
         self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
-        gravity = np.array([0, 0, -9.81])
+        # gravity = np.array([0, 0, -9.81])
 
         # define dimensions
         sym_t = cs.SX
@@ -78,7 +78,7 @@ class Walking:
 
         # virtual force
         # f_pay = np.array([0, 0, -50.0])   # virtual force
-        Fz_pay = sym_t.sym('Fz_pay', N)
+        F_virt = sym_t.sym('F_virt', dimu * N)
 
         P = list()  # parameters
         g = list()  # list of constraint expressions
@@ -92,7 +92,7 @@ class Walking:
             'P_mov_r': P_mov_r,
             'DP_mov_l': DP_mov_l,
             'DP_mov_r': DP_mov_r,
-            'Fz_pay': Fz_pay
+            'F_virt': F_virt
         }
 
         # iterate over knots starting from k = 0
@@ -130,13 +130,10 @@ class Walking:
                 cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
 
-            # virtual force
-            f_pay = np.array([0.0, 0.0, Fz_pay[k]])
-
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
-                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], f_pay
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], F_virt[u_slice1:u_slice2]
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -183,13 +180,9 @@ class Walking:
             g.append(right_mov_contact_box_constraint['y'])
             g.append(right_mov_contact_box_constraint['z'])
 
-            # newton's second law for the payload mass
-            payload_mass = 50.0
-            #newtons_law = -Fz_pay[k] - payload_mass * 9.81 - payload_mass * ddp
-
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, Fz_pay),
+            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, F_virt),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -242,9 +235,9 @@ class Walking:
         DPr_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
         DPr_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
 
-        # moving contact
-        Fz_payl = [0] * self._N  # force lower bounds
-        Fz_payu = [0] * self._N  # force upper bounds
+        # virtual force
+        F_virtl = [0] * self._dimu * self._N  # force lower bounds
+        F_virtu = [0] * self._dimu * self._N  # force upper bounds
 
         # constraints
         gl = list()  # constraint lower bounds
@@ -315,8 +308,8 @@ class Walking:
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            Fz_payu[k] = -40.0
-            Fz_payl[k] = -60.0
+            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, -25.0])
+            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, -100.0])
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
@@ -357,8 +350,8 @@ class Walking:
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, Fz_payl)
-        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, Fz_payu)
+        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virtl)
+        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virtu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -376,7 +369,7 @@ class Walking:
         dp_rmov_trj = cs.horzcat(self._trj['DP_mov_r'])  # pack moving contact trj in a desired matrix
 
         # virtual force
-        fz_pay_trj = cs.horzcat(self._trj['Fz_pay'])  # pack moving contact trj in a desired matrix
+        f_virt_trj = cs.horzcat(self._trj['F_virt'])  # pack moving contact trj in a desired matrix
 
         # return values of the quantities *_trj
         return {
@@ -387,7 +380,7 @@ class Walking:
             'Pr_mov': self.evaluate(sol['x'], p_rmov_trj),
             'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
             'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj),
-            'Fz_pay': self.evaluate(sol['x'], fz_pay_trj)  # virtual force
+            'F_virt': self.evaluate(sol['x'], f_virt_trj)  # virtual force
         }
 
     def evaluate(self, solution, expr):
@@ -593,12 +586,12 @@ class Walking:
         for i, name in enumerate(feet_labels):
             plt.subplot(2, 2, i + 1)
             for k in range(3):
-                plt.plot(results['t'], results['f'][3 * i + k], '-')
+                # plt.plot(results['t'], results['f'][3 * i + k], '-')
+                plt.plot(self._time, solution['F'][3 * i + k::self._dimf_tot], '-')
             plt.grid()
             plt.title(name)
             plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
         plt.xlabel('Time [s]')
-        # plt.savefig('../plots/step_forces.png')
 
         # Interpolated moving contact trajectory
         mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
@@ -615,10 +608,11 @@ class Walking:
 
         # plot virtual force
         plt.figure()
-        plt.plot(self._time, solution['Fz_pay'], '.')
+        for k in range(3):
+            plt.plot(self._time, solution['F_virt'][k::3], '-')
         plt.grid()
-        plt.ylabel("[Newton]")
-        plt.title('Virtual force')
+        plt.title("Virtual force in both moving contacts")
+        plt.legend(['x', 'y', 'z'])
         plt.xlabel('Time [s]')
 
         # plot swing trajectory
@@ -660,7 +654,7 @@ class Walking:
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
         plt.xlim(0.5, -0.5)
-        #plt.show()
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -720,7 +714,7 @@ if __name__ == "__main__":
     # check time needed
     end_time = time.time()
     print('Total time for nlp formulation, solution and interpolation:', (end_time - start_time) * 1000, 'ms')
-    #w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+    w.print_trj(sol, interpl, res, foot_contacts, sw_id)
 
     # without optimizing virtual force
     w2 = nominal_payload(mass=95, N=40, dt=0.2)
@@ -740,6 +734,6 @@ if __name__ == "__main__":
     print('Total time for nlp formulation, solution and interpolation:', (end_time - start_time) * 1000, 'ms')
     #w2.print_trj(sol2, interpl2, res, foot_contacts, sw_id)
 
-    compare_print(interpl2, interpl, foot_contacts, sw_id)
+    compare_print(nom_results=interpl2, payl_results=interpl, contacts=foot_contacts, swing_id=sw_id)
 
 
