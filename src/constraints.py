@@ -39,9 +39,18 @@ def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_posit
 
 
 def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, virtual_force):
-
+    """
+    This function is useful for imposing newton's 2nd law in point masses (payload).
+    m * acc = Weight + Forces
+    :param p_mov_list: list of values of the cubic polynomial junctions
+    :param dp_mov_list: list of values of the first derivative of the polynomial at junction
+    :param dt: time discretization of knots
+    :param junction_index: index of current knot
+    :param payload_mass: mass of the payload
+    :param virtual_force: virtual force acting on the mass(3D vector)
+    :return: violation of the newton constraint
+    """
     dimensions = 3
-    #t_current = junction_index * dt
 
     p_mov_previous = p_mov_list[0:dimensions]
     p_mov_current = p_mov_list[dimensions:2 * dimensions]

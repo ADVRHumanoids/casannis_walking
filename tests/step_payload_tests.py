@@ -20,13 +20,14 @@ class Walking:
     3) Optimize virtual force
     """
 
-    def __init__(self, mass, N, dt):
+    def __init__(self, mass, N, dt, payload_mass):
         """Walking class constructor
 
         Args:
             mass (float): robot mass
             N (int): horizon length
             dt (float): discretization step
+            payload_mass: mass attached to each arm
         """
 
         self._N = N
@@ -35,7 +36,7 @@ class Walking:
         self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
         self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
-        # gravity = np.array([0, 0, -9.81])
+        self._payload_mass = payload_mass
 
         # define dimensions
         sym_t = cs.SX
@@ -147,6 +148,27 @@ class Walking:
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
                 g.append(state_constraint)
 
+                # newton constraint for the payload mass, virtual force has opposite sign
+                payload_mass_constraint_l = constraints.newton_payload_constraint(P_mov_l[u_slice0:u_slice2],
+                                                                                  DP_mov_l[u_slice0:u_slice2],
+                                                                                  dt,
+                                                                                  k,
+                                                                                  payload_mass,
+                                                                                  -F_virt[u_slice0:u_slice1])
+                g.append(payload_mass_constraint_l['x'])
+                g.append(payload_mass_constraint_l['y'])
+                g.append(payload_mass_constraint_l['z'])
+
+                payload_mass_constraint_r = constraints.newton_payload_constraint(P_mov_r[u_slice0:u_slice2],
+                                                                                  DP_mov_r[u_slice0:u_slice2],
+                                                                                  dt,
+                                                                                  k,
+                                                                                  payload_mass,
+                                                                                  -F_virt[u_slice0:u_slice1])
+                g.append(payload_mass_constraint_r['x'])
+                g.append(payload_mass_constraint_r['y'])
+                g.append(payload_mass_constraint_r['z'])
+
             # moving contact spline acceleration continuity
             if 0 < k < (self._N - 1):
                 left_mov_contact_spline_acc_constraint = constraints.spline_acc_constraint_3D(
@@ -164,17 +186,6 @@ class Walking:
                 g.append(right_mov_contact_spline_acc_constraint['x'])
                 g.append(right_mov_contact_spline_acc_constraint['y'])
                 g.append(right_mov_contact_spline_acc_constraint['z'])
-
-                # newton constraint for the payload mass
-                payload_mass_constraint = constraints.newton_payload_constraint(P_mov_l[u_slice0:u_slice2],
-                                                                                DP_mov_l[u_slice0:u_slice2],
-                                                                                dt,
-                                                                                k,
-                                                                                5.0,
-                                                                                F_virt[u_slice0:u_slice1])
-                g.append(payload_mass_constraint['x'])
-                g.append(payload_mass_constraint['y'])
-                g.append(payload_mass_constraint['z'])
 
             # box constraint - moving contact
             left_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
@@ -319,8 +330,8 @@ class Walking:
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virtu[u_slice1:u_slice2] = np.full(3, cs.inf)#np.array([1.0, 1.0, -49.0])
-            F_virtl[u_slice1:u_slice2] = np.full(3, -cs.inf)#np.array([-1.0, -1.0, -51.0])
+            F_virtu[u_slice1:u_slice2] = np.array([1.0, 1.0, -10 * self._payload_mass + 5]) #np.full(3, cs.inf)
+            F_virtl[u_slice1:u_slice2] = np.array([-1.0, -1.0, -10 * self._payload_mass - 5])  #np.full(3, -cs.inf)
 
             # contact positions
             contact_params = constraints.set_contact_parameters(
@@ -334,14 +345,18 @@ class Walking:
             if k > 0:
                 gl.append(np.zeros(self._dimx))  # state constraint
                 gu.append(np.zeros(self._dimx))
-            if 0 < k < self._N - 1:
-                gl.append(np.zeros(3))  # 2 moving contacts
+
+                # newton constraint for payload mass
+                gl.append(np.zeros(3))
                 gu.append(np.zeros(3))
 
                 gl.append(np.zeros(3))
                 gu.append(np.zeros(3))
 
-                # newton constraint for payload mass
+            if 0 < k < self._N - 1:
+                gl.append(np.zeros(3))  # 2 moving contacts
+                gu.append(np.zeros(3))
+
                 gl.append(np.zeros(3))
                 gu.append(np.zeros(3))
 
@@ -715,7 +730,7 @@ if __name__ == "__main__":
     # swing_time = (1.5, 3.0)
     swing_time = [2.0, 5.0]
 
-    w = Walking(mass=95, N=40, dt=0.2)
+    w = Walking(mass=95, N=40, dt=0.2, payload_mass=5.0)
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
                   swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
