@@ -36,6 +36,7 @@ class Walking:
         self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
         self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
+        # mass of the payload of each arm
         self._payload_mass = payload_mass
 
         # define dimensions
@@ -342,6 +343,7 @@ class Walking:
             # constraints' bounds
             gl.append(np.zeros(6))  # newton-euler
             gu.append(np.zeros(6))
+
             if k > 0:
                 gl.append(np.zeros(self._dimx))  # state constraint
                 gu.append(np.zeros(self._dimx))

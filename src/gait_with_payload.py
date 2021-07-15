@@ -8,6 +8,7 @@ import constraints
 
 import cubic_hermite_polynomial as cubic_spline
 
+global_gravity = np.array([0.0, 0.0, -9.81])
 
 class Gait:
     """
@@ -16,7 +17,7 @@ class Gait:
 
     """
 
-    def __init__(self, mass, N, dt):
+    def __init__(self, mass, N, dt, payload_mass):
         """Gait class constructor
 
         Args:
@@ -31,7 +32,8 @@ class Gait:
         self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
         self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
-        gravity = np.array([0, 0, -9.81])
+        # mass of the payload
+        self._payload_mass = payload_mass
 
         # define dimensions
         sym_t = cs.SX
@@ -71,7 +73,7 @@ class Gait:
         P_mov_r = sym_t.sym('P_mov_r', N * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', N * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', N * dimp_mov)  # velocity knots for the virtual contact
-        f_pay = np.array([0, 0, -50.0])  # virtual force
+        f_pay = np.array([0, 0, payload_mass * global_gravity[2]])  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -319,9 +321,11 @@ class Gait:
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
+
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
+
             if 0 < k < self._N - 1:
                 gl.append(np.zeros(3))  # 2 moving contacts spline acc continuity
                 gu.append(np.zeros(3))
@@ -645,7 +649,6 @@ class Gait:
 
 
 if __name__ == "__main__":
-    w = Gait(mass=95, N=100, dt=0.1)
 
     # initial state
     c0 = np.array([0.107729, 0.0000907, -0.02118])
@@ -696,6 +699,8 @@ if __name__ == "__main__":
     swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
 
     step_clear = 0.05
+
+    w = Gait(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_mass=5.0)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
