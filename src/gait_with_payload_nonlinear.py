@@ -652,35 +652,33 @@ class Gait:
         plt.legend(['x', 'y', 'z'])
         plt.xlabel('Time [s]')
 
-        # plot swing trajectory
-        # All points to be published
-        N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
-        s = np.linspace(0, self._dt * self._N, N_total)
-        coord_labels = ['x', 'y', 'z']
-        for j in range(len(results['sw'])):
-            plt.figure()
-            for i, name in enumerate(coord_labels):
-                plt.subplot(3, 1, i + 1)
-                plt.plot(s, results['sw'][j][name])  # nominal trj
-                plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
-                plt.grid()
-                plt.legend(['nominal', 'real'])
-                plt.title('Trajectory ' + name)
-            plt.xlabel('Time [s]')
-            # plt.savefig('../plots/gait_swing.png')
-
-        # plot swing trajectory in two dimensions Z - X
-        plt.figure()
-        for j in range(len(results['sw'])):
-            plt.subplot(2, 2, j + 1)
-            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
-            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
-            plt.grid()
-            plt.legend(['nominal', 'real'])
-            plt.title('Trajectory Z- X')
-            plt.xlabel('X [m]')
-            plt.ylabel('Z [m]')
-            # plt.savefig('../plots/gait_swing_zx.png')
+        # # plot swing trajectory
+        # # All points to be published
+        # N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
+        # s = np.linspace(0, self._dt * self._N, N_total)
+        # coord_labels = ['x', 'y', 'z']
+        # for j in range(len(results['sw'])):
+        #     plt.figure()
+        #     for i, name in enumerate(coord_labels):
+        #         plt.subplot(3, 1, i + 1)
+        #         plt.plot(s, results['sw'][j][name])  # nominal trj
+        #         plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+        #         plt.grid()
+        #         plt.legend(['nominal', 'real'])
+        #         plt.title('Trajectory ' + name)
+        #     plt.xlabel('Time [s]')
+        #
+        # # plot swing trajectory in two dimensions Z - X
+        # plt.figure()
+        # for j in range(len(results['sw'])):
+        #     plt.subplot(2, 2, j + 1)
+        #     plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
+        #     plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
+        #     plt.grid()
+        #     plt.legend(['nominal', 'real'])
+        #     plt.title('Trajectory Z- X')
+        #     plt.xlabel('X [m]')
+        #     plt.ylabel('Z [m]')
 
         # Support polygon and CoM motion in the plane
         color_labels = ['red', 'green', 'blue', 'yellow']

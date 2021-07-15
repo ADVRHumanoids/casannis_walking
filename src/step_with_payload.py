@@ -12,9 +12,7 @@ import constraints
 
 class Walking:
     """
-    TODO: 1) Pass everything developed for single step to multiple steps
-    2) Add XY force components
-    3) Optimize virtual force
+    Trajectory Optimization for a single step with payloads on the robot arms, modeled as virtual moving contacts
     """
 
     def __init__(self, mass, N, dt):
