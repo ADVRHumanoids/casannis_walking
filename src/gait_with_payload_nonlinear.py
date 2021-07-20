@@ -324,7 +324,7 @@ class Gait:
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
             DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
@@ -335,7 +335,7 @@ class Gait:
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']

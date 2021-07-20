@@ -13,14 +13,17 @@ global_gravity = np.array([0.0, 0.0, -9.81])
 
 class Gait:
     """
-    TODO: 1) Tune the case of nonlinear optimization (Virtual force)
+    TODO:
+    1) Tune the case of nonlinear optimization (Virtual force), tested in simulation and achieves quite good scenarios
     2) Tune the linear optimization (box constraint z dimension)
     3) try with arms in the back configuration, modify box constraints
     4) handcraft trajectory for switching arms to backward configuration
     5) Formulate box constraint that will exclude a central box of torso
     6) Study the dynamics of the problem and compare different possibilities
+    7) compute estimated CoM and plot this
 
-    7) Add pelvis orientation decision variables
+    8) Add pelvis orientation decision variables
+    9) Try to optimize for footholds
 
     """
 
@@ -302,7 +305,7 @@ class Gait:
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
             DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
@@ -313,7 +316,7 @@ class Gait:
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
@@ -541,12 +544,21 @@ class Gait:
         mov_cont_points = []
 
         for i in range(3):
+            pp = p_mov_optimal[i::self._dimu]
+            dppp = dp_mov_optimal[i::self._dimu]
+            ttt = self._tjunctions
             mov_cont_splines.append(cubic_spline.CubicSpline(p_mov_optimal[i::self._dimu],
                                                              dp_mov_optimal[i::self._dimu],
                                                              self._tjunctions))
 
             mov_cont_polynomials.append(mov_cont_splines[i].get_poly_objects())
             mov_cont_points.append(mov_cont_splines[i].get_spline_trajectory(resolution))
+
+            # poly_object = CubicSpline([0.0, 2.0, 3.5, 8.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.5, 4])
+            # polynomials = poly_object.get_poly_objects()
+            # points = poly_object.get_spline_trajectory(300)
+            cubic_spline.plot_spline(mov_cont_points[i])
+            print("last velocity", dp_mov_optimal[i::self._dimu][-1])
 
         return mov_cont_points
 
@@ -719,6 +731,7 @@ if __name__ == "__main__":
         swing_currents.append(foot_contacts[sw_id[i]])
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
+    print("last element", interpl['dp_mov_r'][2][-1])
     # print the results
     w.print_trj(sol, interpl, res, foot_contacts, sw_id)
 
