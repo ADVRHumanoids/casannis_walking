@@ -9,6 +9,9 @@ stack:
 
 constraints: ["JointLimits", "VelocityLimits"]
 
+params:
+ - &arm_indices [0, 1, 2]
+
 PelvisRPY:
     type: "Cartesian"
     lambda: 0.1
@@ -54,6 +57,7 @@ LeftArm:
     name: "left_hand"
     distal_link: "arm1_8"
     lambda: 0.1
+    indices: *arm_indices
 #    base_link: "pelvis"
 
 RightArm:
@@ -61,7 +65,8 @@ RightArm:
     name: "right_hand"
     distal_link: "arm2_8"
     lambda: 0.1
-#    base_link: "pelvis"
+    indices: *arm_indices
+    #    base_link: "pelvis"
     
 Postural:
     type: "Postural"
