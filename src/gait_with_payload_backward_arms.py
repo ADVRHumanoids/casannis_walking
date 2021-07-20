@@ -12,7 +12,9 @@ global_gravity = np.array([0.0, 0.0, -9.81])
 
 
 class Gait:
-
+    '''
+    TODO: 1) fix jerky moving contacts trajectories for more dynamic gaits
+    '''
     def __init__(self, mass, N, dt, payload_mass):
         """Gait class constructor
 
@@ -108,16 +110,16 @@ class Gait:
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
-            if k > 0:       # moving contact velocity difference, aka a kind of acceleration
+            if k > 0:  # moving contact velocity difference, aka a kind of acceleration
                 cost_function += costs.penalize_quantity(
-                    1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                    1e2, (DP_mov_l[u_slice1:u_slice2 - 1] - DP_mov_l[u_slice0:u_slice1 - 1])
                 )
                 cost_function += costs.penalize_quantity(
                     1e2, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
             if k == self._knot_number - 1:
-                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, 0.15, 0.41]
-                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, -0.15, 0.41]
+                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [-0.0947, 0.15, 0.415]
+                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [-0.0947, -0.15, 0.415]
                 cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
                 cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
@@ -186,7 +188,8 @@ class Gait:
         self._nparams = self._nlp['p'].size1()
 
         solver_options = {
-            'ipopt.linear_solver': 'ma57'
+            'ipopt.linear_solver': 'ma57',
+            'ipopt.print_level': 5
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
@@ -333,11 +336,11 @@ class Gait:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([-0.4, 0.1, 0.35]))      # left
-            gu.append(np.array([-0.06, 0.35, 0.45]))
+            gl.append(np.array([-0.3, 0.0, 0.35]))      # left
+            gu.append(np.array([-0.08, 0.35, 0.45]))
 
-            gl.append(np.array([-0.4, -0.35, 0.35]))     # right
-            gu.append(np.array([-0.06, -0.1, 0.45]))
+            gl.append(np.array([-0.3, -0.35, 0.35]))     # right
+            gu.append(np.array([-0.08, -0.0, 0.45]))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -648,7 +651,7 @@ class Gait:
 if __name__ == "__main__":
 
     # initial state
-    c0 = np.array([0.065, 0.000, 0.02])
+    c0 = np.array([0.06, 0.0, 0.002])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
@@ -663,12 +666,12 @@ if __name__ == "__main__":
 
     # mov contacts
     lmoving_contact = [
-        np.array([-0.0017, 0.15, 0.4325]),
+        np.array([-0.0347, 0.15, 0.417]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([-0.0017, -0.15, 0.4325]),
+        np.array([-0.0347, -0.15, 0.417]),
         np.zeros(3),
     ]
 
@@ -676,7 +679,7 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [0, 1, 2, 3]
+    sw_id = [2, 3, 0, 1]
 
     step_num = len(sw_id)
 
@@ -693,7 +696,8 @@ if __name__ == "__main__":
 
     # swing_time
     # swing_time = [[1.0, 4.0], [5.0, 8.0]]
-    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
+    #swing_time = [[1.0, 4.0], [5.0, 8.0], [9.0, 12.0], [13.0, 16.0]]
+    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 9.0]]    # dynamic
 
     step_clear = 0.05
 
