@@ -124,7 +124,7 @@ def casannis(int_freq):
     rh_msg.pose.orientation = rhand_init.pose.orientation
 
     # Construct the class the optimization problem
-    walk = Walking(mass=95, N=40, dt=0.2)
+    walk = Walking(mass=95, N=40, dt=0.2, payload_mass=5.0)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
@@ -135,7 +135,7 @@ def casannis(int_freq):
     interpl = walk.interpolate(sol, contacts[swing_id-1], swing_tgt, swing_clear, swing_t, int_freq)
 
     # All points to be published
-    N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpl. frequency
+    N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpl. frequency
     executed_trj = N_total - 1
 
     # contact detection

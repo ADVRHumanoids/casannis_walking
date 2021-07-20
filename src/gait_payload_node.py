@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 from centauro_contact_detection.msg import Contacts as Contacts_msg
-from gait_with_payload_nonlinear import Gait
+from gait_with_payload_backward_arms import Gait
 
 # radius of centauro wheels
 R = 0.078
@@ -162,7 +162,7 @@ def casannis(int_freq):
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
     # All points to be published
-    N_total = int(walk._N * walk._dt * int_freq)  # total points --> total time * interpolation frequency
+    N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
 
     # executed trj points
     executed_trj = []

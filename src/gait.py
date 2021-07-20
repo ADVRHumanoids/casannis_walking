@@ -30,12 +30,13 @@ class Gait:
             dt (float): discretization step
         """
 
-        self._N = N 
+        self._Nseg = N
         self._dt = dt   # dt used for optimization knots
+        self._problem_duration = N * dt
         self._mass = mass
-        self._time = [(i * dt) for i in range(N)]
 
-        #gravity = np.array([0, 0, -9.81])
+        self._knot_number = knot_number = N + 1  # number of knots is one more than segments number
+        self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         # define dimensions
         sym_t = cs.SX
@@ -65,9 +66,9 @@ class Gait:
         self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
 
         # construct the optimization problem (variables, cost, constraints, bounds)
-        X = sym_t.sym('X', N * dimx)  # state is an SX for all knots
-        U = sym_t.sym('U', N * dimu)  # for all knots
-        F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
+        X = sym_t.sym('X', knot_number * dimx)  # state is an SX for all knots
+        U = sym_t.sym('U', knot_number * dimu)  # for all knots
+        F = sym_t.sym('F', knot_number * (ncontacts * dimf))  # for all knots
         P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
@@ -79,7 +80,7 @@ class Gait:
         }
 
         # iterate over knots starting from k = 0
-        for k in range(N):
+        for k in range(knot_number):
 
             x_slice1 = k * dimx
             x_slice2 = (k + 1) * dimx
@@ -151,12 +152,12 @@ class Gait:
         """
 
         # lists for assigning bounds
-        Xl = [0] * self._dimx * self._N  # state lower bounds (for all knots)
-        Xu = [0] * self._dimx * self._N  # state upper bounds
-        Ul = [0] * self._dimu * self._N  # control lower bounds
-        Uu = [0] * self._dimu * self._N  # control upper bounds
-        Fl = [0] * self._dimf_tot * self._N  # force lower bounds
-        Fu = [0] * self._dimf_tot * self._N  # force upper bounds
+        Xl = [0] * self._dimx * self._knot_number  # state lower bounds (for all knots)
+        Xu = [0] * self._dimx * self._knot_number  # state upper bounds
+        Ul = [0] * self._dimu * self._knot_number  # control lower bounds
+        Uu = [0] * self._dimu * self._knot_number  # control upper bounds
+        Fl = [0] * self._dimf_tot * self._knot_number  # force lower bounds
+        Fu = [0] * self._dimf_tot * self._knot_number  # force upper bounds
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
@@ -169,11 +170,6 @@ class Gait:
 
         # swing feet positions at maximum clearance
         clearance_swing_position = []
-
-        print("Contacts are:", contacts)
-        print("swing target:", swing_tgt)
-        print("swing id:", swing_id)
-        print("step number:", step_num)
 
         for i in range(step_num):
             if contacts[swing_id[i]][2] >= swing_tgt[i][2]:
@@ -189,12 +185,11 @@ class Gait:
                 final_contacts.append(swing_tgt[swing_id.index(i)])
             else:
                 final_contacts.append(contacts[i])
-        print("Final contacts are", final_contacts)
 
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(self._knot_number):
 
             # slice indices for bounds at knot k
             x_slice1 = k * self._dimx
@@ -205,7 +200,7 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._N,
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._knot_number,
                                                              final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
@@ -311,7 +306,7 @@ class Gait:
         """
 
         # start and end times of optimization problem
-        t_tot = [0.0, self._N * self._dt]
+        t_tot = [0.0, self._problem_duration]
 
         # state
         state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
@@ -350,7 +345,7 @@ class Gait:
         x_old = solution['x'][0:9]  # initial state
         x_all = []  # list to append all states
 
-        for ii in range(self._N):  # loop for knots
+        for ii in range(self._knot_number):  # loop for knots
             # control input to change in every knot
             u_old = solution['u'][self._dimu * ii:self._dimu * (ii + 1)]
             for j in range(self._n):  # loop for interpolation points
@@ -359,9 +354,9 @@ class Gait:
                 x_old = x_next  # refreshing the current state
             # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
-        self._t = [(ii * delta_t) for ii in range(self._N * self._n)]
+        self._t = [(ii * delta_t) for ii in range(self._Nseg * self._n)]
         for i in range(self._dimx):  # loop for every component of the state vector
-            for j in range(self._N * self._n):  # loop for every point of interpolation
+            for j in range(self._Nseg * self._n):  # loop for every point of interpolation
                 # append the value of x_i component on j point of interpolation
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
@@ -382,7 +377,7 @@ class Gait:
 
             # append the spline (by casadi) in the i element of the list force_func
             force_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._time],
+                                                [self._tjunctions],
                                                 solution['F'][i::self._dimf_tot]))
             # store the interpolation points for each force component in the i element of the list int_force
             # primary dimension = number of force components
@@ -411,7 +406,7 @@ class Gait:
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
                 plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
-                #plt.plot([i * self._dt for i in range(self._N)], solution['x'][self._dimc * i + j], '.')
+                #plt.plot(self._tjunctions, solution['x'][self._dimc * i + j::self._dimx], 'o')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             plt.title(name)
@@ -434,8 +429,8 @@ class Gait:
 
         # plot swing trajectory
         # All points to be published
-        N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
-        s = np.linspace(0, self._dt * self._N, N_total)
+        N_total = int(self._problem_duration * resol)  # total points --> total time * frequency
+        s = np.linspace(0, self._problem_duration, N_total)
         coord_labels = ['x', 'y', 'z']
         for j in range(len(results['sw'])):
             plt.figure()
