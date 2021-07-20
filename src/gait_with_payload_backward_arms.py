@@ -114,8 +114,8 @@ class Gait:
                     1e2, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
             if k == self._N - 1:
-                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, 0.277, 0.355]
-                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, -0.277, 0.355]
+                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, 0.15, 0.41]
+                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.07, -0.15, 0.41]
                 cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
                 cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
             J.append(cost_function)
@@ -291,7 +291,7 @@ class Gait:
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
             DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
@@ -302,7 +302,7 @@ class Gait:
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k)
+                k, self._N)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
@@ -330,11 +330,11 @@ class Gait:
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([-0.15, 0.1, 0.3]))      # left
-            gu.append(np.array([0.0, 0.35, 0.4]))
+            gl.append(np.array([-0.4, 0.1, 0.35]))      # left
+            gu.append(np.array([-0.06, 0.35, 0.45]))
 
-            gl.append(np.array([-0.15, -0.35, 0.3]))     # right
-            gu.append(np.array([0.0, -0.1, 0.4]))
+            gl.append(np.array([-0.4, -0.35, 0.35]))     # right
+            gu.append(np.array([-0.06, -0.1, 0.45]))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -645,7 +645,7 @@ class Gait:
 if __name__ == "__main__":
 
     # initial state
-    c0 = np.array([0.0704, 0.000, -0.017])
+    c0 = np.array([0.065, 0.000, 0.02])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
@@ -660,12 +660,12 @@ if __name__ == "__main__":
 
     # mov contacts
     lmoving_contact = [
-        np.array([0.0, 0.277, 0.365]),
+        np.array([-0.0017, 0.15, 0.4325]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([0.0, -0.277, 0.365]),
+        np.array([-0.0017, -0.15, 0.4325]),
         np.zeros(3),
     ]
 
