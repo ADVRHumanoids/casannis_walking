@@ -4,6 +4,8 @@ from matplotlib import pyplot as plt
 import trj_interpolation as interpol
 import time
 
+import constraints
+import costs
 
 class Walking:
     """
@@ -33,6 +35,9 @@ class Walking:
         self._dt = dt   # dt used for optimization knots
         self._mass = mass
         self._time = [(i * dt) for i in range(self._N)]
+
+        self._knot_number = knot_number = N + 1   # number of knots is one more than segments number
+        self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
 
         gravity = np.array([0, 0, -9.81])
 
@@ -64,9 +69,9 @@ class Walking:
         self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
 
         # construct the optimization problem (variables, cost, constraints, bounds)
-        X = sym_t.sym('X', N * dimx)    # state is an SX for all knots
-        U = sym_t.sym('U', N * dimu)    # for all knots
-        F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
+        X = sym_t.sym('X', knot_number * dimx)    # state is an SX for all knots
+        U = sym_t.sym('U', knot_number * dimu)    # for all knots
+        F = sym_t.sym('F', knot_number * (ncontacts * dimf))  # for all knots
         P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
@@ -78,7 +83,7 @@ class Walking:
         }
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(knot_number):
 
             # slice indices for variables at knot k
             x_slice1 = k * dimx
@@ -165,12 +170,12 @@ class Walking:
         """
 
         # lists for assigning bounds
-        Xl = [0] * self._dimx * self._N     # state lower bounds (for all knots)
-        Xu = [0] * self._dimx * self._N     # state upper bounds
-        Ul = [0] * self._dimu * self._N     # control lower bounds
-        Uu = [0] * self._dimu * self._N     # control upper bounds
-        Fl = [0] * self._dimf_tot * self._N     # force lower bounds
-        Fu = [0] * self._dimf_tot * self._N     # force upper bounds
+        Xl = [0] * self._dimx * self._knot_number     # state lower bounds (for all knots)
+        Xu = [0] * self._dimx * self._knot_number     # state upper bounds
+        Ul = [0] * self._dimu * self._knot_number     # control lower bounds
+        Uu = [0] * self._dimu * self._knot_number    # control upper bounds
+        Fl = [0] * self._dimf_tot * self._knot_number     # force lower bounds
+        Fu = [0] * self._dimf_tot * self._knot_number    # force upper bounds
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
@@ -185,7 +190,7 @@ class Walking:
             clearance_swing_position = swing_tgt[0:2].tolist() + [swing_tgt[2] + swing_clearance]
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(self._knot_number):
 
             # slice indices for bounds at knot k
             x_slice1 = k * self._dimx
@@ -201,8 +206,8 @@ class Walking:
                 x_min = x0
 
             else:
-                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
-                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
+                x_max = np.full(9, cs.inf)
+                x_min = -np.full(9, cs.inf)
 
             Xu[x_slice1:x_slice2] = x_max
             Xl[x_slice1:x_slice2] = x_min
@@ -371,7 +376,7 @@ class Walking:
 
             # append the spline (by casadi) in the i element of the list force_func
             force_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._time],
+                                                [self._tjunctions],
                                                 solution['F'][i::self._dimf_tot]))
 
             # store the interpolation points for each force component in the i element of the list int_force
@@ -413,7 +418,7 @@ class Walking:
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
                 plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
-                #plt.plot(self._time, solution['x'][self._dimc * i + j::self._dimx], 'o')
+                plt.plot(self._tjunctions, solution['x'][self._dimc * i + j::self._dimx], 'o')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             #plt.legend(['x', 'xopt', 'y', 'yopt', 'z', 'zopt'])
