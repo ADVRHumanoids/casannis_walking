@@ -14,14 +14,13 @@ global_gravity = np.array([0.0, 0.0, -9.81])
 class Gait:
     """
     TODO:
-    1) Tune the case of nonlinear optimization (Virtual force), tested in simulation and achieves quite good scenarios
-    2) Tune the linear optimization (box constraint z dimension)
-    3) try with arms in the back configuration, modify box constraints
-    4) handcraft trajectory for switching arms to backward configuration
-    5) Formulate box constraint that will exclude a central box of torso
-    6) Study the dynamics of the problem and compare different possibilities
-    7) compute estimated CoM and plot this
+    1) Try backward arm config nonlinear case
+    2) Formulate box constraint that will exclude a central box of torso
+    3) trade-off between CoM and arm movement
 
+
+    8) formulate analytical cost - integrated residual minimization
+    6) Study the dynamics of the problem and compare different possibilities
     8) Add pelvis orientation decision variables
     9) Try to optimize for footholds
 
@@ -559,6 +558,37 @@ class Gait:
 
         return mov_cont_points
 
+    def compute_equivalent_CoM(self, masses, xyz_trajectories):
+        '''
+        Function that computes the equivalent CoM from a number of masses that follow trajectories.
+        Used for printing.
+        :param masses: list of masses that consist the system
+        :param xyz_trajectories: [mass1, ... massi], where mass1 = [x, y, z] where x, y, z the trajectories
+        :return: list of x, y, z trajectories of the equivalent CoM
+        '''
+
+        masses_number = len(masses)                 # number of masses
+        trj_points = len(xyz_trajectories[0][0])    # number of trajectory points
+
+        eq_CoM_trj = [[] for i in range(3)]         # list with 3 lists (x, y, z) of trajectory points
+
+        for i in range(trj_points):                 # loop over trj points
+
+            # lists of lists (for each mass) of 3 elements (x, y, z)
+            CoM_contribution = [[0, 0, 0] for ii in range(masses_number)]
+
+            for j in range(masses_number):      # loop over masses
+                for k in range(3):              # loop over x, y, z coordinates
+
+                    # save the term mass * mass_position / sum of masses
+                    CoM_contribution[j][k] = masses[j] * xyz_trajectories[j][k][i] / sum(masses)
+
+            # save the sum of the terms originating from each mass
+            for j in range(3):                  # loop over cartesian coordinates
+                eq_CoM_trj[j].append(sum([sublist[j] for sublist in CoM_contribution]))
+
+        return eq_CoM_trj
+
     def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
         '''
 
@@ -643,6 +673,21 @@ class Gait:
         #     plt.xlabel('X [m]')
         #     plt.ylabel('Z [m]')
 
+        # compute total support polygon including payload masses
+        # Construct lists with the trajectory position from the solution of the TO problem
+        CoM_optimal_position = []
+        payload1_optimal_position = []
+        payload2_optimal_position = []
+
+        for i in range(3):      # loop over cartesian coordinates
+            CoM_optimal_position.append(solution['x'][i::self._dimx])
+            payload1_optimal_position.append(solution['Pl_mov'][i::self._dimp_mov])
+            payload2_optimal_position.append(solution['Pr_mov'][i::self._dimp_mov])
+
+        # call the function that computes the equivalent CoM
+        total_CoM = self.compute_equivalent_CoM([self._mass, self._payload_mass, self._payload_mass],
+                                                [CoM_optimal_position, payload1_optimal_position, payload2_optimal_position])
+
         # Support polygon and CoM motion in the plane
         color_labels = ['red', 'green', 'blue', 'yellow']
         line_labels = ['-', '--', '-.', ':']
@@ -653,7 +698,8 @@ class Gait:
             SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
             SuP_y_coords.append(SuP_y_coords[0])
             plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2-0.4*i, color=color_labels[i])
-        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)
+        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)       # robot links - based CoM
+        plt.plot(total_CoM[1], total_CoM[0])        # equivalent CoM
         plt.grid()
         plt.title('Support polygon and CoM')
         plt.xlabel('Y [m]')
@@ -731,5 +777,4 @@ if __name__ == "__main__":
     print("last element", interpl['dp_mov_r'][2][-1])
     # print the results
     w.print_trj(sol, interpl, res, foot_contacts, sw_id)
-
 
