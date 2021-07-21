@@ -8,6 +8,7 @@ stack:
     - ["Postural"]
 
 constraints: ["JointLimits", "VelocityLimits"]
+#constraints: ["JointLimits", "VelocityLimits", "Collision"]
 
 Collision:
     type: CollisionConstraint

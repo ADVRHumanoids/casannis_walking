@@ -112,10 +112,10 @@ class Gait:
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
             if k > 0:  # moving contact velocity difference, aka a kind of acceleration
                 cost_function += costs.penalize_quantity(
-                    1e2, (DP_mov_l[u_slice1:u_slice2 - 1] - DP_mov_l[u_slice0:u_slice1 - 1])
+                    1e1, (DP_mov_l[u_slice1:u_slice2 - 1] - DP_mov_l[u_slice0:u_slice1 - 1])
                 )
                 cost_function += costs.penalize_quantity(
-                    1e2, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
             if k == self._knot_number - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [-0.0947, 0.15, 0.415]

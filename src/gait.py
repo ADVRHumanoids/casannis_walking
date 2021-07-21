@@ -6,6 +6,7 @@ import trj_interpolation as interpol
 import costs
 import constraints
 
+
 class Gait:
     """
     Assumptions:
