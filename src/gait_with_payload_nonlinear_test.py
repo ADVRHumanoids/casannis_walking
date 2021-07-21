@@ -1,38 +1,40 @@
 import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
-import trj_interpolation as interpol
-
 import costs
 import constraints
 
-import cubic_hermite_polynomial as cubic_spline
+from gait_with_payload import Gait as ParentGait
 
 global_gravity = np.array([0.0, 0.0, -9.81])
 
 
-class Gait(object):
+class Gait(ParentGait):
     """
-    TODO:
-    1) Try backward arm config nonlinear case
-    2) Formulate box constraint that will exclude a central box of torso
-    3) trade-off between CoM and arm movement
-
-
-    8) formulate analytical cost - integrated residual minimization
-    6) Study the dynamics of the problem and compare different possibilities
-    8) Add pelvis orientation decision variables
-    9) Try to optimize for footholds
+    This is a trial for optimization of both virtual moving contact position and virtual force.
+    Extra newton constraint is added for the dynamics of the mass of the payload.
 
     """
 
     def __init__(self, mass, N, dt, payload_mass):
-        """Gait class constructor
+        super(Gait, self).__init__(mass, N, dt, payload_mass)
+
+        problem = cs.opti()
+        
+
+        # virtual force
+        F_virt = cs.SX.sym('F_virt', self._dimu * self._knot_number)
+        self._trj['F_virt'] = F_virt
+        print(self._trj)
+
+    def __init__2(self, mass, N, dt, payload_mass):
+        """Walking class constructor
 
         Args:
             mass (float): robot mass
             N (int): horizon length
             dt (float): discretization step
+            payload_mass: mass attached to each arm
         """
 
         self._Nseg = N
@@ -43,7 +45,7 @@ class Gait(object):
         self._knot_number = knot_number = N + 1  # number of knots is one more than segments number
         self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
-        # mass of the payload
+        # mass of the payload of each arm
         self._payload_mass = payload_mass
 
         # define dimensions
@@ -84,7 +86,9 @@ class Gait(object):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay = np.array([0, 0, payload_mass * global_gravity[2]])  # virtual force
+
+        # virtual force
+        F_virt = sym_t.sym('F_virt', dimu * knot_number)
 
         P = list()
         g = list()  # list of constraint expressions
@@ -97,7 +101,8 @@ class Gait(object):
             'P_mov_l': P_mov_l,
             'P_mov_r': P_mov_r,
             'DP_mov_l': DP_mov_l,
-            'DP_mov_r': DP_mov_r
+            'DP_mov_r': DP_mov_r,
+            'F_virt': F_virt
         }
 
         # iterate over knots starting from k = 0
@@ -138,7 +143,7 @@ class Gait(object):
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
-                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], f_pay
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], F_virt[u_slice1:u_slice2]
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -151,6 +156,27 @@ class Gait(object):
                 state_constraint = constraints.state_constraint(
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
                 g.append(state_constraint)
+
+                # newton constraint for the payload mass, virtual force has opposite sign
+                payload_mass_constraint_l = constraints.newton_payload_constraint(P_mov_l[u_slice0:u_slice2],
+                                                                                  DP_mov_l[u_slice0:u_slice2],
+                                                                                  dt,
+                                                                                  k,
+                                                                                  payload_mass,
+                                                                                  -F_virt[u_slice0:u_slice1])
+                g.append(payload_mass_constraint_l['x'])
+                g.append(payload_mass_constraint_l['y'])
+                g.append(payload_mass_constraint_l['z'])
+
+                payload_mass_constraint_r = constraints.newton_payload_constraint(P_mov_r[u_slice0:u_slice2],
+                                                                                  DP_mov_r[u_slice0:u_slice2],
+                                                                                  dt,
+                                                                                  k,
+                                                                                  payload_mass,
+                                                                                  -F_virt[u_slice0:u_slice1])
+                g.append(payload_mass_constraint_r['x'])
+                g.append(payload_mass_constraint_r['y'])
+                g.append(payload_mass_constraint_r['z'])
 
             # moving contact spline acceleration continuity
             if 0 < k < (self._knot_number - 1):
@@ -187,7 +213,7 @@ class Gait(object):
 
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r),
+            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, F_virt),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -238,6 +264,10 @@ class Gait(object):
         Pr_movu = [0] * self._dimu * self._knot_number  # position of moving contact upper bounds
         DPr_movl = [0] * self._dimu * self._knot_number  # velocity of moving contact lower bounds
         DPr_movu = [0] * self._dimu * self._knot_number  # velocity of moving contact upper bounds
+
+        # virtual force
+        F_virtl = [0] * self._dimu * self._knot_number  # force lower bounds
+        F_virtu = [0] * self._dimu * self._knot_number  # force upper bounds
 
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
@@ -324,6 +354,10 @@ class Gait(object):
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
+            # virtual force bounds
+            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 1])
+            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 5])
+
             # foothold positions
             contact_params = constraints.set_contact_parameters(
                 contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
@@ -337,6 +371,13 @@ class Gait(object):
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
+
+                # newton constraint for payload mass
+                gl.append(np.zeros(3))
+                gu.append(np.zeros(3))
+
+                gl.append(np.zeros(3))
+                gu.append(np.zeros(3))
 
             if 0 < k < self._knot_number - 1:
                 gl.append(np.zeros(3))  # 2 moving contacts spline acc continuity
@@ -366,8 +407,8 @@ class Gait(object):
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl)
-        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu)
+        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virtl)
+        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virtu)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -384,6 +425,9 @@ class Gait(object):
         p_rmov_trj = cs.horzcat(self._trj['P_mov_r'])  # pack moving contact trj in a desired matrix
         dp_rmov_trj = cs.horzcat(self._trj['DP_mov_r'])  # pack moving contact trj in a desired matrix
 
+        # virtual force
+        f_virt_trj = cs.horzcat(self._trj['F_virt'])  # pack moving contact trj in a desired matrix
+
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
@@ -392,320 +436,21 @@ class Gait(object):
             'Pl_mov': self.evaluate(sol['x'], p_lmov_trj),
             'Pr_mov': self.evaluate(sol['x'], p_rmov_trj),
             'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
-            'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj)
+            'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj),
+            'F_virt': self.evaluate(sol['x'], f_virt_trj)  # virtual force
         }
-
-    def evaluate(self, solution, expr):
-        """ Evaluate a given expression
-
-        Args:
-            solution: given solution
-            expr: expression to be evaluated
-
-        Returns:
-            Numerical value of the given expression
-
-        """
-
-        # casadi function that symbolically maps the _nlp to the given expression
-        expr_fun = cs.Function('expr_fun', [self._nlp['x']], [expr], ['v'], ['expr'])
-
-        expr_value = expr_fun(v=solution)['expr'].toarray()
-
-        # make it a flat list
-        expr_value_flat = [i for sublist in expr_value for i in sublist]
-
-        return expr_value_flat
-
-    def interpolate(self, solution, sw_curr, sw_tgt, clearance, sw_t, resol):
-        """ Interpolate the trajectories generated by the solution of the problem
-
-        Args:
-            solution: solution of the problem (numerical values) is a directory
-                solution['x'] 9x30 --> optimized states
-                solution['f'] 12x30 --> optimized forces
-                solution['u'] 9x30 --> optimized control
-            sw_curr: initial position of the feet to be swinged
-            sw_tgt: target position of the feet to be swinged
-            clearance: swing clearance
-            sw_t: list of lists with swing times in secs e.g. [[a, b], [c, d]]
-            resol: interpolation resolution (points per second)
-
-        Returns: a dictionary with:
-            time list for interpolation times (in sec)
-            list of list with state trajectory points
-            list of lists with forces' trajectory points
-            list of lists with the swinging feet's trajectory points
-
-        """
-
-        # start and end times of optimization problem
-        t_tot = [0.0, self._problem_duration]
-
-        # state
-        state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
-
-        # forces
-        forces_trajectory = self.forces_interpolation(solution=solution)
-
-        # moving contacts
-        left_moving_contact_trajectory = self.moving_contact_interpolation(
-            p_mov_optimal=solution['Pl_mov'], dp_mov_optimal=solution['DPl_mov'], resolution=resol
-        )
-
-        right_moving_contact_trajectory = self.moving_contact_interpolation(
-            p_mov_optimal=solution['Pr_mov'], dp_mov_optimal=solution['DPr_mov'], resolution=resol
-        )
-        # swing leg trajectory planning & interpolation
-        sw_interpl = []
-        for i in range(len(sw_curr)):
-            # swing trajectories with one intemediate point
-            sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
-            # spline optimization
-            # sw_interpl.append(interpol.swing_trj_optimal_spline(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
-
-        return {
-            't': self._t,
-            'x': state_trajectory,
-            'f': forces_trajectory,
-            'p_mov_l': [i['p'] for i in left_moving_contact_trajectory],
-            'dp_mov_l': [i['dp'] for i in left_moving_contact_trajectory],
-            'ddp_mov_l': [i['ddp'] for i in left_moving_contact_trajectory],
-            'p_mov_r': [i['p'] for i in right_moving_contact_trajectory],
-            'dp_mov_r': [i['dp'] for i in right_moving_contact_trajectory],
-            'ddp_mov_r': [i['ddp'] for i in right_moving_contact_trajectory],
-            'sw': sw_interpl
-        }
-
-    def state_interpolation(self, solution, resolution):
-        """
-        Interpolate the state vector of the problem using the state equation
-        :param solution: optimal solution
-        :param resolution: resolution of the trajectory, points per secong
-        :return: list of list with state trajectory points
-        """
-
-        delta_t = 1.0 / resolution  # dt for interpolation
-
-        # intermediate points between two knots --> time interval * resolution
-        self._n = int(self._dt * resolution)
-
-        x_old = solution['x'][0:9]  # initial state
-        x_all = []  # list to append all states
-
-        for ii in range(self._knot_number):  # loop for knots
-            # control input to change in every knot
-            u_old = solution['u'][self._dimu * ii:self._dimu * (ii + 1)]
-            for j in range(self._n):  # loop for interpolation points
-                x_all.append(x_old)  # storing state in the list 600x9
-                x_next = self._integrator(x_old, u_old, delta_t)  # next state
-                x_old = x_next  # refreshing the current state
-            # initialize state and time lists to gather the data
-        int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
-        self._t = [(ii * delta_t) for ii in range(self._Nseg * self._n)]
-        for i in range(self._dimx):  # loop for every component of the state vector
-            for j in range(self._Nseg * self._n):  # loop for every point of interpolation
-                # append the value of x_i component on j point of interpolation
-                # in the element i of the list int_state
-                int_state[i].append(x_all[j][i])
-
-        return int_state
-
-    def forces_interpolation(self, solution):
-        """
-        Linear interpolation of the optimal forces
-        :param solution: optimal solution
-        :return: list of lists with the force trajectories
-        """
-
-        force_func = [[] for i in range(self._dimf_tot)]  # list to store the splines
-        int_force = [[] for i in range(self._dimf_tot)]  # list to store lists of points
-
-        for i in range(self._dimf_tot):  # loop for each component of the force vector
-
-            # append the spline (by casadi) in the i element of the list force_func
-            force_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._tjunctions],
-                                                solution['F'][i::self._dimf_tot]))
-            # store the interpolation points for each force component in the i element of the list int_force
-            # primary dimension = number of force components
-            int_force[i] = force_func[i][0](self._t)
-
-        return int_force
-
-    def moving_contact_interpolation(self, p_mov_optimal, dp_mov_optimal, resolution):
-        """
-        Interpolation of the moving contact trajectory as cubic spline.
-        :param p_mov_optimal: optimal solution for mov. contact position
-        :param dp_mov_optimal: optimal solution for mov. contact velocity
-        :param resolution: resolution for the trajectory, points per sec
-        :return: Trajectories generated from the cubic spline and its 1st and 2nd derivatives
-        """
-        mov_cont_splines = []
-        mov_cont_polynomials = []
-        mov_cont_points = []
-
-        for i in range(3):
-            pp = p_mov_optimal[i::self._dimu]
-            dppp = dp_mov_optimal[i::self._dimu]
-            ttt = self._tjunctions
-            mov_cont_splines.append(cubic_spline.CubicSpline(p_mov_optimal[i::self._dimu],
-                                                             dp_mov_optimal[i::self._dimu],
-                                                             self._tjunctions))
-
-            mov_cont_polynomials.append(mov_cont_splines[i].get_poly_objects())
-            mov_cont_points.append(mov_cont_splines[i].get_spline_trajectory(resolution))
-
-        return mov_cont_points
-
-    def compute_equivalent_CoM(self, masses, xyz_trajectories):
-        '''
-        Function that computes the equivalent CoM from a number of masses that follow trajectories.
-        Used for printing.
-        :param masses: list of masses that consist the system
-        :param xyz_trajectories: [mass1, ... massi], where mass1 = [x, y, z] where x, y, z the trajectories
-        :return: list of x, y, z trajectories of the equivalent CoM
-        '''
-
-        masses_number = len(masses)                 # number of masses
-        trj_points = len(xyz_trajectories[0][0])    # number of trajectory points
-
-        eq_CoM_trj = [[] for i in range(3)]         # list with 3 lists (x, y, z) of trajectory points
-
-        for i in range(trj_points):                 # loop over trj points
-
-            # lists of lists (for each mass) of 3 elements (x, y, z)
-            CoM_contribution = [[0, 0, 0] for ii in range(masses_number)]
-
-            for j in range(masses_number):      # loop over masses
-                for k in range(3):              # loop over x, y, z coordinates
-
-                    # save the term mass * mass_position / sum of masses
-                    CoM_contribution[j][k] = masses[j] * xyz_trajectories[j][k][i] / sum(masses)
-
-            # save the sum of the terms originating from each mass
-            for j in range(3):                  # loop over cartesian coordinates
-                eq_CoM_trj[j].append(sum([sublist[j] for sublist in CoM_contribution]))
-
-        return eq_CoM_trj
 
     def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
-        '''
-
-        Args:
-            solution: optimized decision variables
-            t_exec: list of last trj points that were executed (because of early contact or other)
-            results: results from interpolation
-            resol: interpolation resol
-            publish_freq: publish frequency - applies only when trajectories are interfaced with rostopics,
-                else publish_freq = resol
-
-        Returns: prints the nominal interpolated trajectories
-
-        '''
-
-        # Interpolated state plot
-        state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+        # plot virtual force
         plt.figure()
-        for i, name in enumerate(state_labels):
-            plt.subplot(3, 1, i + 1)
-            for j in range(self._dimc):
-                plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
-                # plt.plot([i * self._dt for i in range(self._N)], solution['x'][self._dimc * i + j], '.')
-            plt.grid()
-            plt.legend(['x', 'y', 'z'])
-            plt.title(name)
-        plt.xlabel('Time [s]')
-        # plt.savefig('../plots/gait_state_trj.png')
-
-        feet_labels = ['front left', 'front right', 'hind left', 'hind right']
-
-        # Interpolated force plot
-        plt.figure()
-        for i, name in enumerate(feet_labels):
-            plt.subplot(2, 2, i + 1)
-            for k in range(3):
-                plt.plot(results['t'], results['f'][3 * i + k], '-')
-            plt.grid()
-            plt.title(name)
-            plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
-        plt.xlabel('Time [s]')
-        # plt.savefig('../plots/gait_forces.png')
-
-        # Interpolated moving contact trajectory
-        mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
-        plt.figure()
-        for i, name in enumerate(mov_contact_labels):
-            plt.subplot(2, 3, i + 1)
-            for k in range(3):
-                plt.plot(results['t'], results[name][k], '-')
-                plt.grid()
-                plt.legend(['x', 'y', 'z'])
-            plt.ylabel(name)
-            plt.suptitle('Moving Contact trajectory')
-        plt.xlabel('Time [s]')
-
-        # # plot swing trajectory
-        # # All points to be published
-        # N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
-        # s = np.linspace(0, self._dt * self._N, N_total)
-        # coord_labels = ['x', 'y', 'z']
-        # for j in range(len(results['sw'])):
-        #     plt.figure()
-        #     for i, name in enumerate(coord_labels):
-        #         plt.subplot(3, 1, i + 1)
-        #         plt.plot(s, results['sw'][j][name])  # nominal trj
-        #         plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
-        #         plt.grid()
-        #         plt.legend(['nominal', 'real'])
-        #         plt.title('Trajectory ' + name)
-        #     plt.xlabel('Time [s]')
-        #
-        # # plot swing trajectory in two dimensions Z - X
-        # plt.figure()
-        # for j in range(len(results['sw'])):
-        #     plt.subplot(2, 2, j + 1)
-        #     plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
-        #     plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
-        #     plt.grid()
-        #     plt.legend(['nominal', 'real'])
-        #     plt.title('Trajectory Z- X')
-        #     plt.xlabel('X [m]')
-        #     plt.ylabel('Z [m]')
-
-        # compute total support polygon including payload masses
-        # Construct lists with the trajectory position from the solution of the TO problem
-        CoM_optimal_position = []
-        payload1_optimal_position = []
-        payload2_optimal_position = []
-
-        for i in range(3):      # loop over cartesian coordinates
-            CoM_optimal_position.append(solution['x'][i::self._dimx])
-            payload1_optimal_position.append(solution['Pl_mov'][i::self._dimp_mov])
-            payload2_optimal_position.append(solution['Pr_mov'][i::self._dimp_mov])
-
-        # call the function that computes the equivalent CoM
-        total_CoM = self.compute_equivalent_CoM([self._mass, self._payload_mass, self._payload_mass],
-                                                [CoM_optimal_position, payload1_optimal_position, payload2_optimal_position])
-
-        # Support polygon and CoM motion in the plane
-        color_labels = ['red', 'green', 'blue', 'yellow']
-        line_labels = ['-', '--', '-.', ':']
-        plt.figure()
-        for i in range(len(swing_id)):
-            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id[i]]]
-            SuP_x_coords.append(SuP_x_coords[0])
-            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
-            SuP_y_coords.append(SuP_y_coords[0])
-            plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2-0.4*i, color=color_labels[i])
-        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)       # robot links - based CoM
-        plt.plot(total_CoM[1], total_CoM[0])        # equivalent CoM
+        for k in range(3):
+            plt.plot(self._tjunctions, solution['F_virt'][k::3], '-')
         plt.grid()
-        plt.title('Support polygon and CoM')
-        plt.xlabel('Y [m]')
-        plt.ylabel('X [m]')
-        plt.xlim(0.5, -0.5)
-        plt.show()
+        plt.title("Virtual force in both moving contacts")
+        plt.legend(['x', 'y', 'z'])
+        plt.xlabel('Time [s]')
+
+        super(Gait, self).print_trj(solution, results, resol, contacts, swing_id, t_exec)
 
 
 if __name__ == "__main__":
@@ -774,7 +519,7 @@ if __name__ == "__main__":
         swing_currents.append(foot_contacts[sw_id[i]])
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
-    print("last element", interpl['dp_mov_r'][2][-1])
     # print the results
     w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+
 
