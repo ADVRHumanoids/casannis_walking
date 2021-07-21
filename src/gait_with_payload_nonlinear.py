@@ -27,11 +27,13 @@ class Gait:
             payload_mass: mass attached to each arm
         """
 
-        self._N = N
+        self._Nseg = N
         self._dt = dt  # dt used for optimization knots
+        self._problem_duration = N * dt
         self._mass = mass
-        self._time = [(i * dt) for i in range(self._N)]  # time junctions w/o the last one
-        self._tjunctions = [(i * dt) for i in range(self._N + 1)]  # time junctions from first to last
+
+        self._knot_number = knot_number = N + 1  # number of knots is one more than segments number
+        self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         # mass of the payload of each arm
         self._payload_mass = payload_mass
@@ -65,18 +67,18 @@ class Gait:
         self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
 
         # construct the optimization problem (variables, cost, constraints, bounds)
-        X = sym_t.sym('X', N * dimx)  # state is an SX for all knots
-        U = sym_t.sym('U', N * dimu)  # for all knots
-        F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
+        X = sym_t.sym('X', knot_number * dimx)  # state is an SX for all knots
+        U = sym_t.sym('U', knot_number * dimu)  # for all knots
+        F = sym_t.sym('F', knot_number * (ncontacts * dimf))  # for all knots
 
         # moving contact
-        P_mov_l = sym_t.sym('P_mov_l', N * dimp_mov)  # position knots for the virtual contact
-        P_mov_r = sym_t.sym('P_mov_r', N * dimp_mov)  # position knots for the virtual contact
-        DP_mov_l = sym_t.sym('DP_mov_l', N * dimp_mov)  # velocity knots for the virtual contact
-        DP_mov_r = sym_t.sym('DP_mov_r', N * dimp_mov)  # velocity knots for the virtual contact
+        P_mov_l = sym_t.sym('P_mov_l', knot_number * dimp_mov)  # position knots for the virtual contact
+        P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
+        DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
+        DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
 
         # virtual force
-        F_virt = sym_t.sym('F_virt', dimu * N)
+        F_virt = sym_t.sym('F_virt', dimu * knot_number)
 
         P = list()
         g = list()  # list of constraint expressions
@@ -94,7 +96,7 @@ class Gait:
         }
 
         # iterate over knots starting from k = 0
-        for k in range(N):
+        for k in range(knot_number):
 
             x_slice1 = k * dimx
             x_slice2 = (k + 1) * dimx
@@ -121,7 +123,7 @@ class Gait:
                 cost_function += costs.penalize_quantity(
                     1e2, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
                 )
-            if k == self._N - 1:
+            if k == self._knot_number - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
                 cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
@@ -167,7 +169,7 @@ class Gait:
                 g.append(payload_mass_constraint_r['z'])
 
             # moving contact spline acceleration continuity
-            if 0 < k < (self._N - 1):
+            if 0 < k < (self._knot_number - 1):
                 left_mov_contact_spline_acc_constraint = constraints.spline_acc_constraint_3D(
                     P_mov_l[u_slice0:u_slice2 + 3], DP_mov_l[u_slice0:u_slice2 + 3], dt, k
                 )
@@ -237,25 +239,25 @@ class Gait:
         rmov_contact_initial = mov_contact_initial[1]
 
         # lists for assigning bounds
-        Xl = [0] * self._dimx * self._N  # state lower bounds (for all knots)
-        Xu = [0] * self._dimx * self._N  # state upper bounds
-        Ul = [0] * self._dimu * self._N  # control lower bounds
-        Uu = [0] * self._dimu * self._N  # control upper bounds
-        Fl = [0] * self._dimf_tot * self._N  # force lower bounds
-        Fu = [0] * self._dimf_tot * self._N  # force upper bounds
-        Pl_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
-        Pl_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
-        DPl_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
-        DPl_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+        Xl = [0] * self._dimx * self._knot_number  # state lower bounds (for all knots)
+        Xu = [0] * self._dimx * self._knot_number  # state upper bounds
+        Ul = [0] * self._dimu * self._knot_number  # control lower bounds
+        Uu = [0] * self._dimu * self._knot_number  # control upper bounds
+        Fl = [0] * self._dimf_tot * self._knot_number  # force lower bounds
+        Fu = [0] * self._dimf_tot * self._knot_number  # force upper bounds
+        Pl_movl = [0] * self._dimu * self._knot_number  # position of moving contact lower bounds
+        Pl_movu = [0] * self._dimu * self._knot_number  # position of moving contact upper bounds
+        DPl_movl = [0] * self._dimu * self._knot_number  # velocity of moving contact lower bounds
+        DPl_movu = [0] * self._dimu * self._knot_number  # velocity of moving contact upper bounds
         # right
-        Pr_movl = [0] * self._dimu * self._N  # position of moving contact lower bounds
-        Pr_movu = [0] * self._dimu * self._N  # position of moving contact upper bounds
-        DPr_movl = [0] * self._dimu * self._N  # velocity of moving contact lower bounds
-        DPr_movu = [0] * self._dimu * self._N  # velocity of moving contact upper bounds
+        Pr_movl = [0] * self._dimu * self._knot_number  # position of moving contact lower bounds
+        Pr_movu = [0] * self._dimu * self._knot_number  # position of moving contact upper bounds
+        DPr_movl = [0] * self._dimu * self._knot_number  # velocity of moving contact lower bounds
+        DPr_movu = [0] * self._dimu * self._knot_number  # velocity of moving contact upper bounds
 
         # virtual force
-        F_virtl = [0] * self._dimu * self._N  # force lower bounds
-        F_virtu = [0] * self._dimu * self._N  # force upper bounds
+        F_virtl = [0] * self._dimu * self._knot_number  # force lower bounds
+        F_virtu = [0] * self._dimu * self._knot_number  # force upper bounds
 
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
@@ -290,7 +292,7 @@ class Gait:
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(self._knot_number):
 
             # slice indices for bounds at knot k
             x_slice1 = k * self._dimx
@@ -301,7 +303,8 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._N, final_state)
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)],
+                                                             k, self._knot_number, final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -324,7 +327,7 @@ class Gait:
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k, self._N)
+                k, self._knot_number)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
             DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
@@ -335,15 +338,15 @@ class Gait:
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -0.5), np.full(3, 0.5)],
-                k, self._N)
+                k, self._knot_number)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 1])  # np.full(3, cs.inf)
-            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 5])  # np.full(3, -cs.inf)
+            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 1])
+            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 5])
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
@@ -366,7 +369,7 @@ class Gait:
                 gl.append(np.zeros(3))
                 gu.append(np.zeros(3))
 
-            if 0 < k < self._N - 1:
+            if 0 < k < self._knot_number - 1:
                 gl.append(np.zeros(3))  # 2 moving contacts spline acc continuity
                 gu.append(np.zeros(3))
 
@@ -472,7 +475,7 @@ class Gait:
         """
 
         # start and end times of optimization problem
-        t_tot = [0.0, self._N * self._dt]
+        t_tot = [0.0, self._problem_duration]
 
         # state
         state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
@@ -525,7 +528,7 @@ class Gait:
         x_old = solution['x'][0:9]  # initial state
         x_all = []  # list to append all states
 
-        for ii in range(self._N):  # loop for knots
+        for ii in range(self._knot_number):  # loop for knots
             # control input to change in every knot
             u_old = solution['u'][self._dimu * ii:self._dimu * (ii + 1)]
             for j in range(self._n):  # loop for interpolation points
@@ -534,9 +537,9 @@ class Gait:
                 x_old = x_next  # refreshing the current state
             # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]  # primary dimension = number of state components
-        self._t = [(ii * delta_t) for ii in range(self._N * self._n)]
+        self._t = [(ii * delta_t) for ii in range(self._Nseg * self._n)]
         for i in range(self._dimx):  # loop for every component of the state vector
-            for j in range(self._N * self._n):  # loop for every point of interpolation
+            for j in range(self._Nseg * self._n):  # loop for every point of interpolation
                 # append the value of x_i component on j point of interpolation
                 # in the element i of the list int_state
                 int_state[i].append(x_all[j][i])
@@ -557,7 +560,7 @@ class Gait:
 
             # append the spline (by casadi) in the i element of the list force_func
             force_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._time],
+                                                [self._tjunctions],
                                                 solution['F'][i::self._dimf_tot]))
             # store the interpolation points for each force component in the i element of the list int_force
             # primary dimension = number of force components
@@ -646,7 +649,7 @@ class Gait:
         # plot virtual force
         plt.figure()
         for k in range(3):
-            plt.plot(self._time, solution['F_virt'][k::3], '-')
+            plt.plot(self._tjunctions, solution['F_virt'][k::3], '-')
         plt.grid()
         plt.title("Virtual force in both moving contacts")
         plt.legend(['x', 'y', 'z'])

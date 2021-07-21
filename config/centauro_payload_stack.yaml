@@ -9,6 +9,15 @@ stack:
 
 constraints: ["JointLimits", "VelocityLimits"]
 
+Collision:
+    type: CollisionConstraint
+    lib_name: libcartesio_collision_support.so
+    bound_scaling: 0.1
+    distance_threshold: 0.01
+    max_pairs: 10
+    collision_urdf_path: $(rospack find centauro_urdf)/urdf/capsule/centauro_capsules.urdf
+    collision_srdf_path: $(rospack find centauro_srdf)/srdf/capsule/centauro_capsules.srdf
+
 params:
  - &arm_indices [0, 1, 2]
 

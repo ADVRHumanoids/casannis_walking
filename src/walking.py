@@ -4,6 +4,9 @@ from matplotlib import pyplot as plt
 import trj_interpolation as interpol
 import time
 
+import constraints
+import costs
+
 
 class Walking:
     """
@@ -29,10 +32,13 @@ class Walking:
             dt (float): discretization step
         """
 
-        self._N = N 
+        self._Nseg = N
         self._dt = dt   # dt used for optimization knots
         self._mass = mass
-        self._time = [(i * dt) for i in range(self._N)]
+        self._problem_duration = N * dt
+
+        self._knot_number = knot_number = N + 1   # number of knots is one more than segments number
+        self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         gravity = np.array([0, 0, -9.81])
 
@@ -64,9 +70,9 @@ class Walking:
         self._integrator = cs.Function('integrator', [x, u, delta_t], [xf], ['x0', 'u', 'delta_t'], ['xf'])
 
         # construct the optimization problem (variables, cost, constraints, bounds)
-        X = sym_t.sym('X', N * dimx)    # state is an SX for all knots
-        U = sym_t.sym('U', N * dimu)    # for all knots
-        F = sym_t.sym('F', N * (ncontacts * dimf))  # for all knots
+        X = sym_t.sym('X', knot_number * dimx)    # state is an SX for all knots
+        U = sym_t.sym('U', knot_number * dimu)    # for all knots
+        F = sym_t.sym('F', knot_number * (ncontacts * dimf))  # for all knots
         P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
@@ -78,7 +84,7 @@ class Walking:
         }
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(knot_number):
 
             # slice indices for variables at knot k
             x_slice1 = k * dimx
@@ -88,49 +94,35 @@ class Walking:
             f_slice1 = k * dimf_tot
             f_slice2 = (k + 1) * dimf_tot
 
-            # dynamics constraint
-            if k > 0:
-                x_old = X[(k - 1) * dimx : x_slice1]  # save previous state
-                u_old = U[(k - 1) * dimu : u_slice1]  # prev control
-                dyn_k = self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'] - X[x_slice1:x_slice2]
-                g.append(dyn_k)
-
             # contact points
             p_k = sym_t.sym('p_' + str(k), ncontacts * dimc)
             P.append(p_k)
 
             # cost  function
+            cost_function = 0.0
+            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3],
+                                                                    p_k)  # penalize CoM position
+            cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM control
 
-            # horizontal distance of CoM from the mean of contact points
-            h_horz = X[x_slice1:x_slice2][0:2] - 0.25 * (p_k[0:2] + p_k[3:5] + p_k[6:8] + p_k[9:11])  # xy
+            J.append(cost_function)
 
-            # vertical distance between CoM and mean of feet
-            h_vert = X[x_slice1:x_slice2][2] - 0.25 * (p_k[2] + p_k[5] + p_k[8] + p_k[11]) - 0.68
+            # newton - euler dynamic constraints
+            newton_euler_constraint = constraints.newton_euler_constraint(
+                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2], p_k
+            )
+            g.append(newton_euler_constraint['newton'])
+            g.append(newton_euler_constraint['euler'])
 
-            j_k = 1e2 * cs.sumsqr(h_horz) + 1e3 * cs.sumsqr(h_vert) + \
-                  1e-0 * cs.sumsqr(U[u_slice1:u_slice2]) + 1e-3 * cs.sumsqr(F[f_slice1:f_slice2][0::3]) + \
-                  1e-3 * cs.sumsqr(F[f_slice1:f_slice2][1::3])
-
-            J.append(j_k)
-
-            # newton
-            ddc_k = X[x_slice1:x_slice2][6:9]
-            newton = mass*ddc_k - mass*gravity
-            for i in range(ncontacts):
-                f_i_k = F[f_slice1:f_slice2][3*i:3*(i+1)]  # force of i-th contact
-                newton -= f_i_k
-
-            g.append(newton)
-
-            # euler
-            c_k = X[x_slice1:x_slice2][0:3]
-            euler = np.zeros(dimf)
-            for i in range(ncontacts):
-                f_i_k = F[f_slice1:f_slice2][3*i:3*(i+1)]  # force of i-th contact
-                p_i_k = p_k[3*i:3*(i+1)]  # contact of i-th contact
-                euler += cs.cross(p_i_k - c_k, f_i_k)
-
-            g.append(euler)
+            # state constraint (triple integrator)
+            if k > 0:
+                x_old = X[(k - 1) * dimx: x_slice1]  # save previous state
+                u_old = U[(k - 1) * dimu: u_slice1]  # prev control
+                x_curr = X[x_slice1:x_slice2]
+                state_constraint = constraints.state_constraint(
+                    self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
+                g.append(state_constraint)
 
         # construct the solver
         self._nlp = {
@@ -165,12 +157,12 @@ class Walking:
         """
 
         # lists for assigning bounds
-        Xl = [0] * self._dimx * self._N     # state lower bounds (for all knots)
-        Xu = [0] * self._dimx * self._N     # state upper bounds
-        Ul = [0] * self._dimu * self._N     # control lower bounds
-        Uu = [0] * self._dimu * self._N     # control upper bounds
-        Fl = [0] * self._dimf_tot * self._N     # force lower bounds
-        Fu = [0] * self._dimf_tot * self._N     # force upper bounds
+        Xl = [0] * self._dimx * self._knot_number     # state lower bounds (for all knots)
+        Xu = [0] * self._dimx * self._knot_number     # state upper bounds
+        Ul = [0] * self._dimu * self._knot_number     # control lower bounds
+        Uu = [0] * self._dimu * self._knot_number    # control upper bounds
+        Fl = [0] * self._dimf_tot * self._knot_number     # force lower bounds
+        Fu = [0] * self._dimf_tot * self._knot_number    # force upper bounds
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
         P = list()  # parameter values
@@ -185,7 +177,7 @@ class Walking:
             clearance_swing_position = swing_tgt[0:2].tolist() + [swing_tgt[2] + swing_clearance]
 
         # iterate over knots starting from k = 0
-        for k in range(self._N):
+        for k in range(self._knot_number):
 
             # slice indices for bounds at knot k
             x_slice1 = k * self._dimx
@@ -201,8 +193,8 @@ class Walking:
                 x_min = x0
 
             else:
-                x_max = np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
-                x_min = -np.concatenate([[cs.inf], [cs.inf], [cs.inf], np.full(6, cs.inf)])
+                x_max = np.full(9, cs.inf)
+                x_min = -np.full(9, cs.inf)
 
             Xu[x_slice1:x_slice2] = x_max
             Xl[x_slice1:x_slice2] = x_min
@@ -328,7 +320,7 @@ class Walking:
         """
 
         # start and end times of optimization problem
-        t_tot = [0.0, self._N * self._dt]
+        t_tot = [0.0, self._problem_duration]
 
         delta_t = 1.0 / resol  # dt for interpolation
 
@@ -339,7 +331,7 @@ class Walking:
         x_old = solution['x'][0:9]  # initial state
         x_all = []  # list to append all states
 
-        for ii in range(self._N):   # loop for knots
+        for ii in range(self._knot_number):   # loop for knots
 
             # control input to change in every knot
             u_old = solution['u'][self._dimu*ii:self._dimu*(ii + 1)]
@@ -353,10 +345,10 @@ class Walking:
 
         # initialize state and time lists to gather the data
         int_state = [[] for i in range(self._dimx)]     # primary dimension = number of state components
-        self._t = [(ii*delta_t) for ii in range(self._N * self._n)]
+        self._t = [(ii*delta_t) for ii in range(self._Nseg * self._n)]
 
         for i in range(self._dimx):     # loop for every component of the state vector
-            for j in range(self._N * self._n):    # loop for every point of interpolation
+            for j in range(self._Nseg * self._n):    # loop for every point of interpolation
 
                 # append the value of x_i component on j point of interpolation
                 # in the element i of the list int_state
@@ -371,7 +363,7 @@ class Walking:
 
             # append the spline (by casadi) in the i element of the list force_func
             force_func[i].append(cs.interpolant('X_CONT', 'linear',
-                                                [self._time],
+                                                [self._tjunctions],
                                                 solution['F'][i::self._dimf_tot]))
 
             # store the interpolation points for each force component in the i element of the list int_force
@@ -413,7 +405,7 @@ class Walking:
             plt.subplot(3, 1, i + 1)
             for j in range(self._dimc):
                 plt.plot(results['t'], results['x'][self._dimc * i + j], '-')
-                #plt.plot(self._time, solution['x'][self._dimc * i + j::self._dimx], 'o')
+                plt.plot(self._tjunctions, solution['x'][self._dimc * i + j::self._dimx], 'o')
             plt.grid()
             plt.legend(['x', 'y', 'z'])
             #plt.legend(['x', 'xopt', 'y', 'yopt', 'z', 'zopt'])
@@ -437,8 +429,8 @@ class Walking:
 
         # plot swing trajectory
         # All points to be published
-        N_total = int(self._N * self._dt * resol)  # total points --> total time * frequency
-        s = np.linspace(0, self._dt * self._N, N_total)
+        N_total = int(self._problem_duration * resol)  # total points --> total time * frequency
+        s = np.linspace(0, self._problem_duration, N_total)
         coord_labels = ['x', 'y', 'z']
         plt.figure()
         for i, name in enumerate(coord_labels):
