@@ -23,12 +23,9 @@
     <arg name="clearance" default="0.05"/>
     <arg name="min_force" default="100"/>
 
-    <!--group if="$(arg dynamic)">
-        <arg name="swing_t1" value="[2.0, 4.5]"/>
-        <arg name="swing_t2" value="[5.5, 8.0]"/>
-        <arg name="swing_t3" value="[9.0, 11.5]"/>
-        <arg name="swing_t4" value="[12.5, 15.0]"/>
-    </--group-->
+    <!-- Select Gait -->
+    <arg name="forward_arms_config" default="True"/>
+    <arg name="linear_fvirtual" default="False"/>
 
     <node name="casannis" pkg="casannis_walking" type="gait_payload_node.py" output="screen">
         <param name="sw_id" value="$(arg swing_id)"/>
@@ -43,5 +40,8 @@
         <param name="plots" value="$(arg plots)"/>
         <param name="clear" value="$(arg clearance)"/>
         <param name="min_for" value="$(arg min_force)"/>
+
+        <param name="forward_arms" value="$(arg forward_arms_config)"/>
+        <param name="linear_fvirt" value="$(arg linear_fvirtual)"/>
     </node>
 </launch>

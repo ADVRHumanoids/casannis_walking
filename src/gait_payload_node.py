@@ -4,7 +4,6 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 from centauro_contact_detection.msg import Contacts as Contacts_msg
-from gait_with_payload_backward_arms import Gait
 
 # radius of centauro wheels
 R = 0.078
@@ -34,6 +33,21 @@ def casannis(int_freq):
     """
 
     rospy.init_node('casannis', anonymous=True)
+
+    # select gait among different developments
+    forward_arm_config = rospy.get_param("~forward_arms")
+    linear_fvirt = rospy.get_param("~linear_fvirt")
+
+    if forward_arm_config:
+        if linear_fvirt:
+            from gait_with_payload import Gait as SelectedGait
+        else:
+            from gait_with_payload import GaitNonlinear as SelectedGait
+    else:
+        if linear_fvirt:
+            from gait_with_payload_backward_arms import Gait as SelectedGait
+        else:
+            from gait_with_payload_backward_arms import GaitNonlinearBackward as SelectedGait
 
     # map feet to a string for publishing to the corresponding topic
     id_name = ['FL', 'FR', 'HL', 'HR']
@@ -151,7 +165,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = Gait(mass=95, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_mass=5.0)
+    walk = SelectedGait(mass=95, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_mass=5.0)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values

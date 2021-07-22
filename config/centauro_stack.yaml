@@ -37,17 +37,20 @@ Wheel2:
     distal_link: "wheel_2"
     lambda: 0.1
 
+
 Wheel3:
     type: "Cartesian"
     name: "HL_wheel"
     distal_link: "wheel_3"
     lambda: 0.1
 
+
 Wheel4:
     type: "Cartesian"
     name: "HR_wheel"
     distal_link: "wheel_4"
     lambda: 0.1
+
 
 LeftArm:
     type: "Cartesian"
