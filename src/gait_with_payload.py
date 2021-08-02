@@ -14,15 +14,15 @@ global_gravity = np.array([0.0, 0.0, -9.81])
 class Gait(object):
     """
     TODO:
-    1) Try backward arm config nonlinear case
-    2) Formulate box constraint that will exclude a central box of torso
-    3) trade-off between CoM and arm movement
+    1) Formulate box constraint that will exclude a central box of torso
+    2) trade-off between CoM and arm movement
+    3) create node to publish range of motion boxes in RViz
 
 
-    8) formulate analytical cost - integrated residual minimization
-    6) Study the dynamics of the problem and compare different possibilities
-    8) Add pelvis orientation decision variables
-    9) Try to optimize for footholds
+    3) formulate analytical cost - integrated residual minimization
+    4) Study the dynamics of the problem and compare different possibilities
+    5) Add pelvis orientation decision variables
+    6) Try to optimize for footholds
 
     """
 
@@ -120,19 +120,22 @@ class Gait(object):
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
+                                                     k, knot_number)  # penalize CoM jerk, that is the control
             if k > 0:       # moving contact velocity difference, aka a kind of acceleration
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]),
+                    k, knot_number
                 )
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1]),
+                    k, knot_number
                 )
             if k == self._knot_number - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_lmov_contact, k, knot_number)
+                cost_function += costs.penalize_quantity(1e3, default_rmov_contact, k, knot_number)
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -810,22 +813,39 @@ class GaitNonlinear(Gait):
 
             # cost  function
             cost_function = 0.0
-            cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
-            cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
+            # cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
+            # cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
+                                                     k , knot_number)  # penalize CoM jerk, that is the control
             if k > 0:       # moving contact velocity difference, aka a kind of acceleration
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1])
+                    1e1, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]),
+                    k, knot_number
                 )
                 cost_function += costs.penalize_quantity(
-                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1])
+                    1e1, (DP_mov_r[u_slice1:u_slice2 - 1] - DP_mov_r[u_slice0:u_slice1 - 1]),
+                    k, knot_number
                 )
-            if k == self._knot_number - 1:
-                default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
-                default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
+            # if k == self._knot_number - 1:
+            #     default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
+            #     default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
+            #     cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
+            #     cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
+
+            # test hands penalization over whole trajectory
+            cost_CoM = 1e3
+            cost_function += costs.penalize_horizontal_CoM_position(cost_CoM, X[x_slice1:x_slice1 + 3],
+                                                                    p_k)  # penalize CoM position
+            cost_function += costs.penalize_vertical_CoM_position(cost_CoM, X[x_slice1:x_slice1 + 3], p_k)
+
+            cost_fraction = 0.001
+            cost_hands = cost_fraction * 1e3
+            default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
+            default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
+            cost_function += costs.penalize_quantity(cost_hands, default_lmov_contact, k, knot_number, cost_CoM)
+            cost_function += costs.penalize_quantity(cost_hands, default_rmov_contact, k, knot_number, cost_CoM)
+
             J.append(cost_function)
 
             # newton - euler dynamic constraints

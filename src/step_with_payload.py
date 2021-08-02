@@ -111,15 +111,17 @@ class Walking:
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)     # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])   # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2])    # penalize CoM control
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2], k, knot_number)    # penalize CoM control
             if k > 0:
-                cost_function += costs.penalize_quantity(1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]))    # penalize CoM control
-                cost_function += costs.penalize_quantity(1e2, (DP_mov_r[u_slice1:u_slice2-1] - DP_mov_r[u_slice0:u_slice1-1]))    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (DP_mov_l[u_slice1:u_slice2-1] - DP_mov_l[u_slice0:u_slice1-1]),
+                                                         k, knot_number)    # penalize CoM control
+                cost_function += costs.penalize_quantity(1e2, (DP_mov_r[u_slice1:u_slice2-1] - DP_mov_r[u_slice0:u_slice1-1]),
+                                                         k, knot_number)    # penalize CoM control
             if k == self._knot_number - 1:
                 default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
                 default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
-                cost_function += costs.penalize_quantity(1e3, default_lmov_contact)
-                cost_function += costs.penalize_quantity(1e3, default_rmov_contact)
+                cost_function += costs.penalize_quantity(1e3, default_lmov_contact, k, knot_number)
+                cost_function += costs.penalize_quantity(1e3, default_rmov_contact, k, knot_number)
             J.append(cost_function)
 
             # newton - euler dynamic constraints

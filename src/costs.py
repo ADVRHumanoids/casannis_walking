@@ -38,6 +38,11 @@ def penalize_xy_forces(weight, forces):
     return cost_term
 
 
-def penalize_quantity(weight, quantity):
+def penalize_quantity(weight, quantity, knot, knot_num, final_weight=None):
 
-    return weight * cs.sumsqr(quantity)
+    if final_weight is not None and knot == knot_num - 1:
+        cost = final_weight * cs.sumsqr(quantity)
+    else:
+        cost = weight * cs.sumsqr(quantity)
+
+    return cost

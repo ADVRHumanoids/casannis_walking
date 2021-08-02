@@ -99,8 +99,8 @@ class Gait:
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
-            cost_function += costs.penalize_quantity(1e-0,
-                                                     U[u_slice1:u_slice2])  # penalize CoM jerk, that is the control
+            cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
+                                                     k, knot_number)  # penalize CoM jerk, that is the control
             J.append(cost_function)
 
             # newton - euler dynamic constraints
@@ -480,10 +480,10 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     #sw_id = 2
-    sw_id = [2, 3, 0, 1]
+    sw_id = [0,1,2,3]
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.2
+    dx = 0.0
     dy = 0.0
     dz = 0.0
     swing_target = np.array([[foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz]
