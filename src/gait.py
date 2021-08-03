@@ -386,7 +386,7 @@ class Gait:
 
         return int_force
 
-    def print_trj(self, solution, results, resol, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
         '''
         Args:
             solution: optimized decision variables
@@ -458,6 +458,24 @@ class Gait:
             plt.ylabel('Z [m]')
             # plt.savefig('../plots/gait_swing_zx.png')
 
+        # Support polygon and CoM motion in the plane
+        color_labels = ['red', 'green', 'blue', 'yellow']
+        line_labels = ['-', '--', '-.', ':']
+        plt.figure()
+        for i in range(len(swing_id)):
+            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id[i]]]
+            SuP_x_coords.append(SuP_x_coords[0])
+            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
+            SuP_y_coords.append(SuP_y_coords[0])
+            plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2 - 0.4 * i, color=color_labels[i])
+        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)  # robot links - based CoM
+        plt.grid()
+        plt.title('Support polygon and CoM')
+        plt.xlabel('Y [m]')
+        plt.ylabel('X [m]')
+        plt.xlim(0.5, -0.5)
+        plt.show()
+
         plt.show()
 
 
@@ -481,6 +499,8 @@ if __name__ == "__main__":
     # swing id from 0 to 3
     #sw_id = 2
     sw_id = [0,1,2,3]
+
+    step_num = len(sw_id)
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
     dx = 0.0
@@ -511,10 +531,12 @@ if __name__ == "__main__":
     # interpolate the values, pass values and interpolation resolution
     res = 300
 
-    swing_currents = [foot_contacts[sw_id[0]], foot_contacts[sw_id[1]]]
+    swing_currents = []
+    for i in range(step_num):
+        swing_currents.append(foot_contacts[sw_id[i]])
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
     # print the results
-    w.print_trj(sol, interpl, res)
+    w.print_trj(sol, interpl, res, foot_contacts, sw_id)
 
 
