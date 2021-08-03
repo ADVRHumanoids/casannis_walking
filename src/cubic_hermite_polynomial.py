@@ -41,6 +41,17 @@ def plot_spline(point_list):
     plt.show()
 
 
+def integrate_numerically(poly_obj, t_junctions):
+
+    # simpson's 1/3 rule
+    # integral(f) from a to b = (b-a)/6 * (f(a) + 4 * f((a+b)/2) + f(b))
+    numerical_integration = (t_junctions[1]-t_junctions[0])/6.0 * (
+            poly_obj(t_junctions[0]) + 4.0 * poly_obj((t_junctions[0]+t_junctions[1])/2) + poly_obj(t_junctions[1])
+    )
+
+    return numerical_integration
+
+
 class CubicPolynomial:
     '''
     Construct a class of a cubic polynomial from zero and first derivative values
@@ -156,6 +167,60 @@ class CubicPolynomial:
             'ddp': second_derivative_trj
         }
 
+    def get_coeffs_of_squared_deriv(self, desired_derivative=0):
+        """
+        This function returns the coefficients of the squared cubic polynomial or its squared derivatives
+        i.e. poly ^ 2 = (d*x^3 + c*x^2 + b*x + a) ^ 2
+        :param desired_derivative: the derivative of the cubic polynomial that we want
+        :return: list of coefficients of the resulted polynomial
+        """
+        # f^2 = a^2 + 2*a*b*x + 2*a*c*x^2 + 2*a*d*x^3 + b^2*x^2 + 2*b*c*x^3 + 2*b*d*x^4 + c^2*x^4 + 2*c*d*x^5 + d^2*x^6
+        # df^2 = b^2 + 4*b*c*x + 6*b*d*x^2 + 4*c^2*x^2 + 12*c*d*x^3 + 9*d^2*x^4
+        # ddf^2 = 4*c^2 + 24*c*d*x + 36*d^2*x^2
+
+        # dictionary from which we select the desired polynomial coeffs
+        # these have been computed in matlab symbolically
+        switcher = {
+            0: [self._a**2.0,
+                2.0*self._a*self._b,
+                2.0*self._a*self._c + self._b**2.0,
+                2.0*self._a*self._d + 2.0*self._b*self._c,
+                2.0*self._b*self._d + self._c**2.0,
+                2.0*self._c*self._d,
+                self._d**2.0],
+
+            1: [self._b**2.0,
+                4.0*self._b*self._c,
+                6.0*self._b*self._d + 4.0*self._c**2.0,
+                12.0*self._c*self._d,
+                9.0*self._d**2.0],
+
+            2: [4.0*self._c**2.0,
+                24.0*self._c*self._d,
+                36.0*self._d**2.0],
+        }
+
+        # Get the function from switcher dictionary
+        desired_poly_coeffs = switcher.get(desired_derivative, lambda: "Invalid derivative")
+
+        return desired_poly_coeffs
+
+    def integrate_squared_deriv(self, desired_derivative=0):
+        """
+        This function computes the numerical integral of the squared cubic polynomial or its squared derivatives
+        :param desired_derivative: the order of the derivative to integrate
+        :return: Value of the integral computed numerically (see integrate_numerically function)
+        """
+
+        # Get the function from switcher dictionary
+        desired_poly_object = np.polynomial.polynomial.Polynomial(self.get_coeffs_of_squared_deriv(desired_derivative))
+
+        timings = [self._t0, self._t0 + self._T]
+
+        numerical_integral = integrate_numerically(desired_poly_object, timings)
+
+        return numerical_integral
+
 
 class CubicSpline:
     '''
@@ -269,13 +334,15 @@ if __name__ == "__main__":
     '''
 
     # dense polynomial
-    poly_object = CubicPolynomial([0.0, 2.0], [0.0, 0.0], 1)
+    poly_object = CubicPolynomial([0.0, 1.0], [0.0, 0.0], 1.0)
     polynomial = poly_object.get_poly_from_coeffs()
     timelist = np.linspace(0, 1, 10).tolist()
     points = poly_object.get_trajectory(timelist)
     plot_poly(points)
     value = poly_object.evaluate_second_derivative(0.0)
-    print(value)
+    #print(value)
+    integration = poly_object.integrate_squared_deriv(2)
+    print("Computed numerical integral: ", integration)
 
     # dense spline
     # poly_object = CubicSpline([0.0, 2.0, 3.5, 8.0], [0.0, 0.0, 1.0, 0.0], [1.0, 2.0, 3.5, 4])

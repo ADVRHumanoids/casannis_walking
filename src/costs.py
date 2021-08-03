@@ -1,6 +1,8 @@
 import casadi as cs
 import numpy as np
 
+from cubic_hermite_polynomial import CubicPolynomial
+
 
 def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, reference_position=None):
 
@@ -46,3 +48,72 @@ def penalize_quantity(weight, quantity, knot, knot_num, final_weight=None):
         cost = weight * cs.sumsqr(quantity)
 
     return cost
+
+
+def get_analytical_cost(weight, polynomial_dict, desired_derivative=0):
+    '''
+    This function computes an analytical cost (integral of the square) of a given cubic polynomial or its derivative
+    :param polynomial_dict:
+            polynomial_dict = {
+                               'p_list': p_list,
+                               'v_list': v_list,
+                               'T': T,
+                               't0': t0
+                              }
+    :param desired_derivative: the derivative that we want
+    :return: integral value of the polynomial
+    '''
+
+    # junction values and times for polynomial 1
+    p0 = polynomial_dict['p_list'][0]
+    p1 = polynomial_dict['p_list'][1]
+    v0 = polynomial_dict['v_list'][0]
+    v1 = polynomial_dict['v_list'][1]
+    T = polynomial_dict['T']
+    t0 = polynomial_dict['t0']
+
+    cubic_poly_object = CubicPolynomial([p0, p1], [v0, v1], T, t0)
+    analytical_cost = weight * cubic_poly_object.integrate_squared_deriv(desired_derivative)
+
+    return analytical_cost
+
+
+def get_analytical_cost_3D(weights, p_mov_list, dp_mov_list, dt, junction_index, desired_derivative=0):
+
+    dimensions = 3
+
+    p_mov_previous = p_mov_list[0:dimensions]
+    p_mov_current = p_mov_list[dimensions:2 * dimensions]
+
+    dp_mov_previous = dp_mov_list[0:dimensions]
+    dp_mov_current = dp_mov_list[dimensions:2 * dimensions]
+
+    analytical_cost_3D = []
+    for i in range(3):
+        polynomial_elements = {
+            'p_list': [p_mov_previous[i], p_mov_current[i]],
+            'v_list': [dp_mov_previous[i], dp_mov_current[i]],
+            'T': dt,
+            't0': (junction_index - 1) * dt
+        }
+
+        analytical_cost_3D.append(get_analytical_cost(weights[i], polynomial_elements, desired_derivative))
+
+    return {
+        'x': analytical_cost_3D[0],
+        'y': analytical_cost_3D[1],
+        'z': analytical_cost_3D[2]
+    }
+
+
+if __name__ == "__main__":
+
+    # dense polynomial
+    # poly_object = CubicPolynomial([0.0, 2.0], [0.0, 0.0], 1)
+    # polynomial = poly_object.get_poly_from_coeffs()
+
+    coeff_list = [3, 5, 3]
+    polynomial = np.polynomial.polynomial.Polynomial(coeff_list)
+
+    cost = integrate_numerically(polynomial, [2.0, 5.0])
+    print(cost)
