@@ -5,7 +5,16 @@ from cubic_hermite_polynomial import CubicPolynomial
 
 
 def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, reference_position=None):
-
+    '''
+    Penalize the distance of CoM from the mean of the sum of feet positions.
+    One thing to be improved here is that the reference point is affected by the position at the max_clearance_point.
+    This needs to be taken care more carefully.
+    :param weight:
+    :param CoM_position:
+    :param contact_positions:
+    :param reference_position: default is zero
+    :return: penalty term
+    '''
     if reference_position is None:
 
         contacts_horizontal_mean_position = 0.25 * (contact_positions[0:2] +

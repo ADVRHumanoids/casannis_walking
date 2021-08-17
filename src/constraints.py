@@ -196,15 +196,17 @@ def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
 
 def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, ncontacts, dt, steps_number=1):
     """
-    Assigns bounds for the force decision variables
-    :param min_fz:
-    :param max_f:
-    :param knot:
+    Assigns bounds for the force decision variables. Especially for the fz, it consists the unilateral constraint.
+    For the x, y compoenents the bounds are overlapped by the fricion pyramid constraints, thus, they do not really
+    affect the solver.
+    :param min_fz: minimum positive magnitude of the fz component
+    :param max_f: maximum magnitude of the fz component
+    :param knot: current knot of the problem
     :param swing_time_integral: a list of lists with time integrals (list in a list for one step)
     :param swing_id: a list with the ids (list with one element for one step)
-    :param ncontacts:
-    :param dt:
-    :param steps_number:
+    :param ncontacts: number of contacts
+    :param dt: time segment duration based on discretization of the nlp
+    :param steps_number: number of steps
     :return:
     """
     # force bounds
