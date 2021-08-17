@@ -98,7 +98,6 @@ class Gait:
             cost_function = 0.0
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
             J.append(cost_function)
@@ -118,6 +117,10 @@ class Gait:
                 state_constraint = constraints.state_constraint(
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
                 g.append(state_constraint)
+
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            g.append(np.array(friction_pyramid_constraint))
 
         # construct the solver
         self._nlp = {
@@ -179,6 +182,7 @@ class Gait:
             else:
                 clearance_swing_position.append(contacts[swing_id[i]][0:2].tolist() +
                                                 [swing_tgt[i][2] + swing_clearance])
+
         # compute mean horizontal position of final contacts
         final_contacts = []
         for i in range(4):
@@ -231,7 +235,11 @@ class Gait:
 
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6)) 
-            gu.append(np.zeros(6)) 
+            gu.append(np.zeros(6))
+
+            # friction pyramid
+            gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
+            gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -503,7 +511,7 @@ if __name__ == "__main__":
     step_num = len(sw_id)
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.0
+    dx = 0.1
     dy = 0.0
     dz = 0.0
     swing_target = np.array([[foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz]

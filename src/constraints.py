@@ -3,6 +3,7 @@ import casadi as cs
 
 gravity = np.array([0.0, 0.0, -9.81])
 # gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
 # gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
@@ -226,6 +227,25 @@ def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, nc
         'min': f_min,
         'max': f_max
     }
+
+
+def friction_pyramid(force_vector, friction_coeff, ncontacts=4):
+
+    friction_violation = []
+
+    for i in range(ncontacts):
+        force_x = force_vector[3*i]
+        force_y = force_vector[3*i + 1]
+        force_z = force_vector[3*i + 2]
+
+        x_violation_neg = force_x - friction_coeff * force_z    # fx < mi * fz
+        x_violation_pos = force_x + friction_coeff * force_z    # fx > -mi * fz
+        y_violation_neg = force_y - friction_coeff * force_z
+        y_violation_pos = force_y + friction_coeff * force_z
+
+        friction_violation += [x_violation_neg, x_violation_pos, y_violation_neg, y_violation_pos]
+
+    return friction_violation
 
 
 def bound_moving_contact_variables(p_mov_initial, dp_mov_initial, p_mov_bound, dp_mov_bound,

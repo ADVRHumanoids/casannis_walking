@@ -120,7 +120,6 @@ class Gait(object):
             # penalize CoM position
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
 
@@ -156,6 +155,10 @@ class Gait(object):
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
+
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            g.append(np.array(friction_pyramid_constraint))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -347,6 +350,10 @@ class Gait(object):
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
+
+            # friction pyramid
+            gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
+            gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
 
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
@@ -827,7 +834,6 @@ class GaitNonlinear(Gait):
             # penalize CoM position
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
 
@@ -863,6 +869,10 @@ class GaitNonlinear(Gait):
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
+
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            g.append(np.array(friction_pyramid_constraint))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -1071,8 +1081,8 @@ class GaitNonlinear(Gait):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 1])
-            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 5])
+            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 3])
+            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 3])
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
@@ -1083,6 +1093,10 @@ class GaitNonlinear(Gait):
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
+
+            # friction pyramid
+            gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
+            gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
 
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))

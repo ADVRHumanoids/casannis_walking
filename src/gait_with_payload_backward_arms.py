@@ -142,6 +142,10 @@ class Gait(ParentGait):
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
 
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            g.append(np.array(friction_pyramid_constraint))
+
             # state constraint (triple integrator)
             if k > 0:
                 x_old = X[(k - 1) * dimx: x_slice1]  # save previous state
@@ -334,6 +338,10 @@ class Gait(ParentGait):
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
 
+            # friction pyramid
+            gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
+            gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
+
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
@@ -495,7 +503,6 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             # penalize CoM position
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
-            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
 
@@ -531,6 +538,10 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
+
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            g.append(np.array(friction_pyramid_constraint))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -752,6 +763,10 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
             gu.append(np.zeros(6))
+
+            # friction pyramid
+            gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
+            gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
 
             if k > 0:       # state constraint
                 gl.append(np.zeros(self._dimx))
