@@ -11,7 +11,7 @@ global_gravity = np.array([0.0, 0.0, -9.81])
 
 class Gait(ParentGait):
 
-    def __init__(self, mass, N, dt, payload_mass):
+    def __init__(self, mass, N, dt, payload_masses):
         """Gait class constructor
 
         Args:
@@ -29,7 +29,8 @@ class Gait(ParentGait):
         self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         # mass of the payload
-        self._payload_mass = payload_mass
+        self._payload_mass_l = payload_masses[0]
+        self._payload_mass_r = payload_masses[1]
 
         # define dimensions
         sym_t = cs.SX
@@ -69,7 +70,8 @@ class Gait(ParentGait):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay = np.array([0, 0, payload_mass * global_gravity[2]])  # virtual force
+        f_pay_l = np.array([0, 0, self._payload_mass_l * global_gravity[2]])  # virtual force
+        f_pay_r = np.array([0, 0, self._payload_mass_r * global_gravity[2]])  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -137,7 +139,8 @@ class Gait(ParentGait):
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
-                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], f_pay
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
+                f_pay_l, f_pay_r
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -406,7 +409,7 @@ class Gait(ParentGait):
 
 class GaitNonlinearBackward(GaitNonlinearForward):
 
-    def __init__(self, mass, N, dt, payload_mass):
+    def __init__(self, mass, N, dt, payload_masses):
         """Gait class constructor
 
         Args:
@@ -424,7 +427,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         # mass of the payload
-        self._payload_mass = payload_mass
+        self._payload_mass_l = payload_masses[0]
+        self._payload_mass_r = payload_masses[1]
 
         # define dimensions
         sym_t = cs.SX
@@ -466,7 +470,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
 
         # virtual force
-        F_virt = sym_t.sym('F_virt', dimu * knot_number)
+        F_virt_l = sym_t.sym('F_virt_l', dimu * knot_number)
+        F_virt_r = sym_t.sym('F_virt_r', dimu * knot_number)
 
         P = list()
         g = list()  # list of constraint expressions
@@ -480,7 +485,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             'P_mov_r': P_mov_r,
             'DP_mov_l': DP_mov_l,
             'DP_mov_r': DP_mov_r,
-            'F_virt': F_virt
+            'F_virt_l': F_virt_l,
+            'F_virt_r': F_virt_r
         }
 
         # iterate over knots starting from k = 0
@@ -534,7 +540,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
-                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], F_virt[u_slice1:u_slice2]
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
+                F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -557,8 +564,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                                                                                   DP_mov_l[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
-                                                                                  payload_mass,
-                                                                                  -F_virt[u_slice0:u_slice1])
+                                                                                  self._payload_mass_l,
+                                                                                  -F_virt_l[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_l['x'])
                 g.append(payload_mass_constraint_l['y'])
                 g.append(payload_mass_constraint_l['z'])
@@ -567,8 +574,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                                                                                   DP_mov_r[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
-                                                                                  payload_mass,
-                                                                                  -F_virt[u_slice0:u_slice1])
+                                                                                  self._payload_mass_r,
+                                                                                  -F_virt_r[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_r['x'])
                 g.append(payload_mass_constraint_r['y'])
                 g.append(payload_mass_constraint_r['z'])
@@ -608,7 +615,7 @@ class GaitNonlinearBackward(GaitNonlinearForward):
 
         # construct the solver
         self._nlp = {
-            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, F_virt),
+            'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, F_virt_l, F_virt_r),
             'f': sum(J),
             'g': cs.vertcat(*g),
             'p': cs.vertcat(*P)
@@ -662,8 +669,10 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         DPr_movu = [0] * self._dimu * self._knot_number  # velocity of moving contact upper bounds
 
         # virtual force
-        F_virtl = [0] * self._dimu * self._knot_number  # force lower bounds
-        F_virtu = [0] * self._dimu * self._knot_number  # force upper bounds
+        F_virt_l_l = [0] * self._dimu * self._knot_number  # force lower bounds
+        F_virt_l_u = [0] * self._dimu * self._knot_number  # force upper bounds
+        F_virt_r_l = [0] * self._dimu * self._knot_number  # force lower bounds
+        F_virt_r_u = [0] * self._dimu * self._knot_number  # force upper bounds
 
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
@@ -751,8 +760,11 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virtu[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass + 1])
-            F_virtl[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass - 5])
+            F_virt_l_u[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass_l + 3])
+            F_virt_l_l[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass_l - 3])
+
+            F_virt_r_u[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass_r + 3])
+            F_virt_r_l[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass_r - 3])
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
@@ -807,8 +819,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
-        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virtl)
-        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virtu)
+        lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virt_l_l, F_virt_r_l)
+        ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virt_l_u, F_virt_r_u)
         lbg = cs.vertcat(*gl)
         ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
@@ -826,7 +838,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         dp_rmov_trj = cs.horzcat(self._trj['DP_mov_r'])  # pack moving contact trj in a desired matrix
 
         # virtual force
-        f_virt_trj = cs.horzcat(self._trj['F_virt'])  # pack moving contact trj in a desired matrix
+        f_virt_l_trj = cs.horzcat(self._trj['F_virt_l'])  # pack moving contact trj in a desired matrix
+        f_virt_r_trj = cs.horzcat(self._trj['F_virt_r'])  # pack moving contact trj in a desired matrix
 
         # return values of the quantities *_trj
         return {
@@ -837,7 +850,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             'Pr_mov': self.evaluate(sol['x'], p_rmov_trj),
             'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
             'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj),
-            'F_virt': self.evaluate(sol['x'], f_virt_trj)  # virtual force
+            'F_virt_l': self.evaluate(sol['x'], f_virt_l_trj),  # virtual force
+            'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj)  # virtual force
         }
 
 
@@ -894,7 +908,7 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinearBackward(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_mass=5.0)
+    w = GaitNonlinearBackward(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,

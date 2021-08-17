@@ -26,7 +26,7 @@ class Gait(object):
 
     """
 
-    def __init__(self, mass, N, dt, payload_mass):
+    def __init__(self, mass, N, dt, payload_masses):
         """Gait class constructor
 
         Args:
@@ -44,7 +44,8 @@ class Gait(object):
         self._tjunctions = [(i * dt) for i in range(knot_number)]  # time junctions from first to last
 
         # mass of the payload
-        self._payload_mass = payload_mass
+        self._payload_mass_l = payload_masses[0]
+        self._payload_mass_r = payload_masses[1]
 
         # define dimensions
         sym_t = cs.SX
@@ -84,7 +85,8 @@ class Gait(object):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay = np.array([0, 0, payload_mass * global_gravity[2]])  # virtual force
+        f_pay_l = np.array([0, 0, self._payload_mass_l * global_gravity[2]])  # virtual force
+        f_pay_r = np.array([0, 0, self._payload_mass_r * global_gravity[2]])  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -151,7 +153,8 @@ class Gait(object):
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
-                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2], f_pay
+                p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
+                f_pay_l, f_pay_r
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
