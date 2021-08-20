@@ -102,6 +102,9 @@ class Gait(object):
             'DP_mov_r': DP_mov_r
         }
 
+        # get default arm position for final penalty
+        arms_default_pos = constraints.get_arm_default_pos('forward')
+
         # iterate over knots starting from k = 0
         for k in range(knot_number):
 
@@ -119,6 +122,7 @@ class Gait(object):
 
             # cost  function
             cost_function = 0.0
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             # penalize CoM position
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
@@ -143,8 +147,8 @@ class Gait(object):
             # hands penalization over whole trajectory and high final penalty
             cost_fraction = 0.0  # this determines the penalty for the trj except the final knot which is high
             cost_hands = cost_fraction * 1e3
-            default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
-            default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
+            default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - arms_default_pos['left']
+            default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - arms_default_pos['right']
             cost_function += costs.penalize_quantity(cost_hands, default_lmov_contact, k, knot_number, final_weight=1e3)
             cost_function += costs.penalize_quantity(cost_hands, default_rmov_contact, k, knot_number, final_weight=1e3)
 
@@ -291,6 +295,9 @@ class Gait(object):
 
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
+        # get bounds for arms' box constraints
+        arm_bounds = constraints.get_arm_box_bounds('forward')
+
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
 
@@ -363,18 +370,15 @@ class Gait(object):
                 gu.append(np.zeros(self._dimx))
 
             if 0 < k < self._knot_number - 1:
-                gl.append(np.zeros(3))  # 2 moving contacts spline acc continuity
-                gu.append(np.zeros(3))
-
-                gl.append(np.zeros(3))
-                gu.append(np.zeros(3))
+                gl.append(np.zeros(6))  # 2 moving contacts spline acc continuity
+                gu.append(np.zeros(6))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.35, 0.0, 0.25]))
-            gu.append(np.array([0.48, 0.3, 0.35]))
+            gl.append(arm_bounds['left_l'])
+            gu.append(arm_bounds['left_u'])
 
-            gl.append(np.array([0.35, -0.3, 0.25]))
-            gu.append(np.array([0.48, 0.0, 0.35]))
+            gl.append(arm_bounds['right_l'])
+            gu.append(arm_bounds['right_u'])
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -820,6 +824,9 @@ class GaitNonlinear(Gait):
             'F_virt_r': F_virt_r
         }
 
+        # get default arm position for final penalty
+        arms_default_pos = constraints.get_arm_default_pos('forward')
+
         # iterate over knots starting from k = 0
         for k in range(knot_number):
 
@@ -840,6 +847,7 @@ class GaitNonlinear(Gait):
             # penalize CoM position
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
             cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
+            cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
 
@@ -861,8 +869,8 @@ class GaitNonlinear(Gait):
             # hands penalization over whole trajectory and high final penalty
             cost_fraction = 0.0     # this determines the penalty for the trj except the final knot which is high
             cost_hands = cost_fraction * 1e3
-            default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, 0.179, 0.3]
-            default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - [0.43, -0.179, 0.3]
+            default_lmov_contact = P_mov_l[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - arms_default_pos['left']
+            default_rmov_contact = P_mov_r[u_slice1:u_slice2] - X[x_slice1:x_slice1 + 3] - arms_default_pos['right']
             cost_function += costs.penalize_quantity(cost_hands, default_lmov_contact, k, knot_number, final_weight=1e3)
             cost_function += costs.penalize_quantity(cost_hands, default_rmov_contact, k, knot_number, final_weight=1e3)
 
@@ -1036,6 +1044,9 @@ class GaitNonlinear(Gait):
 
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
+        # get bounds for arms' box constraints
+        arm_bounds = constraints.get_arm_box_bounds('forward')
+
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
 
@@ -1129,11 +1140,11 @@ class GaitNonlinear(Gait):
                 gu.append(np.zeros(3))
 
             # box constraint - moving contact bounds
-            gl.append(np.array([0.35, 0.0, 0.25]))
-            gu.append(np.array([0.48, 0.3, 0.35]))
+            gl.append(arm_bounds['left_l'])
+            gu.append(arm_bounds['left_u'])
 
-            gl.append(np.array([0.35, -0.3, 0.25]))
-            gu.append(np.array([0.48, 0.0, 0.35]))
+            gl.append(arm_bounds['right_l'])
+            gu.append(arm_bounds['right_u'])
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
