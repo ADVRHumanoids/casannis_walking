@@ -7,6 +7,10 @@ import time
 import constraints
 import costs
 
+gravity = np.array([0.0, 0.0, -9.81])
+# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
+# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 class Walking:
     """
@@ -110,7 +114,7 @@ class Walking:
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2], p_k
+                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2], p_k
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])

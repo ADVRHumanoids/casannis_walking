@@ -8,7 +8,10 @@ import constraints
 
 import cubic_hermite_polynomial as cubic_spline
 
-global_gravity = np.array([0.0, 0.0, -9.81])
+gravity = np.array([0.0, 0.0, -9.81])
+# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
+# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
 class Gait(object):
@@ -85,8 +88,8 @@ class Gait(object):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay_l = np.array([0, 0, self._payload_mass_l * global_gravity[2]])  # virtual force
-        f_pay_r = np.array([0, 0, self._payload_mass_r * global_gravity[2]])  # virtual force
+        f_pay_l = self._payload_mass_l * global_gravity  # virtual force
+        f_pay_r = self._payload_mass_r * global_gravity  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -156,7 +159,7 @@ class Gait(object):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 f_pay_l, f_pay_r
             )
@@ -878,7 +881,7 @@ class GaitNonlinear(Gait):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
@@ -904,6 +907,7 @@ class GaitNonlinear(Gait):
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_l,
+                                                                                  gravity,
                                                                                   -F_virt_l[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_l['x'])
                 g.append(payload_mass_constraint_l['y'])
@@ -914,6 +918,7 @@ class GaitNonlinear(Gait):
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_r,
+                                                                                  gravity,
                                                                                   -F_virt_r[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_r['x'])
                 g.append(payload_mass_constraint_r['y'])
@@ -1101,11 +1106,11 @@ class GaitNonlinear(Gait):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virt_l_u[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass_l + 3])
-            F_virt_l_l[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass_l - 3])
+            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
+            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
 
-            F_virt_r_u[u_slice1:u_slice2] = np.array([10.0, 10.0, global_gravity[2] * self._payload_mass_r + 3])
-            F_virt_r_l[u_slice1:u_slice2] = np.array([-10.0, -10.0, global_gravity[2] * self._payload_mass_r - 3])
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(

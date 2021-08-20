@@ -1,19 +1,14 @@
 import numpy as np
 import casadi as cs
 
-gravity = np.array([0.0, 0.0, -9.81])
-# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
-# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
-# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
-
-def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_positions,
+def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, contact_positions,
                             lmoving_contact=cs.SX.zeros(3), rmoving_contact=cs.SX.zeros(3),
                             virtual_force_l=[0.0, 0.0, 0.0], virtual_force_r=[0.0, 0.0, 0.0]
                             ):
     # newton
     CoM_acc = CoM_state[6:9]
-    newton_violation = mass * CoM_acc - mass * gravity
+    newton_violation = mass * CoM_acc - mass * accel_grav
 
     for i in range(contacts_num):
         f_i_k = forces[3 * i:3 * (i + 1)]  # force of i-th contact
@@ -39,10 +34,11 @@ def newton_euler_constraint(CoM_state, mass, contacts_num, forces, contact_posit
     }
 
 
-def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, virtual_force):
+def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, accel_grav, virtual_force):
     """
     This function is useful for imposing newton's 2nd law in point masses (payload).
     m * acc = Weight + Forces
+    :param accel_grav: acceleration of gravity in the planning frame
     :param p_mov_list: list of values of the cubic polynomial junctions
     :param dp_mov_list: list of values of the first derivative of the polynomial at junction
     :param dt: time discretization of knots
@@ -91,7 +87,7 @@ def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, paylo
         # acceleration = 2.0 * c1 + 6.0 * d1 * t
         acceleration_at_start.append(2.0 * c1[i])
 
-    newton_violation = payload_mass * np.array(acceleration_at_start) - np.array(gravity) * payload_mass - virtual_force
+    newton_violation = payload_mass * np.array(acceleration_at_start) - accel_grav * payload_mass - virtual_force
 
     return {
         'x': newton_violation[0],
