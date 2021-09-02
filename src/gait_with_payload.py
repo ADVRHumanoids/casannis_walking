@@ -89,8 +89,8 @@ class Gait(object):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay_l = self._payload_mass_l * global_gravity  # virtual force
-        f_pay_r = self._payload_mass_r * global_gravity  # virtual force
+        f_pay_l = self._payload_mass_l * gravity  # virtual force
+        f_pay_r = self._payload_mass_r * gravity  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -1110,8 +1110,8 @@ class GaitNonlinear(Gait):
             F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
             F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * gravity + [-10.0, -10.0, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * gravity + [10.0, 10.0, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(

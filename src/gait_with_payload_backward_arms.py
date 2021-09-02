@@ -778,8 +778,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
             F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * gravity + [-10.0, -10.0, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * gravity + [10.0, 10.0, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
