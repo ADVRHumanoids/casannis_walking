@@ -8,6 +8,7 @@ import constraints
 
 gravity = np.array([0.0, 0.0, -9.81])
 # gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
 # gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
 # gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
@@ -400,7 +401,7 @@ class Gait:
 
         return int_force
 
-    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, contacts, sw_id, t_exec=[0, 0, 0, 0]):
         '''
         Args:
             solution: optimized decision variables
@@ -476,10 +477,10 @@ class Gait:
         color_labels = ['red', 'green', 'blue', 'yellow']
         line_labels = ['-', '--', '-.', ':']
         plt.figure()
-        for i in range(len(swing_id)):
-            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id[i]]]
+        for i in range(len(sw_id)):
+            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [sw_id[i]]]
             SuP_x_coords.append(SuP_x_coords[0])
-            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
+            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [sw_id[i]]]
             SuP_y_coords.append(SuP_y_coords[0])
             plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2 - 0.4 * i, color=color_labels[i])
         plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)  # robot links - based CoM
@@ -527,6 +528,7 @@ if __name__ == "__main__":
     #swing_time = [[1.0, 4.0], [5.0, 8.0]]
     swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
 
+    #swing_time = [[1.0, 4.0], [5.0, 8.0], [9.0, 12.0], [13.0, 16.0]]
     step_clear = 0.05
 
     w = Gait(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2)

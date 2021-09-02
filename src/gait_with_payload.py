@@ -10,6 +10,7 @@ import cubic_hermite_polynomial as cubic_spline
 
 gravity = np.array([0.0, 0.0, -9.81])
 # gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
+# gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
 # gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
 # gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
@@ -1232,12 +1233,12 @@ if __name__ == "__main__":
 
     # mov contacts
     lmoving_contact = [
-        np.array([0.53, 0.179, 0.3]),
+        np.array([0.53-0.0, 0.179, 0.3]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([0.53, -0.179, 0.3]),
+        np.array([0.53-0.0, -0.179, 0.3]),
         np.zeros(3),
     ]
 
@@ -1245,7 +1246,7 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [0, 1, 2, 3]
+    sw_id = [2, 3, 0, 1]
 
     step_num = len(sw_id)
 
@@ -1266,11 +1267,11 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinear(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    w = GaitNonlinear(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
-                  swing_tgt=swing_target, swing_clearance=step_clear, swing_t=swing_time, min_f=100)
+                  swing_tgt=swing_target, swing_clearance=step_clear, swing_t=swing_time[0:step_num], min_f=100)
 
     # interpolate the values, pass values and interpolation resolution
     res = 300
@@ -1278,7 +1279,7 @@ if __name__ == "__main__":
     swing_currents = []
     for i in range(step_num):
         swing_currents.append(foot_contacts[sw_id[i]])
-    interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
+    interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time[0:step_num], res)
 
     # print the results
     w.print_trj(sol, interpl, res, foot_contacts, sw_id)
