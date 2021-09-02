@@ -5,7 +5,7 @@ from gait import Gait as Nominal
 from gait_with_payload import GaitNonlinear as Payload
 
 
-def compare_print(nom_results, payl_results, contacts, swing_id):
+def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods):
 
     cartesian_dim = 3
     cartesian_labels = ['X', 'Y', 'Z']
@@ -15,9 +15,16 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
     plt.figure()
     for i, name in enumerate(state_labels):
         plt.subplot(3, 1, i + 1)
+        # shade swing periods
+        for k in range(len(swing_id)):
+            plt.axvspan(swing_periods[k][0], swing_periods[k][1], alpha=0.2)
+
+        # plot state
         for j in range(cartesian_dim):
             plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j], '-')
             plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j], '-')
+        #plt.plot(2 * [k[1] for k in swing_periods], [-1,-1,-1,-1,1,1,1,1], '.')
+
         plt.grid()
         plt.legend(['x_nom', 'x', 'y_nom', 'y', 'z_nom', 'z'])
         plt.title(name)
@@ -104,14 +111,14 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [0, 1, 2, 3]
+    sw_id = [2, 3, 0, 1]
 
     step_num = len(sw_id)
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
+    dx = 0.2
     dy = 0.0
-    dz = 0.2
+    dz = 0.0
 
     swing_target = []
     for i in range(step_num):
@@ -160,4 +167,4 @@ if __name__ == "__main__":
     # print the results
     #w1.print_trj(sol1, interpl1, res, foot_contacts, sw_id)
 
-    compare_print(interpl1, interpl2, foot_contacts, sw_id)
+    compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num])
