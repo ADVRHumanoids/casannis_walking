@@ -61,15 +61,15 @@ def compare_print(nom_results, payl_results, contacts, swing_id):
     SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
     SuP_y_coords.append(SuP_y_coords[0])
     plt.figure()
-    plt.plot(nom_results['x'][1], nom_results['x'][0], '-')
-    plt.plot(payl_results['x'][1], payl_results['x'][0], '-')
-    plt.plot(SuP_x_coords, SuP_y_coords, 'ro-')
+    plt.plot(nom_results['x'][0], nom_results['x'][1], '-')
+    plt.plot(payl_results['x'][0], payl_results['x'][1], '-')
+    plt.plot(SuP_y_coords, SuP_x_coords, 'ro-')
     plt.grid()
     plt.title('Support polygon and CoM')
-    plt.xlabel('Y [m]')
-    plt.ylabel('X [m]')
-    plt.xlim(0.5, -0.5)
-    plt.legend(['nominal', 'adaptable'])
+    plt.xlabel('X [m]')
+    plt.ylabel('Y [m]')
+    #plt.xlim(0.5, -0.5)
+    plt.legend(['nominal', 'payload'])
     plt.show()
 
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w_nominal = Nominal(mass=95, N=40, dt=0.2)
+    w_nominal = Nominal(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol1 = w_nominal.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     #w1.print_trj(sol1, interpl1, res, foot_contacts, sw_id)
 
     # adaptable
-    w_payload = Payload(mass=95, N=40, dt=0.2, payload_masses=[5.0, 5.0])
+    w_payload = Payload(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol2 = w_payload.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
