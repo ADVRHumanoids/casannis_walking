@@ -1,34 +1,41 @@
-import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
 from gait import Gait as Nominal
 from gait_with_payload import GaitNonlinear as Payload
 
 
-def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods):
+def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, steps, interpol_freq):
+
+    step_num = len(swing_id)
 
     cartesian_dim = 3
     cartesian_labels = ['X', 'Y', 'Z']
+    linestyles = ['-', '--', ':']
 
     # Interpolated state plot
-    state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+    state_labels = ['Position [$m$]', 'Velocity [$m/s$]', 'Acceleration [$m/s^2$]']
     plt.figure()
     for i, name in enumerate(state_labels):
-        plt.subplot(3, 1, i + 1)
+        axes = plt.subplot(3, 1, i + 1)
         # shade swing periods
-        for k in range(len(swing_id)):
+        for k in range(step_num):
             plt.axvspan(swing_periods[k][0], swing_periods[k][1], alpha=0.2)
 
         # plot state
-        for j in range(cartesian_dim):
-            plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j], '-')
-            plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j], '-')
-        #plt.plot(2 * [k[1] for k in swing_periods], [-1,-1,-1,-1,1,1,1,1], '.')
-
+        for j, style_name in enumerate(linestyles):
+            plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j], style_name, color='g', label='baseline')
+            plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j], style_name, color='r', label='payload')
+            # if i == 0:
+            #     plt.legend(cartesian_labels)
         plt.grid()
-        plt.legend(['x_nom', 'x', 'y_nom', 'y', 'z_nom', 'z'])
-        plt.title(name)
-    plt.xlabel('Time [s]')
+        plt.ylabel(name, fontsize=20)
+
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # plt.legend(handles, labels, loc='upper center')
+
+    # legend1 = plt.legend(prop={'size': 25})
+    # axes.add_artist(legend1)
+    plt.xlabel('Time [$s$]', fontsize=20)
 
     feet_labels = ['FL', 'FR', 'HL', 'HR']
 
@@ -46,30 +53,31 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods):
                     str(name) + '_z_nom', str(name) + '_z'])
     plt.xlabel('Time [s]')
 
-    try:
-        # Interpolated moving contact trajectory
-        plt.figure()
-        for k, name in enumerate(cartesian_labels):
-            plt.plot(nom_results['t'], nom_results['p_mov_l'][k], '-')
-            plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
-        plt.legend([str(cartesian_labels[0]) + '_nom', str(cartesian_labels[0]),
-                    str(cartesian_labels[1]) + '_nom', str(cartesian_labels[1]),
-                    str(cartesian_labels[2]) + '_nom', str(cartesian_labels[2])])
-        plt.grid()
-        plt.title('Moving Contact trajectory')
-        plt.xlabel('Time [s]')
-
-    except:
-        print("Cannot plot moving contact trajectory")
+    # try:
+    #     # Interpolated moving contact trajectory
+    #     plt.figure()
+    #     for k, name in enumerate(cartesian_labels):
+    #         plt.plot(nom_results['t'], nom_results['p_mov_l'][k], '-')
+    #         plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
+    #     plt.legend([str(cartesian_labels[0]) + '_nom', str(cartesian_labels[0]),
+    #                 str(cartesian_labels[1]) + '_nom', str(cartesian_labels[1]),
+    #                 str(cartesian_labels[2]) + '_nom', str(cartesian_labels[2])])
+    #     plt.grid()
+    #     plt.title('Moving Contact trajectory')
+    #     plt.xlabel('Time [s]')
+    #
+    # except:
+    #     print("Cannot plot moving contact trajectory")
 
     # Support polygon and CoM motion in the plane
     SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
     SuP_x_coords.append(SuP_x_coords[0])
     SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id]]
     SuP_y_coords.append(SuP_y_coords[0])
+
     plt.figure()
     plt.plot(nom_results['x'][0], nom_results['x'][1], '-')
-    plt.plot(payl_results['x'][0], payl_results['x'][1], '-')
+    plt.plot(payl_results['x'][0], payl_results['x'][1], '--')
     plt.plot(SuP_y_coords, SuP_x_coords, 'ro-')
     plt.grid()
     plt.title('Support polygon and CoM')
@@ -77,10 +85,70 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods):
     plt.ylabel('Y [m]')
     #plt.xlim(0.5, -0.5)
     plt.legend(['nominal', 'payload'])
+
+
+    # polygons = [[k[0:2].tolist() for k in contacts]]
+    # polygon_current = [k[0:2].tolist() for k in contacts]
+    #
+    # xss, yss = zip(*polygon_current)  # create lists of x and y values
+    #
+    # plt.figure()
+    # plt.plot(xss, yss, '.')
+    # plt.fill(xss, yss, alpha=0.3)
+    # for i in range(step_num):
+    #
+    #     polygon_current[swing_id[i]] = list(map(add, polygon_current[swing_id[i]], steps[0:2]))
+    #     polygons.append(polygon_current)
+    #
+    #
+    #
+    #
+    # polygon_times = [0] + [k[1] for k in swing_periods]
+    # polygons_x = []
+    # polygons_y = []
+    #
+    # # Support polygon and CoM motion in the plane
+    # for i in range(step_num + 1):
+    #     # SuP_x_coords = [contacts[k][1] for k in range(4)]
+    #     SuP_x_coords = [k['x'][int(interpol_freq * polygon_times[i])] for k in nom_results['sw']]
+    #     #SuP_x_coords.append(SuP_x_coords[0])
+    #     SuP_y_coords = [k['y'][int(interpol_freq * polygon_times[i])] for k in nom_results['sw']]
+    #     #SuP_y_coords.append(SuP_y_coords[0])
+    #
+    #     polygons_x.append(SuP_x_coords)
+    #     polygons_y.append(SuP_y_coords)
+    #
+    #     polygons = []
+    #     for ii in range(4):
+    #         polygons.append([SuP_x_coords[ii], SuP_y_coords[ii]])
+    #     polygons.append(polygons[0])
+    #
+    #     xs, ys = zip(*polygons)  # create lists of x and y values
+    #
+    #     plt.figure()
+    #     plt.plot(xs, ys, '.')
+    #     plt.fill(xs, ys, alpha=0.3)
+    #
+    # plt.figure()
+    # plt.plot(nom_results['x'][0], nom_results['x'][1], '-')
+    # plt.plot(payl_results['x'][0], payl_results['x'][1], '--')
+    # plt.plot(polygons_y[0], polygons_x[0], 'ro-')
+    # plt.grid()
+    # plt.title('Support polygon and CoM')
+    # plt.xlabel('X [m]')
+    # plt.ylabel('Y [m]')
+    # # plt.xlim(0.5, -0.5)
+    # plt.legend(['nominal', 'payload'])
     plt.show()
 
 
-if __name__ == "__main__":
+def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
+
+    dx = steps[0]
+    dy = steps[1]
+    dz = steps[2]
+
+    step_num = len(sw_id)
 
     # initial state
     c0 = np.array([0.107729, 0.0000907, -0.02118])
@@ -109,17 +177,6 @@ if __name__ == "__main__":
 
     moving_contact = [lmoving_contact, rmoving_contact]
 
-    # swing id from 0 to 3
-    # sw_id = 2
-    sw_id = [2, 3, 0, 1]
-
-    step_num = len(sw_id)
-
-    # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.2
-    dy = 0.0
-    dz = 0.0
-
     swing_target = []
     for i in range(step_num):
         swing_target.append(
@@ -127,13 +184,7 @@ if __name__ == "__main__":
 
     swing_target = np.array(swing_target)
 
-    # swing_time
-    # swing_time = [[1.0, 4.0], [5.0, 8.0]]
-    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
-
-    step_clear = 0.05
-
-    w_nominal = Nominal(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2)
+    w_nominal = Nominal(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol1 = w_nominal.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
@@ -153,7 +204,7 @@ if __name__ == "__main__":
     #w1.print_trj(sol1, interpl1, res, foot_contacts, sw_id)
 
     # adaptable
-    w_payload = Payload(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    w_payload = Payload(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt, payload_masses=[5.0, 5.0])
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol2 = w_payload.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
@@ -167,4 +218,66 @@ if __name__ == "__main__":
     # print the results
     #w1.print_trj(sol1, interpl1, res, foot_contacts, sw_id)
 
-    compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num])
+    # compute deviation
+    CoM_deviation = compute_CoM_deviation(interpl1, interpl2)
+
+    compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num], [dx, dy, dz], res)
+
+    return CoM_deviation
+
+
+def compute_CoM_deviation(nominal_trj, payload_trj):
+
+    point_num = len(nominal_trj['x'][0])
+
+    deviation = []
+    for i in range(point_num):
+        current_dev = np.sqrt((nominal_trj['x'][0][i] - payload_trj['x'][0][i])**2 +
+                              (nominal_trj['x'][0][i] - payload_trj['x'][0][i])**2 +
+                              (nominal_trj['x'][0][i] - payload_trj['x'][0][i])**2)
+        deviation.append(current_dev)
+
+    # plt.figure()
+    # plt.plot(nominal_trj['t'], deviation)
+    # plt.grid()
+    # plt.xlabel('Time [s]')
+    # plt.ylabel('CoM deviation [m]')
+    # plt.show()
+
+    return deviation
+
+
+if __name__ == "__main__":
+
+    # 0.2 stepping
+    scenario1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=95, dt=0.2)
+
+    # 0.2 dynamic stepping
+    scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 2.0], [2.5, 3.5], [4.0, 5.0], [5.5, 6.5]],
+                                      robot_mass=95, dt=0.2)
+
+    # 0.2 stepping 45 degrees
+    scenario3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1414, 0.1414, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=95, dt=0.2)
+
+    # 2 step-ups on 20 cm platform
+    scenario4_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=95, dt=0.2)
+
+    # team of boxplots
+    boxplots_dict = {'sc1': scenario1_CoM,
+                     'sc2': scenario2_CoM,
+                     'sc3': scenario3_CoM,
+                     'sc4': scenario4_CoM}
+
+    fig, ax = plt.subplots()
+    ax.boxplot(boxplots_dict.values())
+    ax.set_xticklabels(boxplots_dict.keys())
+    plt.grid()
+    plt.ylabel('CoM deviation [$m$]')
+    plt.show()
