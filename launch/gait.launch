@@ -18,6 +18,11 @@
     <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
     <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
 
+    <!--arg name="swing_t1" default="[1.0, 2.0]" if="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[2.5, 3.5]" if="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[4.0, 5.0" if="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[5.5, 6.5]" if="$(arg dynamic)"/-->
+
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.1"/>
