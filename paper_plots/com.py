@@ -23,8 +23,10 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
 
         # plot state
         for j, style_name in enumerate(linestyles):
-            plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j], style_name, color='g', label='baseline')
-            plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j], style_name, color='r', label='payload')
+            plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j],
+                     style_name, linewidth=3, color='g', label='baseline')
+            plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j],
+                     style_name, linewidth=3, color='r', label='payload')
             # if i == 0:
             #     plt.legend(cartesian_labels)
         plt.grid()
@@ -53,21 +55,23 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
                     str(name) + '_z_nom', str(name) + '_z'])
     plt.xlabel('Time [s]')
 
-    # try:
-    #     # Interpolated moving contact trajectory
-    #     plt.figure()
-    #     for k, name in enumerate(cartesian_labels):
-    #         plt.plot(nom_results['t'], nom_results['p_mov_l'][k], '-')
-    #         plt.plot(payl_results['t'], payl_results['p_mov_l'][k], '-')
-    #     plt.legend([str(cartesian_labels[0]) + '_nom', str(cartesian_labels[0]),
-    #                 str(cartesian_labels[1]) + '_nom', str(cartesian_labels[1]),
-    #                 str(cartesian_labels[2]) + '_nom', str(cartesian_labels[2])])
-    #     plt.grid()
-    #     plt.title('Moving Contact trajectory')
-    #     plt.xlabel('Time [s]')
-    #
-    # except:
-    #     print("Cannot plot moving contact trajectory")
+    try:
+        # Interpolated moving contact trajectory
+        plt.figure()
+        # shade swing periods
+        for k in range(step_num):
+            plt.axvspan(swing_periods[k][0], swing_periods[k][1], alpha=0.2)
+        for k, (name, style_name) in enumerate(zip(cartesian_labels, linestyles)):
+            plt.plot(payl_results['t'], payl_results['p_mov_l'][k], style_name, linewidth=3, color='g')
+            plt.plot(payl_results['t'], payl_results['p_mov_r'][k], style_name, linewidth=3, color='r')
+        #plt.legend([str(cartesian_labels[0]), str(cartesian_labels[1]), str(cartesian_labels[2])])
+        plt.grid()
+        #plt.title('Arm end-effectors trajectory', fontsize=20)
+        plt.ylabel('Position [$m$]', fontsize=20)
+        plt.xlabel('Time [$s$]', fontsize=20)
+
+    except:
+        print("Cannot plot moving contact trajectory")
 
     # Support polygon and CoM motion in the plane
     SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id]]
@@ -277,7 +281,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
     ax.boxplot(boxplots_dict.values())
-    ax.set_xticklabels(boxplots_dict.keys())
+    ax.set_xticklabels(boxplots_dict.keys(), fontsize=20)
     plt.grid()
-    plt.ylabel('CoM deviation [$m$]')
+    plt.ylabel('CoM position deviation [$m$]', fontsize=20)
     plt.show()
