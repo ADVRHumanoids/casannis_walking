@@ -20,7 +20,8 @@ Collision:
     collision_srdf_path: $(rospack find centauro_srdf)/srdf/capsule/centauro_capsules.srdf
 
 params:
- - &arm_indices [0, 1, 2]
+ - &arm_indices [0, 1, 2, 3, 4, 5]
+ - &wh_indices [0, 1, 2, 3, 4]
 
 PelvisRPY:
     type: "Cartesian"
@@ -42,24 +43,28 @@ Wheel1:
     type: "Cartesian"
     name: "FL_wheel"
     distal_link: "wheel_1"
+    indices: *wh_indices
     lambda: 0.1
 
 Wheel2:
     type: "Cartesian"
     name: "FR_wheel"
     distal_link: "wheel_2"
+    indices: *wh_indices
     lambda: 0.1
 
 Wheel3:
     type: "Cartesian"
     name: "HL_wheel"
     distal_link: "wheel_3"
+    indices: *wh_indices
     lambda: 0.1
 
 Wheel4:
     type: "Cartesian"
     name: "HR_wheel"
     distal_link: "wheel_4"
+    indices: *wh_indices
     lambda: 0.1
 
 LeftArm:
