@@ -551,11 +551,12 @@ class Gait:
 
 
 if __name__ == "__main__":
-    w = Gait(mass=95, N=80, dt=0.1)
+    w = Gait(mass=112, N=80, dt=0.1)
 
     # initial state
     # c0 = np.array([-0.00629, -0.03317, 0.01687])
-    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    # c0 = np.array([0.107729, 0.0000907, -0.02118])
+    c0 = np.array([0.0922, 0.0009, -0.0222])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)

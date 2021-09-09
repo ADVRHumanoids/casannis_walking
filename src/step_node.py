@@ -103,7 +103,7 @@ def casannis(int_freq):
     f_msg.pose.orientation = f_init[swing_id-1].pose.orientation
 
     # Construct the class the optimization problem
-    walk = Walking(mass=95, N=40, dt=0.2)
+    walk = Walking(mass=112, N=40, dt=0.2)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values

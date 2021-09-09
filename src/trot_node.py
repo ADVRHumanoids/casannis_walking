@@ -119,7 +119,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = Gait(mass=95, N=int((swing_t[-2][1] + 1.0) / 0.2), dt=0.2)
+    walk = Gait(mass=112, N=int((swing_t[-2][1] + 1.0) / 0.2), dt=0.2)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values

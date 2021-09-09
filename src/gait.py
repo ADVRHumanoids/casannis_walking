@@ -498,7 +498,8 @@ if __name__ == "__main__":
 
     # initial state
     #c0 = np.array([-0.00629, -0.03317, 0.01687])
-    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    # c0 = np.array([0.107729, 0.0000907, -0.02118])
+    c0 = np.array([0.0922, 0.0009, -0.0222])
     #c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
@@ -531,7 +532,7 @@ if __name__ == "__main__":
     #swing_time = [[1.0, 4.0], [5.0, 8.0], [9.0, 12.0], [13.0, 16.0]]
     step_clear = 0.05
 
-    w = Gait(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2)
+    w = Gait(mass=112, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,

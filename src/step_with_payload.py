@@ -636,10 +636,11 @@ class Walking:
 if __name__ == "__main__":
     start_time = time.time()
 
-    w = Walking(mass=95, N=40, dt=0.2, payload_mass=5.0)
+    w = Walking(mass=112, N=40, dt=0.2, payload_mass=5.0)
 
     # initial state =
-    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    # c0 = np.array([0.107729, 0.0000907, -0.02118])
+    c0 = np.array([0.0922, 0.0009, -0.0222])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
     x_init = np.hstack([c0, dc0, ddc0])

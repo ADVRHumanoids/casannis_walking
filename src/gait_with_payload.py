@@ -1218,7 +1218,8 @@ class GaitNonlinear(Gait):
 if __name__ == "__main__":
 
     # initial state
-    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    # c0 = np.array([0.107729, 0.0000907, -0.02118])
+    c0 = np.array([0.0922, 0.0009, -0.0222])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
@@ -1267,7 +1268,7 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinear(mass=95, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
