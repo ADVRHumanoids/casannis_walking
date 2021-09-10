@@ -2,10 +2,10 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="centauro">
 
 <!-- ************ MODEL CONFIGURATION ************ -->
-<xacro:include filename="$(find centauro_urdf)/urdf/centauro_config.urdf.xacro" />
+<xacro:include filename="centauro_config.urdf.xacro" />
 
 <!-- ************ Pholus plain model ************ -->
-<xacro:include filename="$(find centauro_urdf)/urdf/centauro_base.urdf.xacro"/>
+<xacro:include filename="centauro_base.urdf.xacro"/>
 
 <!-- ************ Control frames ************ -->
 <!--xacro:include filename="$(find pholus_urdf)/urdf/control_frames.urdf.xacro"/-->
@@ -29,7 +29,7 @@
 </xacro:unless>
 
 <xacro:if value="${ADD_VIRTUAL_FRAME}">
-  <xacro:include filename="$(find centauro_urdf)/urdf/parts/virtual_frame.urdf.xacro"/>
+  <xacro:include filename="parts/virtual_frame.urdf.xacro"/>
 </xacro:if>
 
 </robot>

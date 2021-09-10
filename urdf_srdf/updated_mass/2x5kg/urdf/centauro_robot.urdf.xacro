@@ -8,19 +8,19 @@
   This file groups files to use CENTAURO in GAZEBO
   
   -->
-  <xacro:include filename="$(find centauro_urdf)/urdf/centauro.urdf.xacro" />
+  <xacro:include filename="centauro.urdf.xacro" />
 
-  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/centauro.gazebo.xacro" />
+  <xacro:include filename="gazebo/centauro.gazebo.xacro" />
  
   
   <!--xacro:include filename="$(find cogimon_urdf)/urdf/gazebo/force_torque.gazebo.xacro" /-->
   
-  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/imu.gazebo.xacro" />
+  <xacro:include filename="gazebo/imu.gazebo.xacro" />
 
 
-  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/xbot.gazebo.xacro" />
+  <xacro:include filename="gazebo/xbot.gazebo.xacro" />
 
-  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/materials.gazebo.xacro" />
+  <xacro:include filename="gazebo/materials.gazebo.xacro" />
 
 
 

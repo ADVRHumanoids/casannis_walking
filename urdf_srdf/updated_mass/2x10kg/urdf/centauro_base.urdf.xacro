@@ -7,10 +7,10 @@
   Author: Enrico Mingo Hoffman
 -->
 
-<xacro:include filename="$(find centauro_urdf)/urdf/utils.urdf.xacro" />
-<xacro:include filename="$(find centauro_urdf)/urdf/parts/kinematics_properties.urdf.xacro" />
-<xacro:include filename="$(find centauro_urdf)/urdf/parts/inertial_properties.urdf.xacro" />
-<xacro:include filename="$(find centauro_urdf)/urdf/parts/limits.urdf.xacro" />
+<xacro:include filename="utils.urdf.xacro" />
+<xacro:include filename="parts/kinematics_properties.urdf.xacro" />
+<xacro:include filename="parts/inertial_properties.urdf.xacro" />
+<xacro:include filename="parts/limits.urdf.xacro" />
 
 
 
@@ -58,11 +58,11 @@
 
 
 <xacro:if value="${ADD_UPPER_BODY}">
-	<xacro:include filename="$(find centauro_urdf)/urdf/parts/centauro_torso.urdf.xacro" />
-    <xacro:include filename="$(find centauro_urdf)/urdf/parts/arms.urdf.xacro" />
+	<xacro:include filename="parts/centauro_torso.urdf.xacro" />
+    <xacro:include filename="parts/arms.urdf.xacro" />
 	
 	<xacro:if value="${ADD_BALL_END_EFFECTOR}">
-		<xacro:include filename="$(find centauro_urdf)/urdf/parts/ball.urdf.xacro" />
+		<xacro:include filename="parts/ball.urdf.xacro" />
 
 		<xacro:ball_end_effector arm_num="1"  parent_link="arm1_7">
       			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
@@ -72,11 +72,11 @@
       			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
    		</xacro:ball_end_effector>
 	</xacro:if>
-	<xacro:include filename="$(find centauro_urdf)/urdf/parts/head.urdf.xacro" />
+	<xacro:include filename="parts/head.urdf.xacro" />
 </xacro:if>
 
 <xacro:if value="${ADD_LEGS}">
-	<xacro:include filename="$(find centauro_urdf)/urdf/parts/legs.urdf.xacro" />
+	<xacro:include filename="parts/legs.urdf.xacro" />
 </xacro:if>
 
 
