@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<gazebo>
+
+    <plugin name="xbot2_link_state_sensor" filename="libxbot2_gz_link_state_sensor.so">
+        <links>
+            <link name="pelvis"/>
+            <link name="wheel_1"/>
+        </links>
+    </plugin>
+    
+    <plugin name="xbot2_ft_driver" filename="libxbot2_gz_ft_server.so"/>
+    
+    <plugin name="xbot2_imu_driver" filename="libxbot2_gz_imu_server.so"/>
+    
+    <plugin name="xbot2_joint_driver" filename="libxbot2_gz_joint_server.so">
+        <pid>
+            <gain name="lowpwr_mot" p="50"  d="5"/>
+            <gain name="small_mot"  p="250"  d="5"/>
+            <gain name="medium_mot" p="1000" d="10"/>
+            <gain name="big_mot"    p="3000" d="10"/>
+            <gain name="wheel_mot"  p="0" d="10"/>
+            
+            <pid name="neck_yaw" profile="lowpwr_mot"/>
+            <pid name="neck_pitch" profile="lowpwr_mot"/>
+            <pid name="neck_velodyne" p="0"  d="20"/>
+
+            <pid name="j_arm1_1" profile="medium_mot"/>
+            <pid name="j_arm1_2" profile="medium_mot"/>
+            <pid name="j_arm1_3" profile="medium_mot"/>
+            <pid name="j_arm1_4" profile="medium_mot"/>
+            <pid name="j_arm1_5" profile="small_mot"/>
+            <pid name="j_arm1_6" profile="small_mot"/>
+            <pid name="j_arm1_7" profile="small_mot"/>
+            
+            <pid name="j_arm2_1" profile="medium_mot"/>
+            <pid name="j_arm2_2" profile="medium_mot"/>
+            <pid name="j_arm2_3" profile="medium_mot"/>
+            <pid name="j_arm2_4" profile="medium_mot"/>
+            <pid name="j_arm2_5" profile="small_mot"/>
+            <pid name="j_arm2_6" profile="small_mot"/>
+            <pid name="j_arm2_7" profile="small_mot"/>
+
+            <pid name="torso_yaw" profile="big_mot"/>
+            
+            <pid name="hip_yaw_1"     profile="big_mot"/>
+            <pid name="hip_pitch_1"   profile="big_mot"/>
+            <pid name="knee_pitch_1"  profile="big_mot"/>
+            <pid name="ankle_pitch_1" profile="medium_mot"/>
+            <pid name="ankle_yaw_1"   profile="small_mot"/>
+            <pid name="j_wheel_1"     profile="wheel_mot"/>
+            
+            <pid name="hip_yaw_2"     profile="big_mot"/>
+            <pid name="hip_pitch_2"   profile="big_mot"/>
+            <pid name="knee_pitch_2"  profile="big_mot"/>
+            <pid name="ankle_pitch_2" profile="medium_mot"/>
+            <pid name="ankle_yaw_2"   profile="small_mot"/>
+            <pid name="j_wheel_2"     profile="wheel_mot"/>
+            
+            <pid name="hip_yaw_3"     profile="big_mot"/>
+            <pid name="hip_pitch_3"   profile="big_mot"/>
+            <pid name="knee_pitch_3"  profile="big_mot"/>
+            <pid name="ankle_pitch_3" profile="medium_mot"/>
+            <pid name="ankle_yaw_3"   profile="small_mot"/>
+            <pid name="j_wheel_3"     profile="wheel_mot"/>
+            
+            <pid name="hip_yaw_4"     profile="big_mot"/>
+            <pid name="hip_pitch_4"   profile="big_mot"/>
+            <pid name="knee_pitch_4"  profile="big_mot"/>
+            <pid name="ankle_pitch_4" profile="medium_mot"/>
+            <pid name="ankle_yaw_4"   profile="small_mot"/>
+            <pid name="j_wheel_4"     profile="wheel_mot"/>
+        </pid>
+    </plugin>
+</gazebo>
+
+</robot>

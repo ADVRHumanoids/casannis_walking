@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+
+<xacro:macro name="centauro_leg_materials" params="leg_num">
+
+<gazebo reference="hip1_${leg_num}">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="hip2_${leg_num}">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+<gazebo reference="knee_${leg_num}">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="ankle1_${leg_num}">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="ankle2_${leg_num}">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="wheel_${leg_num}">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+
+</xacro:macro>
+
+<xacro:macro name="centauro_arm_materials" params="arm_num">
+
+<gazebo reference="arm${arm_num}_1">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_2">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_3">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_4">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_5">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_6">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+<gazebo reference="arm${arm_num}_7">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+
+</xacro:macro>
+
+
+
+<gazebo reference="pelvis">
+	<material>Gazebo/LightBlueLaser</material>
+</gazebo>
+
+<xacro:if value="${ADD_LEGS}">
+
+<xacro:centauro_leg_materials leg_num="1"/>
+<xacro:centauro_leg_materials leg_num="2"/>
+<xacro:centauro_leg_materials leg_num="3"/>
+<xacro:centauro_leg_materials leg_num="4"/>
+
+	
+</xacro:if>
+
+<xacro:if value="${ADD_UPPER_BODY}">
+
+<gazebo reference="torso_2">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+
+<xacro:centauro_arm_materials arm_num="1"/>
+<xacro:centauro_arm_materials arm_num="2"/>
+
+<xacro:if value="${ADD_BALL_END_EFFECTOR}">
+
+<gazebo reference="ball1">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+
+<gazebo reference="ball2">
+	<material>Gazebo/BlackTransparent</material>
+</gazebo>
+
+</xacro:if>
+
+</xacro:if>
+
+
+
+</robot>

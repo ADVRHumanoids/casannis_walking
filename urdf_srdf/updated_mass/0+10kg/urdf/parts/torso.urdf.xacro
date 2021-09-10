@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<link name="torso">
+    <inertial>
+      <origin xyz="${-1.9591632e+01*mmTom} ${2.3519432e-01*mmTom} ${1.2437790e+02*mmTom}" rpy="0.0 0.0 0.0"/>
+      <mass value="1.2092311e+01"/>
+      <inertia ixx="${2.0926885e+05*mm2Tom2}"  ixy="${4.7008497e+00*mm2Tom2}"  ixz="${8.2803626e+03*mm2Tom2}" iyy="${1.8674037e+05*mm2Tom2}" iyz="${-1.4624228e+03*mm2Tom2}" izz="${1.7692713e+05*mm2Tom2}" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="black"/>
+      <geometry name="pelvis_visual">
+        <mesh filename="package://pholus_urdf/meshes/torso.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+      </geometry>
+    </visual> 
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry name="pelvis_collision">
+        <mesh filename="package://pholus_urdf/meshes/simple/torso.stl" scale="${mmTom} ${mmTom} ${mmTom}"/>
+      </geometry>             
+    </collision>   
+</link>
+
+<joint name="torso_yaw_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="torso"/>
+    <origin xyz="${200*mmTom} 0 ${256*mmTom}" rpy="0 0 0" />
+    <axis xyz="0 0 1"/>
+    <limit velocity="5.7" effort="${147*torque_scale}" lower="${-150*toRad}" upper="${150*toRad}" /> <!-- VALUES FROM CENTAURO TODO: UPDATE! -->
+    <dynamics friction="0" damping="0.03"/>
+</joint>
+
+</robot>
+

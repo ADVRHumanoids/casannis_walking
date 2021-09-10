@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<link name ="arm1_8"/>
+<joint name="arm1_8_joint" type="fixed">
+  <parent link="l_wrist_yaw"/>
+  <child link="arm1_8"/>
+  <origin xyz="0 0 0" rpy="0 ${PI} ${-PI_2}"/>
+</joint>
+
+<link name ="arm2_8"/>
+<joint name="arm2_8_joint" type="fixed">
+  <parent link="r_wrist_yaw"/>
+  <child link="arm2_8"/>
+  <origin xyz="0 0 0" rpy="0 ${PI} ${-PI_2}"/>
+</joint>
+
+<xacro:if value="${USE_STICKS}">
+<xacro:property name="STICK_Z" value="${452.5*mmTom}" />
+<xacro:property name="STICK_Y" value="${23.3*mmTom}" />
+
+<link name ="fl_foot"/>
+<joint name="fl_foot_joint" type="fixed">
+  <parent link="fl_stick"/>
+  <child link="fl_foot"/>
+  <origin xyz="0 ${STICK_Y} -${STICK_Z}" rpy="0 0 0"/>
+</joint>
+
+<link name ="fr_foot"/>
+<joint name="fr_foot_joint" type="fixed">
+  <parent link="fr_stick"/>
+  <child link="fr_foot"/>
+  <origin xyz="0 -${STICK_Y} -${STICK_Z}" rpy="0 0 0"/>
+</joint>
+
+<link name ="hl_foot"/>
+<joint name="hl_foot_joint" type="fixed">
+  <parent link="hl_stick"/>
+  <child link="hl_foot"/>
+  <origin xyz="0 ${STICK_Y} -${STICK_Z}" rpy="0 0 0"/>
+</joint>
+
+<link name ="hr_foot"/>
+<joint name="hr_foot_joint" type="fixed">
+  <parent link="hr_stick"/>
+  <child link="hr_foot"/>
+  <origin xyz="0 -${STICK_Y} -${STICK_Z}" rpy="0 0 0"/>
+</joint>
+
+</xacro:if>
+
+<xacro:unless value="${USE_STICKS}">
+<link name ="ankle2_1"/>
+<joint name="ankle2_1_joint" type="fixed">
+  <parent link="fl_ankle_yaw"/>
+  <child link="ankle2_1"/>
+  <origin xyz="0 0 ${149*mmTom}" rpy="0 ${PI} 0"/>
+</joint>
+
+<link name ="ankle2_2"/>
+<joint name="ankle2_2_joint" type="fixed">
+  <parent link="fr_ankle_yaw"/>
+  <child link="ankle2_2"/>
+  <origin xyz="0 0 ${149*mmTom}" rpy="${-PI} 0 0"/>
+</joint>
+
+<link name ="ankle2_3"/>
+<joint name="ankle2_3_joint" type="fixed">
+  <parent link="hl_ankle_yaw"/>
+  <child link="ankle2_3"/>
+  <origin xyz="0 0 ${149*mmTom}" rpy="0 ${PI} 0"/>
+</joint>
+
+<link name ="ankle2_4"/>
+<joint name="ankle2_4_joint" type="fixed">
+  <parent link="hr_ankle_yaw"/>
+  <child link="ankle2_4"/>
+  <origin xyz="0 0 ${149*mmTom}" rpy="${-PI} 0 0"/>
+</joint>
+</xacro:unless>
+
+</robot>

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="centauro">
+  <!--
+  ROS urdf definition of the PHOLUS humanoid robot by Istituto Italiano di Tecnologia
+  
+  Author: Enrico Mingo
+  
+  This file groups files to use CENTAURO in GAZEBO
+  
+  -->
+  <xacro:include filename="$(find centauro_urdf)/urdf/centauro.urdf.xacro" />
+
+  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/centauro.gazebo.xacro" />
+ 
+  
+  <!--xacro:include filename="$(find cogimon_urdf)/urdf/gazebo/force_torque.gazebo.xacro" /-->
+  
+  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/imu.gazebo.xacro" />
+
+
+  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/xbot.gazebo.xacro" />
+
+  <xacro:include filename="$(find centauro_urdf)/urdf/gazebo/materials.gazebo.xacro" />
+
+
+
+<origin xyz="0.0 0.0 1.2" rpy="0 0 0" />
+</robot>
+
