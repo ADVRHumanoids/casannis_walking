@@ -150,6 +150,13 @@ def casannis(int_freq):
 
         swing_contacts.append(contacts[swing_id[i] - 1])
 
+    # receive weight of payloads
+    payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
+    payload_m = payload_m.rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
+    payload_m = [float(i) for i in payload_m]
+
+    print('Payload masses', payload_m)
+
     # CoM trj publisher
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
 
@@ -165,7 +172,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values

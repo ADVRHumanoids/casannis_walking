@@ -18,6 +18,8 @@
     <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
     <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
 
+    <arg name="payload_masses" default="[5.0, 5.0]"/>
+
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
     <arg name="clearance" default="0.05"/>
@@ -40,6 +42,9 @@
         <param name="plots" value="$(arg plots)"/>
         <param name="clear" value="$(arg clearance)"/>
         <param name="min_for" value="$(arg min_force)"/>
+
+        <param name="mass_payl" value="$(arg payload_masses)"/>
+
 
         <param name="forward_arms" value="$(arg forward_arms_config)"/>
         <param name="linear_fvirt" value="$(arg linear_fvirtual)"/>
