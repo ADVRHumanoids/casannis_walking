@@ -304,11 +304,17 @@ def get_arm_box_bounds(side):
     '''
 
     if side == 'forward':
-        left_lower_bound = np.array([0.35, 0.0, 0.25])
-        left_upper_bound = np.array([0.48, 0.3, 0.35])
+        #left_lower_bound = np.array([0.35, 0.0, 0.25])
+        #left_upper_bound = np.array([0.48, 0.3, 0.35])
 
-        right_lower_bound = np.array([0.35, -0.3, 0.25])
-        right_upper_bound = np.array([0.48, 0.0, 0.35])
+        #right_lower_bound = np.array([0.35, -0.3, 0.25])
+        #right_upper_bound = np.array([0.48, 0.0, 0.35])
+
+        left_lower_bound = np.array([0.45, 0.1, 0.25])
+        left_upper_bound = np.array([0.58, 0.35, 0.35])
+
+        right_lower_bound = np.array([0.45, -0.35, 0.25])
+        right_upper_bound = np.array([0.58, -0.1, 0.35])
 
     elif side == 'backward':
         left_lower_bound = np.array([-0.3, 0.0, 0.35])
@@ -345,8 +351,11 @@ def get_arm_default_pos(side):
     '''
 
     if side == 'forward':
-        left = [0.43, 0.179, 0.3]
-        right = [0.43, -0.179, 0.3]
+    #    left = [0.43, 0.179, 0.3]
+    #    right = [0.43, -0.179, 0.3]
+
+        left = [0.53, 0.279, 0.3]
+        right = [0.53, -0.279, 0.3]
 
     elif side == 'backward':
         left = [-0.0947, 0.15, 0.415]
