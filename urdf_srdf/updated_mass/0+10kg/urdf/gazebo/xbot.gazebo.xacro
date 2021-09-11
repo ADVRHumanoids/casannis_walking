@@ -25,7 +25,7 @@
             
             <pid name="neck_yaw" profile="lowpwr_mot"/>
             <pid name="neck_pitch" profile="lowpwr_mot"/>
-            <pid name="neck_velodyne" p="0"  d="20"/>
+            <pid name="neck_velodyne" p="250"  d="20"/>
 
             <pid name="j_arm1_1" profile="medium_mot"/>
             <pid name="j_arm1_2" profile="medium_mot"/>

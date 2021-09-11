@@ -21,7 +21,7 @@
             <gain name="small_mot"  p="250"  d="5"/>
             <gain name="medium_mot" p="1000" d="10"/>
             <gain name="big_mot"    p="3000" d="10"/>
-            <gain name="wheel_mot"  p="0" d="10"/>
+            <gain name="wheel_mot"  p="250" d="10"/>
             
             <pid name="neck_yaw" profile="lowpwr_mot"/>
             <pid name="neck_pitch" profile="lowpwr_mot"/>
