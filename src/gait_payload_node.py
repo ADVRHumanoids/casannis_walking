@@ -11,7 +11,7 @@ R = 0.078
 task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 
 task_name_moving_contact = ['left_hand', 'right_hand']
-
+rod_plate_CoG_urdf = [4.8407693e-02,  2.0035723e-02,  7.7533287e-02]    # not used currently
 
 def contacts_callback(msg):
 
