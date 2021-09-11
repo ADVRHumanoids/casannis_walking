@@ -155,7 +155,7 @@ def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
     step_num = len(sw_id)
 
     # initial state
-    c0 = np.array([0.107729, 0.0000907, -0.02118])
+    c0 = np.array([0.0822, 0.0009, -0.0222])
     # c0 = np.array([-0.03, -0.04, 0.01687])
     dc0 = np.zeros(3)
     ddc0 = np.zeros(3)
@@ -170,12 +170,12 @@ def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
 
     # mov contacts
     lmoving_contact = [
-        np.array([0.53, 0.179, 0.3]),
+        np.array([0.63, 0.279, 0.3]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([0.53, -0.179, 0.3]),
+        np.array([0.63, -0.279, 0.3]),
         np.zeros(3),
     ]
 

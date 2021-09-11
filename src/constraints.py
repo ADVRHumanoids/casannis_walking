@@ -354,8 +354,8 @@ def get_arm_default_pos(side):
     #    left = [0.43, 0.179, 0.3]
     #    right = [0.43, -0.179, 0.3]
 
-        left = [0.53, 0.279, 0.3]
-        right = [0.53, -0.279, 0.3]
+        left = [0.55, 0.279, 0.31]
+        right = [0.55, -0.279, 0.31]
 
     elif side == 'backward':
         left = [-0.0947, 0.15, 0.415]
