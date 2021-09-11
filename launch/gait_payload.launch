@@ -3,22 +3,22 @@
 <launch>
     <arg name="dynamic" default="False"/>
 
-    <arg name="swing_id" default="[3, 4, 1, 2]"/>
+    <arg name="swing_id" default="[3, 1, 4, 2]"/>
     <arg name="target_dx" default="0.1"/>
     <arg name="target_dy" default="0.0"/>
     <arg name="target_dz" default="0.0"/>
 
-    <arg name="swing_t1" default="[1.0, 4.0]" unless="$(arg dynamic)"/>
-    <arg name="swing_t2" default="[5.0, 8.0]" unless="$(arg dynamic)"/>
-    <arg name="swing_t3" default="[9.0, 12.0]" unless="$(arg dynamic)"/>
-    <arg name="swing_t4" default="[13.0, 16.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t1" default="[1.0, 3.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[4.0, 6.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[7.0, 9.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[10.0, 12.0]" unless="$(arg dynamic)"/>
 
     <arg name="swing_t1" default="[1.0, 2.0]" if="$(arg dynamic)"/>
     <arg name="swing_t2" default="[3.0, 4.0]" if="$(arg dynamic)"/>
     <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
     <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
 
-    <arg name="payload_masses" default="[5.0, 5.0]"/>
+    <arg name="payload_masses" default="[10.0, 10.0]"/>
 
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>

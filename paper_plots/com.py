@@ -256,25 +256,29 @@ def compute_CoM_deviation(nominal_trj, payload_trj):
 
 if __name__ == "__main__":
 
-    # 0.2 stepping
-    scenario1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
+    # 0.3 stepping
+    scenario1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
                                       robot_mass=112, dt=0.2, min_force=100)
+
+    scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
 
     # 0.2 dynamic stepping
-    scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 2.0], [2.5, 3.5], [4.0, 5.0], [5.5, 6.5]],
-                                      robot_mass=112, dt=0.2, min_force=100)
+    #scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
+    #                                  swing_time=[[1.0, 2.0], [2.5, 3.5], [4.0, 5.0], [5.5, 6.5]],
+    #                                  robot_mass=112, dt=0.2, min_force=100)
 
     # 0.2 stepping 45 degrees
-    scenario3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1414, 0.1414, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100)
+    #scenario3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1414, 0.1414, 0.0], step_clear=0.05,
+    #                                  swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+    #                                  robot_mass=112, dt=0.2, min_force=100)
 
     # 2 step-ups on 20 cm platform
     scenario4_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100)
+                                      robot_mass=112, dt=0.2, min_force=50)
 
     # -10 deg inclined terrain
     scenario5_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
