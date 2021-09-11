@@ -14,7 +14,9 @@
 <xacro:property name="ADD_LEGS" value="$(arg add_legs)" />
 <xacro:property name="ADD_UPPER_BODY" value="$(arg add_upper_body)" />
 
-<xacro:property name="ADD_BALL_END_EFFECTOR" value="true" />
+<xacro:property name="ADD_BALL_END_EFFECTOR" value="false" />
+
+<xacro:property name="ADD_ROD_PLATE_END_EFFECTOR" value="true" />
 
 <xacro:property name="ADD_FLOATING_BASE" value="$(arg add_legs)" />
 <xacro:property name="ADD_VIRTUAL_FRAME" value="false" />

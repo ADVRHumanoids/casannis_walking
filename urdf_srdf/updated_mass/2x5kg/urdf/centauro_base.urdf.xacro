@@ -64,14 +64,27 @@
 	<xacro:if value="${ADD_BALL_END_EFFECTOR}">
 		<xacro:include filename="parts/ball.urdf.xacro" />
 
-		<xacro:ball_end_effector arm_num="1"  parent_link="arm1_7">
+		<xacro:ball_end_effector arm_num="1"  parent_link="arm1_7" ball_mass="1.27">
       			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
    		</xacro:ball_end_effector>
 
-		<xacro:ball_end_effector arm_num="2"  parent_link="arm2_7">
+		<xacro:ball_end_effector arm_num="2"  parent_link="arm2_7" ball_mass="1.27">
       			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
    		</xacro:ball_end_effector>
 	</xacro:if>
+	
+	<xacro:if value="${ADD_ROD_PLATE_END_EFFECTOR}">
+		<xacro:include filename="parts/rod_plate.urdf.xacro" />
+
+		<xacro:rod_plate_end_effector arm_num="1" rot="1" parent_link="arm1_7" rod_mass="5.01">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:rod_plate_end_effector>
+
+		<xacro:rod_plate_end_effector arm_num="2" rot="-1"  parent_link="arm2_7" rod_mass="5.01">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:rod_plate_end_effector>
+	</xacro:if>
+	
 	<xacro:include filename="parts/head.urdf.xacro" />
 </xacro:if>
 

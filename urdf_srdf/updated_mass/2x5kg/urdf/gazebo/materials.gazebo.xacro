@@ -88,6 +88,18 @@
 
 </xacro:if>
 
+<xacro:if value="${ADD_ROD_PLATE_END_EFFECTOR}">
+
+<gazebo reference="rod_plate1">
+	<material>Gazebo/BlueTransparent</material>
+</gazebo>
+
+<gazebo reference="rod_plate2">
+	<material>Gazebo/GreenTransparent</material>
+</gazebo>
+
+</xacro:if>
+
 </xacro:if>
 
 

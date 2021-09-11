@@ -575,40 +575,45 @@
    </geometry>
       </collision-->
   </link>
-  <link name="ball1">
+  <!-- This is an attempt to model rod plate, the file is based on the ball hand -->
+  <link name="rod_plate1">
     <inertial>
-      <origin rpy="0 0 0" xyz="-1.0072498e-05 3.7590658e-05 0.019772332"/>
-      <mass value="5.0"/>
-      <inertia ixx="0.0023061092" ixy="2.9181758e-07" ixz="-2.1246684e-07" iyy="0.0023053155" iyz="7.9290978e-07" izz="0.0030675616"/>
+      <origin rpy="0 0 0" xyz="0.048407693 0.020035723 0.077533287"/>
+      <!--mass value="3.45345"/-->
+      <mass value="5.01"/>
+      <inertia ixx="0.01132302" ixy="-0.00067302376" ixz="-0.0028429136" iyy="0.012661574" iyz="-0.0011815269" izz="0.0084787328"/>
     </inertial>
     <visual>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-      <geometry name="ball1_visual">
-        <mesh filename="package://centauro_urdf/meshes/BallHand.stl" scale="0.001 0.001 0.001"/>
+      <origin rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry name="rod_plate1_visual">
+        <mesh filename="package://centauro_urdf/meshes/simple/RodPlate.stl" scale="0.001 -0.001 0.001"/>
       </geometry>
       <material name="grey"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-      <geometry name="ball1_collision">
-        <mesh filename="package://centauro_urdf/meshes/simple/BallHand.stl" scale="0.001 0.001 0.001"/>
+      <origin rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry name="rod_plate1_collision">
+        <mesh filename="package://centauro_urdf/meshes/simple/RodPlate.stl" scale="0.001 -0.001 0.001"/>
       </geometry>
     </collision>
   </link>
-  <link name="ball1_tip"/>
+  <link name="rod_plate1_tip"/>
+  <!-- <origin xyz="0 -0.174 -0.049" rpy="1.570796 0.0 0.0"/ -->
+  <!-- Parent link is arm*_7 -->
   <joint name="j_arm1_8" type="fixed">
     <parent link="arm1_7"/>
-    <child link="ball1"/>
+    <child link="rod_plate1"/>
     <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
   </joint>
-  <joint name="j_ball1_tip" type="fixed">
-    <parent link="ball1"/>
-    <child link="ball1_tip"/>
-    <origin rpy="0 0 0" xyz="0 0 -0.07"/>
+  <!-- tip frame is not perfectly correct, need to receive tf from cad -->
+  <joint name="j_rod_plate1_tip" type="fixed">
+    <parent link="rod_plate1"/>
+    <child link="rod_plate1_tip"/>
+    <origin rpy="0.0 0.0 0.349066" xyz="0.06 0.0 -0.16"/>
   </joint>
   <!-- add armX_8 link for legacy reasons (same as ballX) -->
-  <joint name="j_ball1_fixed" type="fixed">
-    <parent link="ball1"/>
+  <joint name="j_rod_plate1_fixed" type="fixed">
+    <parent link="rod_plate1"/>
     <child link="arm1_8"/>
   </joint>
   <link name="arm1_8">
@@ -617,40 +622,44 @@
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
   </link>
-  <link name="ball2">
+  <link name="rod_plate2">
     <inertial>
-      <origin rpy="0 0 0" xyz="-1.0072498e-05 3.7590658e-05 0.019772332"/>
-      <mass value="5.0"/>
-      <inertia ixx="0.0023061092" ixy="2.9181758e-07" ixz="-2.1246684e-07" iyy="0.0023053155" iyz="7.9290978e-07" izz="0.0030675616"/>
+      <origin rpy="0 0 0" xyz="0.048407693 -0.020035723 0.077533287"/>
+      <!--mass value="3.45345"/-->
+      <mass value="5.01"/>
+      <inertia ixx="0.01132302" ixy="0.00067302376" ixz="-0.0028429136" iyy="0.012661574" iyz="0.0011815269" izz="0.0084787328"/>
     </inertial>
     <visual>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-      <geometry name="ball2_visual">
-        <mesh filename="package://centauro_urdf/meshes/BallHand.stl" scale="0.001 0.001 0.001"/>
+      <origin rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry name="rod_plate2_visual">
+        <mesh filename="package://centauro_urdf/meshes/simple/RodPlate.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="grey"/>
     </visual>
     <collision>
-      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-      <geometry name="ball2_collision">
-        <mesh filename="package://centauro_urdf/meshes/simple/BallHand.stl" scale="0.001 0.001 0.001"/>
+      <origin rpy="3.1415 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry name="rod_plate2_collision">
+        <mesh filename="package://centauro_urdf/meshes/simple/RodPlate.stl" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
-  <link name="ball2_tip"/>
+  <link name="rod_plate2_tip"/>
+  <!-- <origin xyz="0 -0.174 -0.049" rpy="1.570796 0.0 0.0"/ -->
+  <!-- Parent link is arm*_7 -->
   <joint name="j_arm2_8" type="fixed">
     <parent link="arm2_7"/>
-    <child link="ball2"/>
+    <child link="rod_plate2"/>
     <origin rpy="0. 0. 0." xyz="0. 0. 0."/>
   </joint>
-  <joint name="j_ball2_tip" type="fixed">
-    <parent link="ball2"/>
-    <child link="ball2_tip"/>
-    <origin rpy="0 0 0" xyz="0 0 -0.07"/>
+  <!-- tip frame is not perfectly correct, need to receive tf from cad -->
+  <joint name="j_rod_plate2_tip" type="fixed">
+    <parent link="rod_plate2"/>
+    <child link="rod_plate2_tip"/>
+    <origin rpy="0.0 0.0 -0.349066" xyz="0.06 0.0 -0.16"/>
   </joint>
   <!-- add armX_8 link for legacy reasons (same as ballX) -->
-  <joint name="j_ball2_fixed" type="fixed">
-    <parent link="ball2"/>
+  <joint name="j_rod_plate2_fixed" type="fixed">
+    <parent link="rod_plate2"/>
     <child link="arm2_8"/>
   </joint>
   <link name="arm2_8">
@@ -2032,11 +2041,11 @@
   <gazebo reference="arm2_7">
     <material>Gazebo/LightBlueLaser</material>
   </gazebo>
-  <gazebo reference="ball1">
-    <material>Gazebo/BlackTransparent</material>
+  <gazebo reference="rod_plate1">
+    <material>Gazebo/BlueTransparent</material>
   </gazebo>
-  <gazebo reference="ball2">
-    <material>Gazebo/BlackTransparent</material>
+  <gazebo reference="rod_plate2">
+    <material>Gazebo/GreenTransparent</material>
   </gazebo>
   <origin rpy="0 0 0" xyz="0.0 0.0 1.2"/>
 </robot>

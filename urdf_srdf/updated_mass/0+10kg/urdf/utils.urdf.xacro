@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:property name="mmTom" value="0.001" />
+<xacro:property name="mm2Tom2" value="${0.001*0.001}" />
+<xacro:property name="tonsToKg" value="1000.0" />
+
+<xacro:property name="PI" value="3.14159265359" />
+<xacro:property name="PI_2" value="1.57079632679" />
+
+<xacro:property name="toRad" value="${PI/180.0}" />
+<xacro:property name="toDeg" value="${180.0/PI}" />
+
+<xacro:property name="torque_scale" value="0.7" /> <!-- scaling facto for available peack torque link side, from 0 to 1 -->
+
+<material name="black">
+    <color rgba="0.4 0.4 0.4 1"/>
+</material>
+
+<material name="dark">
+    <color rgba="0.1 0.1 0.1 1"/>
+</material>
+
+</robot>

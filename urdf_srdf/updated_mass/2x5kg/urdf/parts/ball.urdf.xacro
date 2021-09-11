@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-<xacro:macro name="ball_end_effector" params="arm_num parent_link *origin">
+<xacro:macro name="ball_end_effector" params="arm_num parent_link ball_mass *origin">
 
 <link name="ball${arm_num}">
     <inertial>
       <origin xyz="${-1.0072498e-02*mmTom} ${3.7590658e-02*mmTom} ${1.9772332e+01*mmTom}" rpy="0 0 0"/>
-      <mass value="5.0"/>
+      <mass value="${ball_mass}"/>
       <inertia ixx="${2.3061092e+03*mm2Tom2}"  ixy="${2.9181758e-01*mm2Tom2}"  ixz="${-2.1246684e-01*mm2Tom2}" iyy="${2.3053155e+03*mm2Tom2}" iyz="${7.9290978e-01*mm2Tom2}" izz="${3.0675616e+03*mm2Tom2}" />
     </inertial>
     <visual>

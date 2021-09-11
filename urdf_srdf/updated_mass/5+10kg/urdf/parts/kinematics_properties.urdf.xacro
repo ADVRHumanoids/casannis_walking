@@ -1,0 +1,231 @@
+<!--<?xml version="1.0"?>-->
+<robot  xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- Generic parameters -->
+<xacro:property name="cos_m10" value="0.984807753012208"/>
+<xacro:property name="sin_m10" value="-0.17364817766693033"/>
+
+<!-- Origin N-->
+<xacro:property name="Imu_Ox" value="${0.26 - (0.0254 * (1.08 - 0.62))}"/>
+<xacro:property name="Imu_Oy" value=" 0.0 "/>
+<xacro:property name="Imu_Oz" value="0.015"/>
+<xacro:property name="Imu_raw" value=" 0.0 "/>
+<xacro:property name="Imu_pitch" value=" 0.0 "/>
+<xacro:property name="Imu_yaw" value=" 0.0 "/>
+
+<!-- Origin -->
+<xacro:property name="Pelvis_Ox" value=" 0.0 "/>
+<xacro:property name="Pelvis_Oy" value=" 0.0 "/>
+<xacro:property name="Pelvis_Oz" value=" 0.93445 "/>
+
+<!-- Origin -->
+<xacro:property name="Neck_1_Ox" value=" 0.0 "/>
+<xacro:property name="Neck_1_Oy" value=" 0.0 "/>
+<xacro:property name="Neck_1_Oz" value=" 0.2795 "/>
+
+<!-- Origin -->
+<xacro:property name="Neck_2_Ox" value=" 0.054 "/>
+<xacro:property name="Neck_2_Oy" value=" 0.0596 "/>
+<xacro:property name="Neck_2_Oz" value=" -0.0124975 "/>
+
+<!-- Origin -->
+<xacro:property name="Neck_3_Ox" value=" 0.055 "/>
+<xacro:property name="Neck_3_Oy" value=" 0.00 "/>
+<xacro:property name="Neck_3_Oz" value=" 0.473262 "/>
+
+<!-- Origin -->
+<xacro:property name="Leg_1_Ox" value="${250.000 * mmTom}"/>
+<xacro:property name="Leg_1_Oy" value="${-125.000 * mmTom}"/>
+<xacro:property name="Leg_1_Oz" value="${-56.6000 * mmTom}"/>
+<xacro:property name="Leg_1_roll" value="0.0"/>
+<xacro:property name="Leg_1_pitch" value="0.0"/>
+<xacro:property name="Leg_1_yaw" value="0.0"/>
+
+<!-- Origin -->
+<xacro:property name="Leg_2_Ox" value="0.0"/>
+<xacro:property name="Leg_2_Oy" value="${-114.600 * mmTom}"/>
+<xacro:property name="Leg_2_Oz" value="${-62.5000 * mmTom}"/>
+<xacro:property name="Leg_2_roll" value="${PI_2}"/>
+<xacro:property name="Leg_2_pitch" value="0.0"/>
+<xacro:property name="Leg_2_yaw" value="0.0"/>
+
+<!-- Origin -->
+<xacro:property name="Leg_3_Ox" value="0.0"/>
+<xacro:property name="Leg_3_Oy" value="${-300.000 * mmTom}"/>
+<xacro:property name="Leg_3_Oz" value="${-118.200 * mmTom}"/>
+<xacro:property name="Leg_3_roll" value="${PI}"/>
+<xacro:property name="Leg_3_pitch" value="0.0"/>
+<xacro:property name="Leg_3_yaw" value="0.0"/>
+
+<xacro:property name="Ankle_1_Ox" value="0.0"/>
+<xacro:property name="Ankle_1_Oy" value="${200.000 * mmTom}"/>
+<xacro:property name="Ankle_1_Oz" value="${-100.150 * mmTom}"/>
+<xacro:property name="Ankle_1_roll" value="${PI}"/>
+<xacro:property name="Ankle_1_pitch" value=" 0.0 "/>
+<xacro:property name="Ankle_1_yaw" value=" 0.0 "/>
+
+<xacro:property name="Ankle_2_Ox" value="${0.0 * mmTom}"/>
+<xacro:property name="Ankle_2_Oy" value="${-139.000 * mmTom}"/>
+<xacro:property name="Ankle_2_Oz" value="${0.850000 * mmTom}"/>
+<xacro:property name="Ankle_2_roll" value="${-PI_2}"/>
+<xacro:property name="Ankle_2_pitch" value="0.0"/>
+<xacro:property name="Ankle_2_yaw" value="'0.0'"/>
+
+<xacro:property name="Wheel_Ox" value="${0.0 * mmTom}"/>
+<xacro:property name="Wheel_Oy" value="${0.0 * mmTom}"/>
+<xacro:property name="Wheel_Oz" value="${-98.3500 * mmTom}"/>
+<xacro:property name="Wheel_roll" value="${PI_2}"/>
+<xacro:property name="Wheel_pitch" value="0.0"/>
+<xacro:property name="Wheel_yaw" value="0.0"/>
+
+<!-- Origin -->
+<xacro:property name="Torso_2_Ox" value=" 0.200 "/>
+<xacro:property name="Torso_2_Oy" value=" 0.0 "/>
+<xacro:property name="Torso_2_Oz" value=" 0.256 "/>
+
+<!-- Origin -->
+<xacro:property name="Shoulder_1_Ox" value=" 0.0457475 "/> <!-- for the other arm it was 0.0457475 -->
+<xacro:property name="Shoulder_1_Oy" value=" 0.169137"/>
+<xacro:property name="Shoulder_1_Oz" value=" 0.11662600"/> <!-- Cogimon 0.155126 -->
+<xacro:property name="Shoulder_1_roll" value=" 0.174533 "/>
+<xacro:property name="Shoulder_1_pitch" value=" 0.0 "/> 
+<xacro:property name="Shoulder_1_yaw" value=" -0.5235988 "/>
+
+
+<!-- Origin -->
+<xacro:property name="Shoulder_2_Ox" value=" -0.09015 "/>
+<xacro:property name="Shoulder_2_Oy" value=" 0.062 "/>
+<xacro:property name="Shoulder_2_Oz" value=" 0.0 "/>
+<xacro:property name="Shoulder_2_roll" value=" -0.1745327 "/>
+<xacro:property name="Shoulder_2_pitch" value=" 0.0 "/> 
+<xacro:property name="Shoulder_2_yaw" value=" 0.0 "/>
+
+<!-- Origin -->
+<xacro:property name="Shoulder_3_Ox" value=" 0.09015 "/>
+<xacro:property name="Shoulder_3_Oy" value=" 0.0"/>
+<xacro:property name="Shoulder_3_Oz" value=" -0.21815  "/>
+
+<!-- Origin -->
+<xacro:property name="Elbow_1_Ox" value=" 0.045 "/>
+<xacro:property name="Elbow_1_Oy" value=" 0.05515 "/>
+<xacro:property name="Elbow_1_Oz" value=" -0.074 "/>
+
+<!-- Origin -->
+<xacro:property name="Wrist_1_Ox" value=" -0.015 "/>
+<xacro:property name="Wrist_1_Oy" value=" -0.05515 "/>
+<xacro:property name="Wrist_1_Oz" value=" -0.095 "/>
+
+<!-- Origin -->
+<xacro:property name="Wrist_2_Ox" value=" 0.0 "/>
+<xacro:property name="Wrist_2_Oy" value=" 0.049 "/>
+<xacro:property name="Wrist_2_Oz" value=" -0.156 "/>
+
+<!-- Origin -->
+<xacro:property name="Wrist_3_Ox" value=" 0.0 "/>
+<xacro:property name="Wrist_3_Oy" value=" -0.049 "/>
+<xacro:property name="Wrist_3_Oz" value=" -0.174 "/>
+
+
+<!-- FT_SENSORS_ARM-->
+<!-- Origin -->
+<xacro:property name="Ft_arm_Ox" value=" 0.0 "/>
+<xacro:property name="Ft_arm_Oy" value=" 0.0 "/>
+<xacro:property name="Ft_arm_Oz" value=" -0.00 "/>
+<xacro:property name="Ft_arm_roll" value=" 0.0 "/>
+<xacro:property name="Ft_arm_pitch" value=" 0.0 "/>
+<xacro:property name="Ft_arm_yaw" value=" 0.0 "/>
+
+<!-- END-EFFECTORS-->
+<!-- SOFT HAND/STICK/NO_EE-->
+<!-- Origin -->
+<xacro:property name="No_end_ft_Ox" value=" 0.0 "/>
+<xacro:property name="No_end_ft_Oy" value=" 0.0 "/>
+<xacro:property name="No_end_ft_Oz" value=" 0.0 "/>
+<xacro:property name="No_end_ft_roll" value=" ${PI} "/>
+<xacro:property name="No_end_ft_pitch" value=" 0.0 "/>
+<xacro:property name="No_end_ft_yaw" value=" 0.0 "/>
+
+<xacro:property name="No_end_Ox" value=" 0.0 "/>
+<xacro:property name="No_end_Oy" value=" 0.0 "/>
+<xacro:property name="No_end_Oz" value=" 0.0 "/>
+<xacro:property name="No_end_roll" value=" 0.0 "/>
+<xacro:property name="No_end_pitch" value=" 0.0 "/>
+<xacro:property name="No_end_yaw" value=" 0.0 "/>
+
+<xacro:property name="Stick_ft_Ox" value=" 0.0 "/>
+<xacro:property name="Stick_ft_Oy" value=" 0.0 "/>
+<xacro:property name="Stick_ft_Oz" value=" -0.0350 "/>
+<xacro:property name="Stick_ft_roll" value=" 0.0 "/>
+<xacro:property name="Stick_ft_pitch" value=" ${PI} "/>
+<xacro:property name="Stick_ft_yaw" value=" 0.0 "/>
+
+<xacro:property name="Stick_Ox" value=" 0.0 "/>
+<xacro:property name="Stick_Oy" value=" 0.0 "/>
+<xacro:property name="Stick_Oz" value=" -0.0 "/>
+<xacro:property name="Stick_roll" value=" 0.0 "/>
+<xacro:property name="Stick_pitch" value=" ${PI} "/>
+<xacro:property name="Stick_yaw" value=" ${-PI/2} "/>
+
+<xacro:property name="Heri_ft_Ox" value=" 0.0 "/>
+<xacro:property name="Heri_ft_Oy" value=" 0.0 "/>
+<xacro:property name="Heri_ft_Oz" value=" -0.0415 "/>
+<xacro:property name="Heri_ft_roll" value=" 0.0 "/>
+<xacro:property name="Heri_ft_pitch" value=" ${PI} "/>
+<xacro:property name="Heri_ft_yaw" value=" ${PI} "/>
+
+<xacro:property name="Heri_Ox" value=" 0.0 "/>
+<xacro:property name="Heri_Oy" value=" 0.0 "/>
+<xacro:property name="Heri_Oz" value=" -0.0405 "/>
+<xacro:property name="Heri_roll" value=" 0.0 "/>
+<xacro:property name="Heri_pitch" value=" ${PI} "/>
+<xacro:property name="Heri_yaw" value=" ${PI} "/>
+
+<xacro:property name="Hand_ft_Ox" value=" 0.0 "/>
+<xacro:property name="Hand_ft_Oy" value=" 0.0 "/>
+<xacro:property name="Hand_ft_Oz" value=" -0.005 "/>
+<xacro:property name="Hand_ft_roll" value=" 0.0 "/>
+<xacro:property name="Hand_ft_pitch" value=" 0.0 "/>
+<xacro:property name="Hand_ft_yaw" value=" 0.0 "/>
+
+<xacro:property name="Hand_Ox" value=" 0.0 "/>
+<xacro:property name="Hand_Oy" value=" 0.0 "/>
+<xacro:property name="Hand_Oz" value=" 0.0 "/>
+<xacro:property name="Hand_roll" value=" 0.0 "/>
+<xacro:property name="Hand_pitch" value=" 0.0 "/>
+<xacro:property name="Hand_yaw" value=" 0.0 "/>
+
+<xacro:property name="Camera_central_Ox" value=" 0.0559593 "/>
+<xacro:property name="Camera_central_Oy" value=" 5e-12 "/>
+<xacro:property name="Camera_central_Oz" value=" 0.390626 "/>
+<xacro:property name="Camera_central_roll" value=" 0.0 "/>
+<xacro:property name="Camera_central_pitch" value=" 0.349065586018 "/>
+<xacro:property name="Camera_central_yaw" value=" 0.0 "/>
+
+<xacro:property name="Camera_left_Ox" value=" 0.0191392 "/>
+<xacro:property name="Camera_left_Oy" value=" 0.0525845 "/>
+<xacro:property name="Camera_left_Oz" value=" 0.390626 "/>
+<xacro:property name="Camera_left_roll" value=" 0.0 "/>
+<xacro:property name="Camera_left_pitch" value=" 0.349065586018 "/>
+<xacro:property name="Camera_left_yaw" value=" 1.2217302006 "/>
+
+<xacro:property name="Camera_right_Ox" value=" 0.0191392 "/>
+<xacro:property name="Camera_right_Oy" value=" -0.0525845 "/>
+<xacro:property name="Camera_right_Oz" value=" 0.390626 "/>
+<xacro:property name="Camera_right_roll" value=" 0.0 "/>
+<xacro:property name="Camera_right_pitch" value=" 0.349065586018 "/>
+<xacro:property name="Camera_right_yaw" value=" -1.2217302006 "/>
+
+<xacro:property name="Kinect_Ox" value=" 0.03 "/>
+<xacro:property name="Kinect_Oy" value=" -0.0596 "/>
+<xacro:property name="Kinect_Oz" value=" 0.045855 "/>
+<xacro:property name="Kinect_roll" value=" 0.0 "/>
+<xacro:property name="Kinect_pitch" value=" 0.0 "/>
+<xacro:property name="Kinect_yaw" value=" 0.0 "/>
+
+<xacro:property name="Velodyne_Ox" value=" 0.0283656 "/>
+<xacro:property name="Velodyne_Oy" value=" -0.00976704 "/>
+<xacro:property name="Velodyne_Oz" value=" 0.047 "/>
+<xacro:property name="Velodyne_roll" value=" 1.57079632679 "/>
+<xacro:property name="Velodyne_pitch" value=" 0.0 "/>
+<xacro:property name="Velodyne_yaw" value=" -0.331612273666 "/>
+</robot>
