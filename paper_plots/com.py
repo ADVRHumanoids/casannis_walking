@@ -276,22 +276,63 @@ if __name__ == "__main__":
     #                                  robot_mass=112, dt=0.2, min_force=100)
 
     # 2 step-ups on 20 cm platform
-    scenario4_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
+    scenario3_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=50)
+                                      robot_mass=112, dt=0.2, min_force=100)
 
     # -10 deg inclined terrain
-    scenario5_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
+    scenario4_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
                                       swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[10.0, 10.0],
+                                      robot_mass=112, dt=0.2, min_force=50, payloads=[10.0, 10.0],
                                       gravity_vect=np.array([1.703, 0.0, -9.661]))
+
+    # ------------------------------- 2x5 kg--------------------------------------------------
+    # 0.3 stepping
+    scenario2_1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 5.0])
+
+    # 2 step-ups on 20 cm platform
+    scenario2_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 5.0])
+
+    # -10 deg inclined terrain
+    scenario2_3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
+                                      robot_mass=112, dt=0.2, min_force=50, payloads=[5.0, 5.0],
+                                      gravity_vect=np.array([1.703, 0.0, -9.661]))
+
+    # ------------------------------- 5 + 10 kg--------------------------------------------------
+    # 0.3 stepping
+    scenario3_1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
+
+    # 2 step-ups on 20 cm platform
+    scenario3_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
+                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
+
+    # -10 deg inclined terrain
+    scenario3_3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
+                                      robot_mass=112, dt=0.2, min_force=50, payloads=[5.0, 10.0],
+                                      gravity_vect=np.array([1.703, 0.0, -9.661]))
+
 
     # team of boxplots
     boxplots_dict = {'sc1': scenario1_CoM,
                      'sc2': scenario2_CoM,
                      'sc3': scenario3_CoM,
                      'sc4': scenario4_CoM,
-                     'sc5': scenario5_CoM}
+                     'sc2_1': scenario2_1_CoM,
+                     'sc2_2': scenario2_2_CoM,
+                     'sc2_3': scenario2_3_CoM,
+                     'sc3_1': scenario3_1_CoM,
+                     'sc3_2': scenario3_2_CoM,
+                     'sc3_3': scenario3_3_CoM
+                     }
 
     fig, ax = plt.subplots()
     ax.boxplot(boxplots_dict.values())
