@@ -8,9 +8,10 @@ import constraints
 
 import cubic_hermite_polynomial as cubic_spline
 
-gravity = np.array([0.0, 0.0, -9.81])
+# gravity = np.array([0.0, 0.0, -9.81])
 # gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
 # gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
+# gravity = np.array([0.0871557, 0.0, -9.661])   # -5 deg pitch
 # gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
 # gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
@@ -30,7 +31,7 @@ class Gait(object):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses):
+    def __init__(self, mass, N, dt, payload_masses, gravity=np.array([0.0, 0.0, -9.81])):
         """Gait class constructor
 
         Args:
@@ -38,7 +39,7 @@ class Gait(object):
             N (int): horizon length
             dt (float): discretization step
         """
-
+        self._gravity = gravity
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
         self._problem_duration = N * dt
@@ -747,7 +748,7 @@ class GaitNonlinear(Gait):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses):
+    def __init__(self, mass, N, dt, payload_masses, gravity=np.array([0.0, 0.0, -9.81])):
         """Walking class constructor
 
         Args:
@@ -756,6 +757,8 @@ class GaitNonlinear(Gait):
             dt (float): discretization step
             payload_masses: masses attached to arms [left, right]
         """
+
+        self._gravity = gravity
 
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
@@ -882,7 +885,7 @@ class GaitNonlinear(Gait):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
@@ -1107,11 +1110,11 @@ class GaitNonlinear(Gait):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
+            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-10.0, -10.0, - 3.0]
+            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [10.0, 10.0, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-10.0, -10.0, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [10.0, 10.0, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
@@ -1234,12 +1237,12 @@ if __name__ == "__main__":
 
     # mov contacts
     lmoving_contact = [
-        np.array([0.63, 0.279, 0.3]),
+        np.array([0.6336, 0.27945, 0.298]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([0.63, -0.279, 0.3]),
+        np.array([0.6336, -0.27945, 0.298]),
         np.zeros(3),
     ]
 
@@ -1247,12 +1250,12 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [2, 3, 0, 1]
+    sw_id = [2,3,0,1]
 
     step_num = len(sw_id)
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.0
+    dx = 0.1
     dy = 0.0
     dz = 0.0
 
@@ -1268,7 +1271,8 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2,
+                      payload_masses=[10.0, 10.0], gravity=np.array([1.703, 0.0, -9.661]))
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,

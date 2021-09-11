@@ -6,7 +6,7 @@ import trj_interpolation as interpol
 import costs
 import constraints
 
-gravity = np.array([0.0, 0.0, -9.81])
+# gravity = np.array([0.0, 0.0, -9.81])
 # gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
 # gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
 # gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
@@ -28,7 +28,7 @@ class Gait:
         - fulfil contact constraints (i.e. unilateral constraint)
     """
 
-    def __init__(self, mass, N, dt):
+    def __init__(self, mass, N, dt, gravity=np.array([0.0, 0.0, -9.81])):
         """Gait class constructor
 
         Args:
@@ -36,6 +36,8 @@ class Gait:
             N (int): horizon length
             dt (float): discretization step
         """
+
+        self._gravity = gravity
 
         self._Nseg = N
         self._dt = dt   # dt used for optimization knots

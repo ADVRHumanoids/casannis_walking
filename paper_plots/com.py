@@ -146,7 +146,9 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
     plt.show()
 
 
-def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
+def single_comparison(sw_id, steps, step_clear, swing_time,
+                      robot_mass, dt, min_force,
+                      payloads=[10.0, 10.0], gravity_vect=np.array([0.0, 0.0, -9.81])):
 
     dx = steps[0]
     dy = steps[1]
@@ -170,12 +172,12 @@ def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
 
     # mov contacts
     lmoving_contact = [
-        np.array([0.63, 0.279, 0.3]),
+        np.array([0.6336, 0.27945, 0.298]),
         np.zeros(3),
     ]
 
     rmoving_contact = [
-        np.array([0.63, -0.279, 0.3]),
+        np.array([0.6336, -0.27945, 0.298]),
         np.zeros(3),
     ]
 
@@ -188,11 +190,11 @@ def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
 
     swing_target = np.array(swing_target)
 
-    w_nominal = Nominal(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt)
+    w_nominal = Nominal(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt, gravity=gravity_vect)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol1 = w_nominal.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
-                  swing_clearance=step_clear, swing_t=swing_time, min_f=100)
+                  swing_clearance=step_clear, swing_t=swing_time, min_f=min_force)
 
 
     # interpolate the values, pass values and interpolation resolution
@@ -208,12 +210,13 @@ def single_comparison(sw_id, steps, step_clear, swing_time, robot_mass, dt):
     #w1.print_trj(sol1, interpl1, res, foot_contacts, sw_id)
 
     # adaptable
-    w_payload = Payload(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt, payload_masses=[5.0, 5.0])
+    w_payload = Payload(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt,
+                        payload_masses=payloads, gravity=gravity_vect)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol2 = w_payload.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact,
                     swing_id=sw_id, swing_tgt=swing_target, swing_clearance=step_clear,
-                    swing_t=swing_time, min_f=100)
+                    swing_t=swing_time, min_f=min_force)
 
 
     # interpolate the values, pass values and interpolation resolution
@@ -256,28 +259,35 @@ if __name__ == "__main__":
     # 0.2 stepping
     scenario1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=95, dt=0.2)
+                                      robot_mass=112, dt=0.2, min_force=100)
 
     # 0.2 dynamic stepping
     scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
                                       swing_time=[[1.0, 2.0], [2.5, 3.5], [4.0, 5.0], [5.5, 6.5]],
-                                      robot_mass=95, dt=0.2)
+                                      robot_mass=112, dt=0.2, min_force=100)
 
     # 0.2 stepping 45 degrees
     scenario3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1414, 0.1414, 0.0], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=95, dt=0.2)
+                                      robot_mass=112, dt=0.2, min_force=100)
 
     # 2 step-ups on 20 cm platform
     scenario4_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
                                       swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=95, dt=0.2)
+                                      robot_mass=112, dt=0.2, min_force=100)
+
+    # -10 deg inclined terrain
+    scenario5_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
+                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
+                                      robot_mass=112, dt=0.2, min_force=100, payloads=[10.0, 10.0],
+                                      gravity_vect=np.array([1.703, 0.0, -9.661]))
 
     # team of boxplots
     boxplots_dict = {'sc1': scenario1_CoM,
                      'sc2': scenario2_CoM,
                      'sc3': scenario3_CoM,
-                     'sc4': scenario4_CoM}
+                     'sc4': scenario4_CoM,
+                     'sc5': scenario5_CoM}
 
     fig, ax = plt.subplots()
     ax.boxplot(boxplots_dict.values())
