@@ -3,6 +3,8 @@ from matplotlib import pyplot as plt
 from gait import Gait as Nominal
 from gait_with_payload import GaitNonlinear as Payload
 
+import matplotlib
+
 
 def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, steps, interpol_freq):
 
@@ -15,6 +17,8 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
     # Interpolated state plot
     state_labels = ['Position [$m$]', 'Velocity [$m/s$]', 'Acceleration [$m/s^2$]']
     plt.figure()
+    matplotlib.rc('xtick', labelsize=16)
+    matplotlib.rc('ytick', labelsize=16)
     for i, name in enumerate(state_labels):
         axes = plt.subplot(3, 1, i + 1)
         # shade swing periods
@@ -24,9 +28,9 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
         # plot state
         for j, style_name in enumerate(linestyles):
             plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j],
-                     style_name, linewidth=3, color='g', label='baseline')
+                     style_name, linewidth=4, color='g', label='baseline')
             plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j],
-                     style_name, linewidth=3, color='r', label='payload')
+                     style_name, linewidth=4, color='r', label='payload')
             # if i == 0:
             #     plt.legend(cartesian_labels)
         plt.grid()
@@ -58,12 +62,14 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
     try:
         # Interpolated moving contact trajectory
         plt.figure()
+        matplotlib.rc('xtick', labelsize=16)
+        matplotlib.rc('ytick', labelsize=16)
         # shade swing periods
         for k in range(step_num):
             plt.axvspan(swing_periods[k][0], swing_periods[k][1], alpha=0.2)
         for k, (name, style_name) in enumerate(zip(cartesian_labels, linestyles)):
-            plt.plot(payl_results['t'], payl_results['p_mov_l'][k], style_name, linewidth=3, color='g')
-            plt.plot(payl_results['t'], payl_results['p_mov_r'][k], style_name, linewidth=3, color='r')
+            plt.plot(payl_results['t'], payl_results['p_mov_l'][k], style_name, linewidth=4, color='g')
+            plt.plot(payl_results['t'], payl_results['p_mov_r'][k], style_name, linewidth=4, color='r')
         #plt.legend([str(cartesian_labels[0]), str(cartesian_labels[1]), str(cartesian_labels[2])])
         plt.grid()
         #plt.title('Arm end-effectors trajectory', fontsize=20)
@@ -228,7 +234,7 @@ def single_comparison(sw_id, steps, step_clear, swing_time,
     # compute deviation
     CoM_deviation = compute_CoM_deviation(interpl1, interpl2)
 
-    compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num], [dx, dy, dz], res)
+    # compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num], [dx, dy, dz], res)
 
     return CoM_deviation
 
@@ -319,20 +325,36 @@ if __name__ == "__main__":
 
 
     # team of boxplots
-    boxplots_dict = {'sc1': scenario1_CoM,
-                     'sc2': scenario2_CoM,
-                     'sc3': scenario3_CoM,
-                     'sc4': scenario4_CoM,
-                     'sc2_1': scenario2_1_CoM,
-                     'sc2_2': scenario2_2_CoM,
-                     'sc2_3': scenario2_3_CoM,
-                     'sc3_1': scenario3_1_CoM,
-                     'sc3_2': scenario3_2_CoM,
-                     'sc3_3': scenario3_3_CoM
+    #boxplots_dict = {'Sc. 1': scenario1_CoM,
+    #                 'Sc. 2': scenario2_CoM,
+    #                 'Sc. 3': scenario3_CoM,
+    #                 'Sc. 4': scenario4_CoM,
+    #                 'sc2_1': scenario2_1_CoM,
+    #                 'sc2_2': scenario2_2_CoM,
+    #                 'sc2_3': scenario2_3_CoM,
+    #                 'sc3_1': scenario3_1_CoM,
+    #                 'sc3_2': scenario3_2_CoM,
+    #                 'sc3_3': scenario3_3_CoM
+    #                 }
+
+    boxplots_dict = {'$Sc. 1$': scenario1_CoM + scenario2_1_CoM + scenario3_1_CoM,
+                     '$Sc. 3$': scenario3_CoM + scenario2_2_CoM + scenario3_2_CoM,
+                     '$Sc. 4$': scenario4_CoM + scenario2_3_CoM + scenario3_3_CoM
                      }
 
     fig, ax = plt.subplots()
-    ax.boxplot(boxplots_dict.values())
+    matplotlib.rc('xtick', labelsize=16)
+    matplotlib.rc('ytick', labelsize=16)
+
+    boxprops = dict(linestyle='-', linewidth=4, color='black')
+    flierprops = dict(marker='o', markerfacecolor='green', markersize=12,
+                      markeredgecolor='none')
+    medianprops = dict(linestyle='-', linewidth=3, color='red')
+    meanpointprops = dict(marker='D', markeredgecolor='black',
+                          markerfacecolor='firebrick')
+    meanlineprops = dict(linestyle='--', linewidth=2.5, color='purple')
+
+    ax.boxplot(boxplots_dict.values(), boxprops=boxprops, medianprops=medianprops)
     ax.set_xticklabels(boxplots_dict.keys(), fontsize=20)
     plt.grid()
     plt.ylabel('CoM position deviation [$m$]', fontsize=20)
