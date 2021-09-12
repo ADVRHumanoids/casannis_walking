@@ -34,14 +34,14 @@
   <!--arg name="robot_namespace" default="centauro"/-->
   <!-- from where the simulation enviornment will be loaded:
        WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
-  <arg name="world_name" default="$(find casannis_walking)/worlds/centauro_platform.world"/>
-  <!--arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro_inclined_10.world"/-->
+  <!--arg name="world_name" default="$(find casannis_walking)/worlds/centauro_platform.world"/-->
+  <arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro_inclined_10.world"/>
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->
   <param name="robot_description"
-         command="$(find xacro)/xacro --inorder '$(find casannis_walking)/urdf_srdf/updated_mass/2x10kg/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/>
+         command="$(find xacro)/xacro --inorder '$(find casannis_walking)/urdf_srdf/updated_mass/5+10kg/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/>
 
-  <param name="robot_semantic_description" textfile="$(find casannis_walking)/urdf_srdf/updated_mass/2x10kg/srdf/centauro.srdf"/>
+  <param name="robot_semantic_description" textfile="$(find casannis_walking)/urdf_srdf/updated_mass/5+10kg/srdf/centauro.srdf"/>
 
   
   <!-- run gazebo -->

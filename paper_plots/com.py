@@ -256,68 +256,65 @@ def compute_CoM_deviation(nominal_trj, payload_trj):
 
 if __name__ == "__main__":
 
+    dt_nlp = 0.2
+    force_z = 50
+    feet_id = [2, 0, 3, 1]
+    clearance = 0.05
+    swing_periods = [[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]]
+    centauro_mass = 112
+
     # 0.3 stepping
-    scenario1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100)
+    scenario1_CoM = single_comparison(sw_id=feet_id, steps=[0.3, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z)
 
-    scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
-
-    # 0.2 dynamic stepping
-    #scenario2_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.2, 0.0, 0.0], step_clear=0.05,
-    #                                  swing_time=[[1.0, 2.0], [2.5, 3.5], [4.0, 5.0], [5.5, 6.5]],
-    #                                  robot_mass=112, dt=0.2, min_force=100)
-
-    # 0.2 stepping 45 degrees
-    #scenario3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1414, 0.1414, 0.0], step_clear=0.05,
-    #                                  swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-    #                                  robot_mass=112, dt=0.2, min_force=100)
+    scenario2_CoM = single_comparison(sw_id=feet_id, steps=[0.3, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 10.0])
 
     # 2 step-ups on 20 cm platform
-    scenario3_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100)
+    scenario3_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z)
 
     # -10 deg inclined terrain
-    scenario4_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
-                                      robot_mass=112, dt=0.2, min_force=50, payloads=[10.0, 10.0],
+    scenario4_CoM = single_comparison(sw_id=feet_id, steps=[0.1, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[10.0, 10.0],
                                       gravity_vect=np.array([1.703, 0.0, -9.661]))
 
     # ------------------------------- 2x5 kg--------------------------------------------------
     # 0.3 stepping
-    scenario2_1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 5.0])
+    scenario2_1_CoM = single_comparison(sw_id=feet_id, steps=[0.3, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 5.0])
 
     # 2 step-ups on 20 cm platform
-    scenario2_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 5.0])
+    scenario2_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 5.0])
 
     # -10 deg inclined terrain
-    scenario2_3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
-                                      robot_mass=112, dt=0.2, min_force=50, payloads=[5.0, 5.0],
+    scenario2_3_CoM = single_comparison(sw_id=feet_id, steps=[0.1, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 5.0],
                                       gravity_vect=np.array([1.703, 0.0, -9.661]))
 
     # ------------------------------- 5 + 10 kg--------------------------------------------------
     # 0.3 stepping
-    scenario3_1_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.3, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
+    scenario3_1_CoM = single_comparison(sw_id=feet_id, steps=[0.3, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 10.0])
 
     # 2 step-ups on 20 cm platform
-    scenario3_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=0.05,
-                                      swing_time=[[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]],
-                                      robot_mass=112, dt=0.2, min_force=100, payloads=[5.0, 10.0])
+    scenario3_2_CoM = single_comparison(sw_id=[0, 1], steps=[0.2, 0.0, 0.2], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 10.0])
 
     # -10 deg inclined terrain
-    scenario3_3_CoM = single_comparison(sw_id=[2, 3, 0, 1], steps=[0.1, 0.0, 0.0], step_clear=0.05,
-                                      swing_time=[[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]],
-                                      robot_mass=112, dt=0.2, min_force=50, payloads=[5.0, 10.0],
+    scenario3_3_CoM = single_comparison(sw_id=feet_id, steps=[0.1, 0.0, 0.0], step_clear=clearance,
+                                      swing_time=swing_periods,
+                                      robot_mass=centauro_mass, dt=dt_nlp, min_force=force_z, payloads=[5.0, 10.0],
                                       gravity_vect=np.array([1.703, 0.0, -9.661]))
 
 

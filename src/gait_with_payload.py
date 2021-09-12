@@ -1271,8 +1271,8 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0) / 0.2), dt=0.2,
-                      payload_masses=[10.0, 10.0], gravity=np.array([1.703, 0.0, -9.661]))
+    w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0)/0.2), dt=0.2,
+                      payload_masses=[10.0, 10.0])#, gravity=np.array([1.703, 0.0, -9.661]))
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
