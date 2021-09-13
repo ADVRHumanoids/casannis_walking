@@ -28,9 +28,9 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
         # plot state
         for j, style_name in enumerate(linestyles):
             plt.plot(nom_results['t'], nom_results['x'][cartesian_dim * i + j],
-                     style_name, linewidth=4, color='g', label='baseline')
+                     style_name, linewidth=4, color='g', label=cartesian_labels[j])
             plt.plot(payl_results['t'], payl_results['x'][cartesian_dim * i + j],
-                     style_name, linewidth=4, color='r', label='payload')
+                     style_name, linewidth=4, color='r')
             # if i == 0:
             #     plt.legend(cartesian_labels)
         plt.grid()
@@ -39,8 +39,8 @@ def compare_print(nom_results, payl_results, contacts, swing_id, swing_periods, 
     # handles, labels = plt.gca().get_legend_handles_labels()
     # plt.legend(handles, labels, loc='upper center')
 
-    # legend1 = plt.legend(prop={'size': 25})
-    # axes.add_artist(legend1)
+    legend1 = plt.legend(prop={'size': 25})
+    axes.add_artist(legend1)
     plt.xlabel('Time [$s$]', fontsize=20)
 
     feet_labels = ['FL', 'FR', 'HL', 'HR']
@@ -198,8 +198,12 @@ def single_comparison(sw_id, steps, step_clear, swing_time,
 
     w_nominal = Nominal(mass=robot_mass, N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt, gravity=gravity_vect)
 
+    w_nominal = Nominal(mass=robot_mass+payloads[0]+payloads[1], N=int((swing_time[0:step_num][-1][1] + 1.0) / dt), dt=dt, gravity=gravity_vect)
+    c_nom0 = np.array([0.1422, 0.0009, -0.0222])
+    x_nom_init = np.hstack([c_nom0, dc0, ddc0])
+
     # sol is the directory returned by solve class function contains state, forces, control values
-    sol1 = w_nominal.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
+    sol1 = w_nominal.solve(x0=x_nom_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
                   swing_clearance=step_clear, swing_t=swing_time, min_f=min_force)
 
 
@@ -234,7 +238,7 @@ def single_comparison(sw_id, steps, step_clear, swing_time,
     # compute deviation
     CoM_deviation = compute_CoM_deviation(interpl1, interpl2)
 
-    # compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num], [dx, dy, dz], res)
+    compare_print(interpl1, interpl2, foot_contacts, sw_id, swing_time[0:step_num], [dx, dy, dz], res)
 
     return CoM_deviation
 
@@ -337,9 +341,9 @@ if __name__ == "__main__":
     #                 'sc3_3': scenario3_3_CoM
     #                 }
 
-    boxplots_dict = {'$Sc. 1$': scenario1_CoM + scenario2_1_CoM + scenario3_1_CoM,
-                     '$Sc. 3$': scenario3_CoM + scenario2_2_CoM + scenario3_2_CoM,
-                     '$Sc. 4$': scenario4_CoM + scenario2_3_CoM + scenario3_3_CoM
+    boxplots_dict = {' 0.3 m steps': scenario1_CoM + scenario2_1_CoM + scenario3_1_CoM,
+                     ' Platform step-up': scenario3_CoM + scenario2_2_CoM + scenario3_2_CoM,
+                     ' -10 deg. inclined terrain': scenario4_CoM + scenario2_3_CoM + scenario3_3_CoM
                      }
 
     fig, ax = plt.subplots()
