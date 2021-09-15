@@ -5,15 +5,9 @@ import trj_interpolation as interpol
 
 import costs
 import constraints
+import parameters
 
 import cubic_hermite_polynomial as cubic_spline
-
-# gravity = np.array([0.0, 0.0, -9.81])
-# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
-# gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
-# gravity = np.array([0.0871557, 0.0, -9.661])   # -5 deg pitch
-# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
-# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
 class Gait(object):
@@ -31,7 +25,7 @@ class Gait(object):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses, gravity=np.array([0.0, 0.0, -9.81])):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg=0):
         """Gait class constructor
 
         Args:
@@ -39,7 +33,10 @@ class Gait(object):
             N (int): horizon length
             dt (float): discretization step
         """
-        self._gravity = gravity
+
+        self._box_conservative = False
+
+        self._gravity = parameters.get_gravity_acc_vector(slope_deg)
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
         self._problem_duration = N * dt
@@ -90,8 +87,8 @@ class Gait(object):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay_l = self._payload_mass_l * gravity  # virtual force
-        f_pay_r = self._payload_mass_r * gravity  # virtual force
+        f_pay_l = self._payload_mass_l * self._gravity  # virtual force
+        f_pay_r = self._payload_mass_r * self._gravity  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -108,7 +105,7 @@ class Gait(object):
         }
 
         # get default arm position for final penalty
-        arms_default_pos = constraints.get_arm_default_pos('forward')
+        arms_default_pos = parameters.get_arm_default_pos('forward', self._box_conservative)
 
         # iterate over knots starting from k = 0
         for k in range(knot_number):
@@ -161,7 +158,7 @@ class Gait(object):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 f_pay_l, f_pay_r
             )
@@ -301,7 +298,7 @@ class Gait(object):
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # get bounds for arms' box constraints
-        arm_bounds = constraints.get_arm_box_bounds('forward')
+        arm_bounds = parameters.get_arm_box_bounds('forward', self._box_conservative)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -748,7 +745,7 @@ class GaitNonlinear(Gait):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses, gravity=np.array([0.0, 0.0, -9.81])):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg):
         """Walking class constructor
 
         Args:
@@ -758,7 +755,9 @@ class GaitNonlinear(Gait):
             payload_masses: masses attached to arms [left, right]
         """
 
-        self._gravity = gravity
+        self._box_conservative = False
+
+        self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
@@ -832,7 +831,7 @@ class GaitNonlinear(Gait):
         }
 
         # get default arm position for final penalty
-        arms_default_pos = constraints.get_arm_default_pos('forward')
+        arms_default_pos = parameters.get_arm_default_pos('forward', self._box_conservative)
 
         # iterate over knots starting from k = 0
         for k in range(knot_number):
@@ -906,23 +905,23 @@ class GaitNonlinear(Gait):
                 g.append(state_constraint)
 
                 # newton constraint for the payload mass, virtual force has opposite sign
-                payload_mass_constraint_l = constraints.newton_payload_constraint(P_mov_l[u_slice0:u_slice2],
+                payload_mass_constraint_l = constraints.newton_point_mass_constraint(P_mov_l[u_slice0:u_slice2],
                                                                                   DP_mov_l[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_l,
-                                                                                  gravity,
+                                                                                  self._gravity,
                                                                                   -F_virt_l[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_l['x'])
                 g.append(payload_mass_constraint_l['y'])
                 g.append(payload_mass_constraint_l['z'])
 
-                payload_mass_constraint_r = constraints.newton_payload_constraint(P_mov_r[u_slice0:u_slice2],
+                payload_mass_constraint_r = constraints.newton_point_mass_constraint(P_mov_r[u_slice0:u_slice2],
                                                                                   DP_mov_r[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_r,
-                                                                                  gravity,
+                                                                                  self._gravity,
                                                                                   -F_virt_r[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_r['x'])
                 g.append(payload_mass_constraint_r['y'])
@@ -1054,7 +1053,7 @@ class GaitNonlinear(Gait):
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # get bounds for arms' box constraints
-        arm_bounds = constraints.get_arm_box_bounds('forward')
+        arm_bounds = parameters.get_arm_box_bounds('forward', self._box_conservative)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -1272,7 +1271,7 @@ if __name__ == "__main__":
     step_clear = 0.05
 
     w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0)/0.2), dt=0.2,
-                      payload_masses=[10.0, 10.0])#, gravity=np.array([1.703, 0.0, -9.661]))
+                      payload_masses=[10.0, 10.0], slope_deg=0)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
