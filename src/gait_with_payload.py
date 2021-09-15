@@ -25,16 +25,19 @@ class Gait(object):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses, slope_deg=0):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg=0, conservative_box=True):
         """Gait class constructor
 
         Args:
             mass (float): robot mass
             N (int): horizon length
             dt (float): discretization step
+            payload_masses: mass of the payloads in left and right arm
+            slope_deg: inclination of terrain in degrees (only in x direction)
+            conservative_box: if true the arm EE box constraints are more conservative and far from robot chest
         """
 
-        self._box_conservative = False
+        self._box_conservative = conservative_box
 
         self._gravity = parameters.get_gravity_acc_vector(slope_deg)
         self._Nseg = N
@@ -745,7 +748,7 @@ class GaitNonlinear(Gait):
 
     """
 
-    def __init__(self, mass, N, dt, payload_masses, slope_deg):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg, conservative_box=True):
         """Walking class constructor
 
         Args:
@@ -753,9 +756,11 @@ class GaitNonlinear(Gait):
             N (int): horizon length
             dt (float): discretization step
             payload_masses: masses attached to arms [left, right]
+            slope_deg: inclination of terrain in degrees (only in x direction)
+            conservative_box: if true the arm EE box constraints are more conservative and far from robot chest
         """
 
-        self._box_conservative = False
+        self._box_conservative = conservative_box
 
         self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 

@@ -34,7 +34,11 @@ def casannis(int_freq):
 
     rospy.init_node('casannis', anonymous=True)
 
-    inclination_deg = rospy.get_param("~inclination_deg")  # get from command line as target_dx
+    # get inclination of terrain
+    inclination_deg = rospy.get_param("~inclination_deg")
+
+    # get param conservative_box which defines if the box constraints are near the chest or not
+    arm_box_conservative = rospy.get_param("~box_conservative")
 
     # select gait among different developments
     forward_arm_config = rospy.get_param("~forward_arms")
@@ -175,7 +179,7 @@ def casannis(int_freq):
 
     # object class of the optimization problem
     walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m,
-                        slope_deg=inclination_deg)
+                        slope_deg=inclination_deg, conservative_box=arm_box_conservative)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
