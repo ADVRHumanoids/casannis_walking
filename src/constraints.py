@@ -34,7 +34,7 @@ def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, c
     }
 
 
-def newton_payload_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, accel_grav, virtual_force):
+def newton_point_mass_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, accel_grav, virtual_force):
     """
     This function is useful for imposing newton's 2nd law in point masses (payload).
     m * acc = Weight + Forces
@@ -293,86 +293,6 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
         'x': constraint_violation[0],
         'y': constraint_violation[1],
         'z': constraint_violation[2],
-    }
-
-
-def get_arm_box_bounds(side):
-    '''
-    Get the box constraint bounds for the arms' position.
-    :param side: forward/backward/sideways
-    :return: return the bounds as dictionary of np.array
-    '''
-
-    if side == 'forward':
-        #left_lower_bound = np.array([0.35, 0.0, 0.25])
-        #left_upper_bound = np.array([0.48, 0.3, 0.35])
-
-        #right_lower_bound = np.array([0.35, -0.3, 0.25])
-        #right_upper_bound = np.array([0.48, 0.0, 0.35])
-
-        left_lower_bound = np.array([0.45, 0.1, 0.25])
-        left_upper_bound = np.array([0.58, 0.35, 0.35])
-
-        right_lower_bound = np.array([0.45, -0.35, 0.25])
-        right_upper_bound = np.array([0.58, -0.1, 0.35])
-
-    elif side == 'backward':
-        left_lower_bound = np.array([-0.3, 0.0, 0.35])
-        left_upper_bound = np.array([-0.08, 0.35, 0.45])
-
-        right_lower_bound = np.array([-0.3, -0.35, 0.35])
-        right_upper_bound = np.array([-0.08, -0.0, 0.45])
-
-    elif side == 'sideways':
-        # to be specified
-        left_lower_bound = np.array([0.35, 0.0, 0.25])
-        left_upper_bound = np.array([0.48, 0.3, 0.35])
-
-        right_lower_bound = np.array([0.35, -0.3, 0.25])
-        right_upper_bound = np.array([0.48, 0.0, 0.35])
-
-    else:
-        print('Wrong side specification')
-        left_lower_bound = left_upper_bound = right_lower_bound = right_upper_bound = None
-
-    return {
-        'left_l': left_lower_bound,
-        'left_u': left_upper_bound,
-        'right_l': right_lower_bound,
-        'right_u': right_upper_bound
-    }
-
-
-def get_arm_default_pos(side):
-    '''
-    Get the default position of arms.
-    :param side: forward/backward/sideways
-    :return: return the bounds as dictionary of lists
-    '''
-
-    if side == 'forward':
-    #    left = [0.43, 0.179, 0.3]
-    #    right = [0.43, -0.179, 0.3]
-
-        left = [0.55, 0.279, 0.31]
-        right = [0.55, -0.279, 0.31]
-
-    elif side == 'backward':
-        left = [-0.0947, 0.15, 0.415]
-        right = [-0.0947, -0.15, 0.415]
-
-    elif side == 'sideways':
-        # to be specified
-        left = [0.43, 0.179, 0.3]
-        right = [0.43, -0.179, 0.3]
-
-    else:
-        print('Wrong side specification')
-        left = right = None
-
-    return {
-        'left': left,
-        'right': right
     }
 
 

@@ -29,12 +29,20 @@ def penalize_horizontal_CoM_position(weight, CoM_position, contact_positions, re
     return weight * cs.sumsqr(horizontal_dist)
 
 
-def penalize_vertical_CoM_position(weight, CoM_position, contact_positions, reference_position=None):
+def penalize_vertical_CoM_position(weight, CoM_position, contact_positions, payload_offset_z=0, reference_position=None):
+    '''
+    :param weight: weigtht of the cost
+    :param CoM_position: position vector of the CoM
+    :param contact_positions: contact points
+    :param payload_offset_z: extra offset to compensate for payload or other effects (optional)
+    :param reference_position: hardcode a reference position for the CoM (optional)
+    :return:
+    '''
 
     if reference_position is None:
         contacts_vertical_mean_position = 0.25 * (contact_positions[2] + contact_positions[5]
                                                   + contact_positions[8] + contact_positions[11])\
-                                          + 0.66
+                                          + 0.66 + payload_offset_z
         reference_position = contacts_vertical_mean_position
 
     vertical_dist = CoM_position[2] - reference_position

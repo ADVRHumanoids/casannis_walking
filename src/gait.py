@@ -1,16 +1,12 @@
 import casadi as cs 
 import numpy as np
 from matplotlib import pyplot as plt
+
+import parameters
 import trj_interpolation as interpol
 
 import costs
 import constraints
-
-# gravity = np.array([0.0, 0.0, -9.81])
-# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
-# gravity = np.array([1.703, 0.0, -9.661])   # -10 deg pitch
-# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
-# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
 class Gait:
@@ -28,7 +24,7 @@ class Gait:
         - fulfil contact constraints (i.e. unilateral constraint)
     """
 
-    def __init__(self, mass, N, dt, gravity=np.array([0.0, 0.0, -9.81])):
+    def __init__(self, mass, N, dt, slope_deg=0):
         """Gait class constructor
 
         Args:
@@ -37,7 +33,18 @@ class Gait:
             dt (float): discretization step
         """
 
-        self._gravity = gravity
+        # identify if there is payload
+        robot_mass = 112.0
+        if mass > robot_mass:
+            payload = mass - robot_mass
+            CoM_vert_offset = 0.047
+            print(payload, ' kg payload detected. Check input for robot mass.')
+
+        else:
+            print('No payload')
+            CoM_vert_offset = 0.0
+
+        self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 
         self._Nseg = N
         self._dt = dt   # dt used for optimization knots
@@ -106,14 +113,15 @@ class Gait:
             cost_function = 0.0
             cost_function += costs.penalize_xy_forces(1e-3, F[f_slice1:f_slice2])  # penalize xy forces
             cost_function += costs.penalize_horizontal_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)  # penalize CoM position
-            cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3], p_k)
+            cost_function += costs.penalize_vertical_CoM_position(1e3, X[x_slice1:x_slice1 + 3],
+                                                                  p_k, payload_offset_z=CoM_vert_offset)
             cost_function += costs.penalize_quantity(1e-0, U[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
             J.append(cost_function)
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2], p_k
+                X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2], p_k
             )
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
@@ -534,7 +542,7 @@ if __name__ == "__main__":
     #swing_time = [[1.0, 4.0], [5.0, 8.0], [9.0, 12.0], [13.0, 16.0]]
     step_clear = 0.05
 
-    w = Gait(mass=112, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2)
+    w = Gait(mass=112, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, slope_deg=0)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, swing_id=sw_id, swing_tgt=swing_target,
