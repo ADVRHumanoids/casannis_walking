@@ -2,6 +2,9 @@
 
 <launch>
     <arg name="dynamic" default="False"/>
+    <arg name="robot_mass" default="112"/>
+
+    <arg name="slope_x" default="0.0"/>
 
     <arg name="swing_id" default="[3, 1, 4, 2]"/>
     <arg name="target_dx" default="0.1"/>
@@ -32,18 +35,24 @@
         <arg name="swing_t1" value="[2.0, 4.5]"/>
         <arg name="swing_t2" value="[5.5, 8.0]"/>
         <arg name="swing_t3" value="[9.0, 11.5]"/>
-        <arg name="swing_t4" value="[12.5, 15.0]"/>
-    </--group-->
+        <arg name="swing_t4" value="[12.5, 15.0]"/-->
+    <!--/group-->
 
     <node name="casannis" pkg="casannis_walking" type="gait_node.py" output="screen">
+
+        <param name="inclination_deg" value="$(arg slope_x)"/>
+        <param name="centauro_mass" value="$(arg robot_mass)"/>
         <param name="sw_id" value="$(arg swing_id)"/>
+
         <param name="tgt_dx" value="$(arg target_dx)"/>
         <param name="tgt_dy" value="$(arg target_dy)"/>
         <param name="tgt_dz" value="$(arg target_dz)"/>
+
         <param name="sw_t1" value="$(arg swing_t1)"/>
         <param name="sw_t2" value="$(arg swing_t2)"/>
         <param name="sw_t3" value="$(arg swing_t3)"/>
         <param name="sw_t4" value="$(arg swing_t4)"/>
+
         <param name="cont_det" value="$(arg contact_det)"/>
         <param name="plots" value="$(arg plots)"/>
         <param name="clear" value="$(arg clearance)"/>

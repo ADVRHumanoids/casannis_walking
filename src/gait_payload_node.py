@@ -34,6 +34,8 @@ def casannis(int_freq):
 
     rospy.init_node('casannis', anonymous=True)
 
+    inclination_deg = rospy.get_param("~inclination_deg")  # get from command line as target_dx
+
     # select gait among different developments
     forward_arm_config = rospy.get_param("~forward_arms")
     linear_fvirt = rospy.get_param("~linear_fvirt")
@@ -172,8 +174,8 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m)#,
-                        #gravity=np.array([1.703, 0.0, -9.661]))
+    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m,
+                        slope_deg=inclination_deg)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
@@ -203,9 +205,6 @@ def casannis(int_freq):
 
     # approximate distance covered during swing
     tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
-
-    # publish freq wrt the desired swing velocity
-    #freq = swing_vel * N_swing_total / tgt_ds
 
     # mean velocity of the swing foot
     mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))

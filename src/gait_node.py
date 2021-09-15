@@ -66,6 +66,12 @@ def casannis(int_freq):
 
     # Get ROS Parameters
 
+    # get slope from parameter server
+    inclination_deg = rospy.get_param("~inclination_deg")  # get from command line as target_dx
+
+    # get robot mass
+    centauro_mass = rospy.get_param("~centauro_mass")  # get from command line as target_dx
+
     # ID of the foot to be moved, get from parameters
     swing_id = rospy.get_param("~sw_id")    # from command line as swing_id:=1/2/3/4
     swing_id = swing_id.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
@@ -129,7 +135,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # object class of the optimization problem
-    walk = Gait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2)
+    walk = Gait(mass=centauro_mass, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, slope_deg=inclination_deg)
 
     # call the solver of the optimization problem
     # sol is the directory returned by solve class function contains state, forces, control values
