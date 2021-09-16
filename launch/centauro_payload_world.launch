@@ -39,9 +39,9 @@
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->
   <param name="robot_description"
-         command="$(find xacro)/xacro --inorder '$(find casannis_walking)/urdf_srdf/updated_mass/5+10kg/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/>
+         command="$(find xacro)/xacro --inorder '$(find casannis_walking)/urdf_srdf/updated_mass/2x10kg/urdf/centauro_robot.urdf.xacro' add_upper_body:=$(arg arms) add_legs:=$(arg legs)"/>
 
-  <param name="robot_semantic_description" textfile="$(find casannis_walking)/urdf_srdf/updated_mass/5+10kg/srdf/centauro.srdf"/>
+  <param name="robot_semantic_description" textfile="$(find casannis_walking)/urdf_srdf/updated_mass/2x10kg/srdf/centauro.srdf"/>
 
   
   <!-- run gazebo -->
