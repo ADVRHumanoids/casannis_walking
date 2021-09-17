@@ -37,12 +37,12 @@ class Gait:
         robot_mass = 112.0
         if mass > robot_mass:
             payload = mass - robot_mass
-            CoM_vert_offset = 0.047
+            self._CoM_vert_offset = CoM_vert_offset = 0.068
             print(payload, ' kg payload detected. Check input for robot mass.')
 
         else:
             print('No payload')
-            CoM_vert_offset = 0.0
+            self._CoM_vert_offset = CoM_vert_offset = 0.0
 
         self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 
@@ -208,7 +208,8 @@ class Gait:
             else:
                 final_contacts.append(contacts[i])
 
-        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
+        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts,
+                                                                       offset_from_payload=self._CoM_vert_offset)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):

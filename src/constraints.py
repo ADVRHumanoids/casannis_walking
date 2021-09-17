@@ -296,6 +296,13 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
     }
 
 
+def avoid_arm_self_collision_constraint(ee_left, ee_right):
+
+    constraint_violation = ee_left[1] - ee_right[1]
+
+    return constraint_violation
+
+
 def bound_state_variables(initial_state, state_bound, knot, knot_num, final_state=None):
 
     # state bounds
@@ -348,7 +355,7 @@ def set_contact_parameters(contacts, swing_id, swing_target, clearance_times, po
     return p_k
 
 
-def get_nominal_CoM_bounds_from_contacts(contacts):
+def get_nominal_CoM_bounds_from_contacts(contacts, offset_from_payload=0):
 
     mean_hor_foothold = [0.25 * coordinate
                          for coordinate in [sum([sublist[0] for sublist in contacts]),
@@ -356,8 +363,10 @@ def get_nominal_CoM_bounds_from_contacts(contacts):
                                             sum([sublist[2] for sublist in contacts])]
                          ]
 
-    final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.65]
-    final_position_u = [mean_hor_foothold[0] + 0.05] + [mean_hor_foothold[1]] + [mean_hor_foothold[2] + 0.67]
+    final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + \
+                       [mean_hor_foothold[2] + 0.65 + offset_from_payload]
+    final_position_u = [mean_hor_foothold[0] + 0.05] + [mean_hor_foothold[1]] + \
+                       [mean_hor_foothold[2] + 0.67 + offset_from_payload]
 
     final_state_bounds = [np.concatenate([final_position_l, np.zeros(6)]),
                           np.concatenate([final_position_u, np.zeros(6)])]

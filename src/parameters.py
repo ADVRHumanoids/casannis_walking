@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+import casadi as cs
+
 
 def get_arm_box_bounds(side, conservative = True):
     '''
@@ -12,19 +14,19 @@ def get_arm_box_bounds(side, conservative = True):
 
     if side == 'forward' and conservative:
 
-        left_lower_bound = np.array([0.40, 0.05, 0.32])
+        left_lower_bound = np.array([0.40, -0.05, 0.32])
         left_upper_bound = np.array([0.58, 0.35, 0.42])
 
         right_lower_bound = np.array([0.40, -0.35, 0.32])
-        right_upper_bound = np.array([0.58, -0.05, 0.42])
+        right_upper_bound = np.array([0.58, 0.05, 0.42])
 
     elif side == 'forward' and not conservative:
 
-        left_lower_bound = np.array([0.35, 0.0, 0.25])
-        left_upper_bound = np.array([0.48, 0.3, 0.35])
+        left_lower_bound = np.array([0.35, -0.1, 0.25])
+        left_upper_bound = np.array([0.55, 0.35, 0.35])
 
-        right_lower_bound = np.array([0.35, -0.3, 0.25])
-        right_upper_bound = np.array([0.48, 0.0, 0.35])
+        right_lower_bound = np.array([0.35, -0.35, 0.25])
+        right_upper_bound = np.array([0.55, 0.1, 0.35])
 
     elif side == 'backward':
         left_lower_bound = np.array([-0.3, 0.0, 0.35])
@@ -50,6 +52,30 @@ def get_arm_box_bounds(side, conservative = True):
         'left_u': left_upper_bound,
         'right_l': right_lower_bound,
         'right_u': right_upper_bound
+    }
+
+
+def get_distance_between_arms(conservative = True):
+    '''
+    The returned distance will be the bound for the arm self collision avoidance constraint
+    :param conservative: true for conservative box bounds to avoid self collision
+    :return: return the bound
+    '''
+
+    if conservative:
+        lower_bound = 0.3
+        upper_bound = cs.inf
+
+    elif not conservative:
+        lower_bound = 0.2
+        upper_bound = cs.inf
+    else:
+        print('Wrong side specification')
+        lower_bound = upper_bound = None
+
+    return {
+        'lower': lower_bound,
+        'upper': upper_bound
     }
 
 

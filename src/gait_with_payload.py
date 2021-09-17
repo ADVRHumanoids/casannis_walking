@@ -965,6 +965,14 @@ class GaitNonlinear(Gait):
             g.append(right_mov_contact_box_constraint['y'])
             g.append(right_mov_contact_box_constraint['z'])
 
+            # constraint for self collision avoidance of arm ee
+            avoid_arm_collision_constraint = constraints.avoid_arm_self_collision_constraint(
+                P_mov_l[u_slice1:u_slice2],
+                P_mov_r[u_slice1:u_slice2]
+            )
+
+            g.append(avoid_arm_collision_constraint)
+
         # construct the solver
         self._nlp = {
             'x': cs.vertcat(X, U, F, P_mov_l, P_mov_r, DP_mov_l, DP_mov_r, F_virt_l, F_virt_r),
@@ -1059,6 +1067,9 @@ class GaitNonlinear(Gait):
 
         # get bounds for arms' box constraints
         arm_bounds = parameters.get_arm_box_bounds('forward', self._box_conservative)
+
+        # get bounds for arm self collision avoidance
+        arm_distance_bounds = parameters.get_distance_between_arms(self._box_conservative)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -1158,6 +1169,10 @@ class GaitNonlinear(Gait):
 
             gl.append(arm_bounds['right_l'])
             gu.append(arm_bounds['right_u'])
+
+            # arm self collision avoidance
+            gl.append(arm_distance_bounds['lower'])
+            gu.append(arm_distance_bounds['upper'])
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
