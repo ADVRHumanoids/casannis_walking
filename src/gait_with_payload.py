@@ -1095,7 +1095,7 @@ class GaitNonlinear(Gait):
                 lmov_contact_initial[0],
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                [np.full(3, -0.5), np.full(3, 0.5)],
+                [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 k, self._knot_number)
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
@@ -1106,7 +1106,7 @@ class GaitNonlinear(Gait):
                 rmov_contact_initial[0],
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                [np.full(3, -0.5), np.full(3, 0.5)],
+                [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 k, self._knot_number)
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
