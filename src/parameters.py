@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 def get_arm_box_bounds(side, conservative = True):
     '''
     Get the box constraint bounds for the arms' position.
@@ -11,11 +12,11 @@ def get_arm_box_bounds(side, conservative = True):
 
     if side == 'forward' and conservative:
 
-        left_lower_bound = np.array([0.45, 0.1, 0.25])
-        left_upper_bound = np.array([0.58, 0.35, 0.35])
+        left_lower_bound = np.array([0.40, 0.05, 0.32])
+        left_upper_bound = np.array([0.58, 0.35, 0.42])
 
-        right_lower_bound = np.array([0.45, -0.35, 0.25])
-        right_upper_bound = np.array([0.58, -0.1, 0.35])
+        right_lower_bound = np.array([0.40, -0.35, 0.32])
+        right_upper_bound = np.array([0.58, -0.05, 0.42])
 
     elif side == 'forward' and not conservative:
 
@@ -61,8 +62,8 @@ def get_arm_default_pos(side, conservative=True):
 
     if side == 'forward' and conservative:
 
-        left = [0.55, 0.279, 0.31]
-        right = [0.55, -0.279, 0.31]
+        left = [0.5, 0.2, 0.39]
+        right = [0.5, -0.2, 0.39]
 
     elif side == 'forward' and not conservative:
 
@@ -99,3 +100,23 @@ def get_gravity_acc_vector(inclination_deg=0):
     gravity_acc_vector = np.array([g_x, g_y, g_z])
 
     return gravity_acc_vector
+
+
+def get_distance_of_gravity_from_urdf_frame(link_name):
+
+    mmTom = 0.001
+
+    if link_name == 'ball':
+        left_grav_urdf = right_grav_urdf = np.array([-1.0072498e-02*mmTom, 3.7590658e-02*mmTom, 1.9772332e+01*mmTom])
+
+    elif link_name == 'rod_plate':
+        left_grav_urdf = np.array([4.8407693e+01*mmTom, 2.0035723e+01*mmTom, 7.7533287e+01*mmTom])
+        right_grav_urdf = np.array([4.8407693e+01 * mmTom, - 2.0035723e+01 * mmTom, 7.7533287e+01 * mmTom])
+
+    else:
+        print('Wrong arm EE link name.')
+
+    return {
+        'left': left_grav_urdf,
+        'right': right_grav_urdf
+    }
