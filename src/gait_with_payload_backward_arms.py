@@ -3,25 +3,26 @@ import numpy as np
 
 import costs
 import constraints
+import parameters
+
 from gait_with_payload import Gait as ParentGait
 from gait_with_payload import GaitNonlinear as GaitNonlinearForward
-
-gravity = np.array([0.0, 0.0, -9.81])
-# gravity = np.array([-1.703, 0.0, -9.661])   # 10 deg pitch
-# gravity = np.array([-3.3552, 0.0, -9.218])   # 20 deg pitch
-# gravity = np.array([-2.539, -0.826, -9.44])   # 15 deg pitch, 5 deg roll
 
 
 class Gait(ParentGait):
 
-    def __init__(self, mass, N, dt, payload_masses):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg, conservative_box):
         """Gait class constructor
 
         Args:
             mass (float): robot mass
             N (int): horizon length
             dt (float): discretization step
+            slope_deg: inclination in degrees, only in pitch direction
+            conservative_box: not used yet, just for consistency with forward arms config
         """
+
+        self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
@@ -73,8 +74,8 @@ class Gait(ParentGait):
         P_mov_r = sym_t.sym('P_mov_r', knot_number * dimp_mov)  # position knots for the virtual contact
         DP_mov_l = sym_t.sym('DP_mov_l', knot_number * dimp_mov)  # velocity knots for the virtual contact
         DP_mov_r = sym_t.sym('DP_mov_r', knot_number * dimp_mov)  # velocity knots for the virtual contact
-        f_pay_l = self._payload_mass_l * global_gravity  # virtual force
-        f_pay_r = self._payload_mass_r * global_gravity  # virtual force
+        f_pay_l = self._payload_mass_l * self._gravity  # virtual force
+        f_pay_r = self._payload_mass_r * self._gravity  # virtual force
 
         P = list()
         g = list()  # list of constraint expressions
@@ -91,7 +92,7 @@ class Gait(ParentGait):
         }
 
         # get default arm position for final penalty
-        arms_default_pos = constraints.get_arm_default_pos('backward')
+        arms_default_pos = parameters.get_arm_default_pos('backward')
 
         # iterate over knots starting from k = 0
         for k in range(knot_number):
@@ -144,7 +145,7 @@ class Gait(ParentGait):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 f_pay_l, f_pay_r
             )
@@ -415,14 +416,18 @@ class Gait(ParentGait):
 
 class GaitNonlinearBackward(GaitNonlinearForward):
 
-    def __init__(self, mass, N, dt, payload_masses):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg, conservative_box):
         """Gait class constructor
 
         Args:
             mass (float): robot mass
             N (int): horizon length
             dt (float): discretization step
+            slope_deg: inclination in degrees, only in pitch direction
+            conservative_box: not used yet, just for consistency with forward arms config
         """
+
+        self._gravity = parameters.get_gravity_acc_vector(slope_deg)
 
         self._Nseg = N
         self._dt = dt  # dt used for optimization knots
@@ -496,7 +501,7 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         }
 
         # get default arm position for final penalty
-        arms_default_pos = constraints.get_arm_default_pos('backward')
+        arms_default_pos = parameters.get_arm_default_pos('backward')
 
         # iterate over knots starting from k = 0
         for k in range(knot_number):
@@ -549,7 +554,7 @@ class GaitNonlinearBackward(GaitNonlinearForward):
 
             # newton - euler dynamic constraints
             newton_euler_constraint = constraints.newton_euler_constraint(
-                X[x_slice1:x_slice2], mass, gravity, ncontacts, F[f_slice1:f_slice2],
+                X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2],
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
@@ -570,23 +575,23 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                 g.append(state_constraint)
 
                 # newton constraint for the payload mass, virtual force has opposite sign
-                payload_mass_constraint_l = constraints.newton_payload_constraint(P_mov_l[u_slice0:u_slice2],
+                payload_mass_constraint_l = constraints.newton_point_mass_constraint(P_mov_l[u_slice0:u_slice2],
                                                                                   DP_mov_l[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_l,
-                                                                                  gravity,
+                                                                                  self._gravity,
                                                                                   -F_virt_l[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_l['x'])
                 g.append(payload_mass_constraint_l['y'])
                 g.append(payload_mass_constraint_l['z'])
 
-                payload_mass_constraint_r = constraints.newton_payload_constraint(P_mov_r[u_slice0:u_slice2],
+                payload_mass_constraint_r = constraints.newton_point_mass_constraint(P_mov_r[u_slice0:u_slice2],
                                                                                   DP_mov_r[u_slice0:u_slice2],
                                                                                   dt,
                                                                                   k,
                                                                                   self._payload_mass_r,
-                                                                                  gravity,
+                                                                                  self._gravity,
                                                                                   -F_virt_r[u_slice0:u_slice1])
                 g.append(payload_mass_constraint_r['x'])
                 g.append(payload_mass_constraint_r['y'])
@@ -719,7 +724,7 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # get box bounds for arms
-        arm_bounds = constraints.get_arm_box_bounds('backward')
+        arm_bounds = parameters.get_arm_box_bounds('backward')
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -775,11 +780,11 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * gravity + [10.0, 10.0, 3.0]
+            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-10.0, -10.0, - 3.0]
+            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [10.0, 10.0, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-10.0, -10.0, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [10.0, 10.0, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
