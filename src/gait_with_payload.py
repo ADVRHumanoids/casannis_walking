@@ -1125,11 +1125,12 @@ class GaitNonlinear(Gait):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-10.0, -10.0, - 3.0]
-            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [10.0, 10.0, 3.0]
+            f_magn = 8.0
+            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-f_magn, -f_magn, - 3.0]
+            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [f_magn, f_magn, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-f_magn, -f_magn, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [f_magn, f_magn, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
