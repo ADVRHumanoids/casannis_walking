@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="centauro">
+
+<!-- 
+  ROS urdf definition of the CENTAURO humanoid robot by Istituto Italiano di Tecnologia
+  
+  Author: Enrico Mingo Hoffman
+-->
+
+<xacro:include filename="utils.urdf.xacro" />
+<xacro:include filename="parts/kinematics_properties.urdf.xacro" />
+<xacro:include filename="parts/inertial_properties.urdf.xacro" />
+<xacro:include filename="parts/limits.urdf.xacro" />
+
+
+
+<link name="base_link"/>
+
+<link name="pelvis">
+
+      <inertial>
+         <origin xyz="${Pelvis_x} ${Pelvis_y} ${Pelvis_z}"/>
+         <mass value="${Pelvis_mass}"/>
+         <inertia ixx="${Pelvis_xx}" ixy="${Pelvis_xy}" ixz="${Pelvis_xz}" iyy="${Pelvis_yy}" iyz="${Pelvis_yz}" izz="${Pelvis_zz}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+        <geometry>
+         <mesh filename="package://centauro_urdf/meshes/v2/pelvis.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+
+      <collision>
+         <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <mesh filename="package://centauro_urdf/meshes/simple/pelvis.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+
+   </link>
+
+
+    <link name="imu_link"/>
+
+    <joint name="imu_joint" type="fixed">
+        <parent link="pelvis"/>
+        <origin xyz="${Imu_Ox} ${Imu_Oy} ${Imu_Oz}" rpy="${Imu_raw} ${Imu_pitch} ${Imu_yaw}"/>
+        <child link="imu_link"/>
+    </joint>
+
+
+<joint name="base_joint" type="fixed">
+    <parent link="pelvis"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+</joint>
+
+
+<xacro:if value="${ADD_UPPER_BODY}">
+	<xacro:include filename="parts/centauro_torso.urdf.xacro" />
+    <xacro:include filename="parts/arms.urdf.xacro" />
+	
+	<xacro:if value="${ADD_BALL_END_EFFECTOR}">
+		<xacro:include filename="parts/ball.urdf.xacro" />
+
+		<xacro:ball_end_effector arm_num="1"  parent_link="arm1_7" ball_mass="5.27">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:ball_end_effector>
+
+		<xacro:ball_end_effector arm_num="2"  parent_link="arm2_7" ball_mass="5.27">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:ball_end_effector>
+	</xacro:if>
+	
+	<xacro:if value="${ADD_ROD_PLATE_END_EFFECTOR}">
+		<xacro:include filename="parts/rod_plate.urdf.xacro" />
+
+		<xacro:rod_plate_end_effector arm_num="1" rot="1" parent_link="arm1_7" rod_mass="0.01">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:rod_plate_end_effector>
+
+		<xacro:rod_plate_end_effector arm_num="2" rot="-1"  parent_link="arm2_7" rod_mass="0.01">
+      			<origin xyz="0. 0. 0." rpy="0. 0. 0."/>
+   		</xacro:rod_plate_end_effector>
+	</xacro:if>
+	
+	<xacro:include filename="parts/head.urdf.xacro" />
+</xacro:if>
+
+<xacro:if value="${ADD_LEGS}">
+	<xacro:include filename="parts/legs.urdf.xacro" />
+</xacro:if>
+
+
+
+</robot>
+

@@ -1,0 +1,1790 @@
+<?xml version="1.0" ?>
+<robot name="centauro" version="1.0">
+  <material name="black">
+    <color rgba="0.4 0.4 0.4 1.0"/>
+  </material>
+  <material name="dark">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+  <link name="base_link"/>
+  <link name="pelvis">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0016320207 0.0026534004 0.079167428"/>
+      <mass value="26.584529"/>
+      <inertia ixx="0.39195477" ixy="0.024781259" ixz="0.017108607" iyy="1.0000709" iyz="0.0052627106" izz="1.0679989"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/pelvis.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="3.14158470812 1.54787296367 3.14158452386" xyz="-0.005085 2.00284e-07 0.03057945"/>
+      <geometry>
+        <cylinder length="0.385941397914" radius="0.213204"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.14158470812 1.54787296367 3.14158452386" xyz="-0.198005 0.000000 0.035003"/>
+      <geometry>
+        <sphere radius="0.213204"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.14158470812 1.54787296367 3.14158452386" xyz="0.187835 0.000000 0.026156"/>
+      <geometry>
+        <sphere radius="0.213204"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.248316 0.0 0.015"/>
+    <parent link="pelvis"/>
+    <child link="imu_link"/>
+  </joint>
+  <joint name="base_joint" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="pelvis"/>
+    <child link="base_link"/>
+  </joint>
+  <link name="torso_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.019497794 0.0045317835 0.13768283"/>
+      <mass value="12.553731"/>
+      <inertia ixx="0.063643392" ixy="8.939e-05" ixz="-0.00086873" iyy="0.02680235" iyz="-4.657e-05" izz="0.04743015"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/link1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-0.000238335444242 0.104581190719 -1.24740737196e-05" xyz="0.013239935 1.50245845e-05 0.1846655"/>
+      <geometry>
+        <cylinder length="0.128018449088" radius="0.200841"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.000238335444242 0.104581190719 -1.24740737196e-05" xyz="0.006558 -0.000000 0.121006"/>
+      <geometry>
+        <sphere radius="0.200841"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.000238335444242 0.104581190719 -1.24740737196e-05" xyz="0.019922 0.000030 0.248325"/>
+      <geometry>
+        <sphere radius="0.200841"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="torso_yaw" type="revolute">
+    <origin rpy="0 0 0" xyz="0.2 0.0 0.256"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="pelvis"/>
+    <child link="torso_2"/>
+    <limit effort="147.0" lower="-2.618" upper="2.618" velocity="5.7"/>
+  </joint>
+  <link name="arm1_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0074457212 0.03410796 0.00010978102"/>
+      <mass value="1.9628675"/>
+      <inertia ixx="0.0053547717" ixy="0.00036428926" ixz="1.5089568e-05" iyy="0.0033923328" iyz="5.5692312e-05" izz="0.0068921413"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderPitch.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.69033471763 1.45264918315 -1.5721974565" xyz="0.017831412 0.05324115 2.3169e-05"/>
+      <geometry>
+        <cylinder length="0.0373976849456" radius="0.0698859"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.69033471763 1.45264918315 -1.5721974565" xyz="-0.000737 0.051053 0.000286"/>
+      <geometry>
+        <sphere radius="0.0698859"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.69033471763 1.45264918315 -1.5721974565" xyz="0.036400 0.055430 -0.000240"/>
+      <geometry>
+        <sphere radius="0.0698859"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.058142302 5.7450803e-05 -0.077477683"/>
+      <mass value="1.8595811"/>
+      <inertia ixx="0.013776643" ixy="3.7788675e-05" ixz="0.0037690171" iyy="0.015677464" iyz="-9.4893549e-06" izz="0.0046317657"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderRoll.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="3.14158140766 0.430137396273 3.14154117236" xyz="0.0637382 4.0386e-07 -0.06435918"/>
+      <geometry>
+        <cylinder length="0.127992690725" radius="0.0700645"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.14158140766 0.430137396273 3.14154117236" xyz="0.037052 0.000001 -0.006192"/>
+      <geometry>
+        <sphere radius="0.0700645"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.14158140766 0.430137396273 3.14154117236" xyz="0.090424 -0.000000 -0.122526"/>
+      <geometry>
+        <sphere radius="0.0700645"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.014625194 0.0008172672 -0.028333545"/>
+      <mass value="1.6678109"/>
+      <inertia ixx="0.0064480435" ixy="-0.00015639093" ixz="0.0012205359" iyy="0.0073372077" iyz="8.9941532e-05" izz="0.0036738448"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderYaw.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="3.00242380361 0.242909821838 2.10390753657" xyz="0.007307538565 -0.004091138465 -0.03662884"/>
+      <geometry>
+        <cylinder length="0.060822526466" radius="0.0896121"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.00242380361 0.242909821838 2.10390753657" xyz="-0.000007 0.000004 -0.007396"/>
+      <geometry>
+        <sphere radius="0.0896121"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.00242380361 0.242909821838 2.10390753657" xyz="0.014622 -0.008186 -0.065862"/>
+      <geometry>
+        <sphere radius="0.0896121"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0076833067 -0.040302205 -0.043492779"/>
+      <mass value="1.3157289"/>
+      <inertia ixx="0.004330394" ixy="-0.00011737391" ixz="-0.00041923199" iyy="0.0038539919" iyz="-0.00079573038" izz="0.0017594689"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/Elbow.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-0.338546052476 0.173378149403 -0.0297040701886" xyz="-0.00746020465 -0.0408499 -0.0404292381"/>
+      <geometry>
+        <cylinder length="0.0871341857294" radius="0.0600429"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.338546052476 0.173378149403 -0.0297040701886" xyz="-0.014976 -0.055102 -0.080907"/>
+      <geometry>
+        <sphere radius="0.0600429"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.338546052476 0.173378149403 -0.0297040701886" xyz="0.000056 -0.026598 0.000049"/>
+      <geometry>
+        <sphere radius="0.0600429"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_5">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.00011079615 0.011590836 -0.07816026"/>
+      <mass value="1.4908547"/>
+      <inertia ixx="0.0085692128" ixy="1.7856252e-05" ixz="1.9379365e-05" iyy="0.0077454159" iyz="-0.00032860094" izz="0.0027441921"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/Forearm.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-0.19504999679 0.000108974174582 -1.06615287086e-05" xyz="-3.798436e-06 0.00576208 -0.082271"/>
+      <geometry>
+        <cylinder length="0.0843473974771" radius="0.0804108"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.19504999679 0.000108974174582 -1.06615287086e-05" xyz="-0.000008 -0.002412 -0.123645"/>
+      <geometry>
+        <sphere radius="0.0804108"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.19504999679 0.000108974174582 -1.06615287086e-05" xyz="0.000001 0.013936 -0.040897"/>
+      <geometry>
+        <sphere radius="0.0804108"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_6">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6502396e-06 -0.038014094 -0.069926878"/>
+      <mass value="1.1263612"/>
+      <inertia ixx="0.0051871784" ixy="2.724437e-05" ixz="2.2833496e-06" iyy="0.0048037789" iyz="-0.00072165653" izz="0.0012771388"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ForearmPitch.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-0.155924559424 -0.000643096653781 5.02391105884e-05" xyz="1.10955e-06 -0.04345545 -0.05749733"/>
+      <geometry>
+        <cylinder length="0.114251418714" radius="0.0583263"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.155924559424 -0.000643096653781 5.02391105884e-05" xyz="0.000038 -0.052327 -0.113930"/>
+      <geometry>
+        <sphere radius="0.0583263"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-0.155924559424 -0.000643096653781 5.02391105884e-05" xyz="-0.000036 -0.034584 -0.001065"/>
+      <geometry>
+        <sphere radius="0.0583263"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm1_7">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.03127057"/>
+      <mass value="0.27966428"/>
+      <inertia ixx="0.00014415192" ixy="9.8651826e-08" ixz="0.0" iyy="0.0001441701" iyz="0.0" izz="6.0500616e-05"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ForearmYaw.STL" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.57079632679 -0.262733020835 0.262733020835" xyz="0.0 0.0 0.0101335"/>
+      <geometry>
+        <cylinder length="0.00916730749359" radius="0.0207073"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.57079632679 -0.262733020835 0.262733020835" xyz="0.001190 -0.004426 0.010133"/>
+      <geometry>
+        <sphere radius="0.0207073"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.57079632679 -0.262733020835 0.262733020835" xyz="-0.001190 0.004426 0.010134"/>
+      <geometry>
+        <sphere radius="0.0207073"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="j_arm1_1" type="revolute">
+    <origin rpy="0.174533 0.0 -0.5235988" xyz="0.0457475 0.169137 0.116626"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="torso_2"/>
+    <child link="arm1_1"/>
+    <limit effort="147.0" lower="-3.312" upper="1.615" velocity="3.86"/>
+  </joint>
+  <joint name="j_arm1_2" type="revolute">
+    <origin rpy="-0.1745327 0.0 0.0" xyz="-0.09015 0.062 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <parent link="arm1_1"/>
+    <child link="arm1_2"/>
+    <limit effort="147.0" lower="0.02" upper="3.431" velocity="3.86"/>
+  </joint>
+  <joint name="j_arm1_3" type="revolute">
+    <origin rpy="0 0 0" xyz="0.09015 0.0 -0.21815"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm1_2"/>
+    <child link="arm1_3"/>
+    <limit effort="147.0" lower="-2.552" upper="2.566" velocity="6.06"/>
+  </joint>
+  <joint name="j_arm1_4" type="revolute">
+    <origin rpy="0 0 0" xyz="0.045 0.05515 -0.074"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="arm1_3"/>
+    <child link="arm1_4"/>
+    <limit effort="147.0" lower="-2.465" upper="0.28" velocity="6.06"/>
+  </joint>
+  <joint name="j_arm1_5" type="revolute">
+    <origin rpy="0 0 0" xyz="-0.015 -0.05515 -0.095"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm1_4"/>
+    <child link="arm1_5"/>
+    <limit effort="55.0" lower="-2.569" upper="2.562" velocity="11.72"/>
+  </joint>
+  <joint name="j_arm1_6" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 0.049 -0.156"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="arm1_5"/>
+    <child link="arm1_6"/>
+    <limit effort="55.0" lower="-1.529" upper="1.509" velocity="11.72"/>
+  </joint>
+  <joint name="j_arm1_7" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 -0.049 -0.174"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm1_6"/>
+    <child link="arm1_7"/>
+    <limit effort="28.32" lower="-2.565" upper="2.569" velocity="20.35"/>
+  </joint>
+  <joint name="j_ft_1" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm1_7"/>
+    <child link="ft_arm1"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+  <link name="ft_arm1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="8.2161929e-05 0.0026334189 -0.016465877"/>
+      <mass value="0.37827821"/>
+      <inertia ixx="0.00023321716" ixy="2.3681435e-06" ixz="-1.8039102e-06" iyy="0.00020626291" iyz="3.158829e-05" izz="0.00027399881"/>
+    </inertial>
+  </link>
+  <link name="arm2_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0074457212 -0.03410796 0.00010978102"/>
+      <mass value="1.9628675"/>
+      <inertia ixx="0.0053547717" ixy="-0.00036428926" ixz="1.5089568e-05" iyy="0.0033923328" iyz="-5.5692312e-05" izz="0.0068921413"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderPitch.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="1.69033471763 1.45264918315 1.5721974565" xyz="0.017831412 -0.05324115 2.3169e-05"/>
+      <geometry>
+        <cylinder length="0.0373976849456" radius="0.0698859"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.69033471763 1.45264918315 1.5721974565" xyz="-0.000737 -0.051053 0.000286"/>
+      <geometry>
+        <sphere radius="0.0698859"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.69033471763 1.45264918315 1.5721974565" xyz="0.036400 -0.055430 -0.000240"/>
+      <geometry>
+        <sphere radius="0.0698859"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.058142302 -5.7450803e-05 -0.077477683"/>
+      <mass value="1.8595811"/>
+      <inertia ixx="0.013776643" ixy="-3.7788675e-05" ixz="0.0037690171" iyy="0.015677464" iyz="9.4893549e-06" izz="0.0046317657"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderRoll.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-3.14158140766 0.430137396273 -3.14154117236" xyz="0.0637382 -4.0386e-07 -0.06435918"/>
+      <geometry>
+        <cylinder length="0.127992690725" radius="0.0700645"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.14158140766 0.430137396273 -3.14154117236" xyz="0.037052 -0.000001 -0.006192"/>
+      <geometry>
+        <sphere radius="0.0700645"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.14158140766 0.430137396273 -3.14154117236" xyz="0.090424 0.000000 -0.122526"/>
+      <geometry>
+        <sphere radius="0.0700645"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.014625194 -0.0008172672 -0.028333545"/>
+      <mass value="1.6678109"/>
+      <inertia ixx="0.0064480435" ixy="0.00015639093" ixz="0.0012205359" iyy="0.0073372077" iyz="-8.9941532e-05" izz="0.0036738448"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ShoulderYaw.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-3.00242380361 0.242909821838 -2.10390753657" xyz="0.007307538565 0.004091138465 -0.03662884"/>
+      <geometry>
+        <cylinder length="0.060822526466" radius="0.0896121"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.00242380361 0.242909821838 -2.10390753657" xyz="-0.000007 -0.000004 -0.007396"/>
+      <geometry>
+        <sphere radius="0.0896121"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.00242380361 0.242909821838 -2.10390753657" xyz="0.014622 0.008186 -0.065862"/>
+      <geometry>
+        <sphere radius="0.0896121"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0076833067 0.040302205 -0.043492779"/>
+      <mass value="1.3157289"/>
+      <inertia ixx="0.004330394" ixy="0.00011737391" ixz="-0.00041923199" iyy="0.0038539919" iyz="0.00079573038" izz="0.0017594689"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/Elbow.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0.338546052476 0.173378149403 0.0297040701886" xyz="-0.00746020465 0.0408499 -0.0404292381"/>
+      <geometry>
+        <cylinder length="0.0871341857294" radius="0.0600429"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.338546052476 0.173378149403 0.0297040701886" xyz="-0.014976 0.055102 -0.080907"/>
+      <geometry>
+        <sphere radius="0.0600429"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.338546052476 0.173378149403 0.0297040701886" xyz="0.000056 0.026598 0.000049"/>
+      <geometry>
+        <sphere radius="0.0600429"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_5">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.00011079615 -0.011590836 -0.07816026"/>
+      <mass value="1.4908547"/>
+      <inertia ixx="0.0085692128" ixy="-1.7856252e-05" ixz="1.9379365e-05" iyy="0.0077454159" iyz="0.00032860094" izz="0.0027441921"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/Forearm.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="0.19504999679 0.000108974174582 1.06615287086e-05" xyz="-3.798436e-06 -0.00576208 -0.082271"/>
+      <geometry>
+        <cylinder length="0.0843473974771" radius="0.0804108"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.19504999679 0.000108974174582 1.06615287086e-05" xyz="-0.000008 0.002412 -0.123645"/>
+      <geometry>
+        <sphere radius="0.0804108"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.19504999679 0.000108974174582 1.06615287086e-05" xyz="0.000001 -0.013936 -0.040897"/>
+      <geometry>
+        <sphere radius="0.0804108"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_6">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6502396e-06 0.038014094 -0.069926878"/>
+      <mass value="1.1263612"/>
+      <inertia ixx="0.0051871784" ixy="-2.724437e-05" ixz="2.2833496e-06" iyy="0.0048037789" iyz="0.00072165653" izz="0.0012771388"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ForearmPitch.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0.155924559424 -0.000643096653781 -5.02391105884e-05" xyz="1.10955e-06 0.04345545 -0.05749733"/>
+      <geometry>
+        <cylinder length="0.114251418714" radius="0.0583263"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.155924559424 -0.000643096653781 -5.02391105884e-05" xyz="0.000038 0.052327 -0.113930"/>
+      <geometry>
+        <sphere radius="0.0583263"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0.155924559424 -0.000643096653781 -5.02391105884e-05" xyz="-0.000036 0.034584 -0.001065"/>
+      <geometry>
+        <sphere radius="0.0583263"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="arm2_7">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 -0.0 0.03127057"/>
+      <mass value="0.27966428"/>
+      <inertia ixx="0.00014415192" ixy="-9.8651826e-08" ixz="0.0" iyy="0.0001441701" iyz="0.0" izz="6.0500616e-05"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/ForearmYaw.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="1.57079632679 -0.262733020835 -0.262733020835" xyz="0.0 0.0 0.0101335"/>
+      <geometry>
+        <cylinder length="0.00916730749359" radius="0.0207073"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57079632679 -0.262733020835 -0.262733020835" xyz="0.001190 0.004426 0.010133"/>
+      <geometry>
+        <sphere radius="0.0207073"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57079632679 -0.262733020835 -0.262733020835" xyz="-0.001190 -0.004426 0.010134"/>
+      <geometry>
+        <sphere radius="0.0207073"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="j_arm2_1" type="revolute">
+    <origin rpy="-0.174533 0.0 0.5235988" xyz="0.0457475 -0.169137 0.116626"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="torso_2"/>
+    <child link="arm2_1"/>
+    <limit effort="147.0" lower="-3.3458" upper="1.6012" velocity="3.86"/>
+  </joint>
+  <joint name="j_arm2_2" type="revolute">
+    <origin rpy="0.1745327 0.0 0.0" xyz="-0.09015 -0.062 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <parent link="arm2_1"/>
+    <child link="arm2_2"/>
+    <limit effort="147.0" lower="-3.4258" upper="-0.0138" velocity="3.86"/>
+  </joint>
+  <joint name="j_arm2_3" type="revolute">
+    <origin rpy="0 0 0" xyz="0.09015 0.0 -0.21815"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm2_2"/>
+    <child link="arm2_3"/>
+    <limit effort="147.0" lower="-2.5614" upper="2.5606" velocity="6.06"/>
+  </joint>
+  <joint name="j_arm2_4" type="revolute">
+    <origin rpy="0 0 0" xyz="0.045 -0.05515 -0.074"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="arm2_3"/>
+    <child link="arm2_4"/>
+    <limit effort="147.0" lower="-2.4794" upper="0.2886" velocity="6.06"/>
+  </joint>
+  <joint name="j_arm2_5" type="revolute">
+    <origin rpy="0 0 0" xyz="-0.015 0.05515 -0.095"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm2_4"/>
+    <child link="arm2_5"/>
+    <limit effort="55.0" lower="-2.5394" upper="2.5546" velocity="11.72"/>
+  </joint>
+  <joint name="j_arm2_6" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 -0.049 -0.156"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="arm2_5"/>
+    <child link="arm2_6"/>
+    <limit effort="55.0" lower="-1.5154" upper="1.5156" velocity="11.72"/>
+  </joint>
+  <joint name="j_arm2_7" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 0.049 -0.174"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm2_6"/>
+    <child link="arm2_7"/>
+    <limit effort="28.32" lower="-2.5554" upper="2.5686" velocity="20.35"/>
+  </joint>
+  <joint name="j_ft_2" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="arm2_7"/>
+    <child link="ft_arm2"/>
+    <limit effort="0.0" lower="0.0" upper="0.0" velocity="0.0"/>
+  </joint>
+  <link name="ft_arm2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="8.2161929e-05 -0.0026334189 -0.016465877"/>
+      <mass value="0.37827821"/>
+      <inertia ixx="0.00023321716" ixy="-2.3681435e-06" ixz="-1.8039102e-06" iyy="0.00020626291" iyz="-3.158829e-05" izz="0.00027399881"/>
+    </inertial>
+  </link>
+  <link name="ball1">
+    <inertial>
+      <origin rpy="0.0 0.0 0.0" xyz="-1.0072498e-05 3.7590658e-05 0.019772332"/>
+      <mass value="1.27"/>
+      <inertia ixx="0.0023061092" ixy="2.9181758e-07" ixz="-2.1246684e-07" iyy="0.0023053155" iyz="7.9290978e-07" izz="0.0030675616"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/BallHand.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="-2.6825e-07 1.2015e-06 -0.0105021"/>
+      <geometry>
+        <cylinder length="9.94006756802e-05" radius="0.0709883"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="0.000046 -0.000017 -0.010502"/>
+      <geometry>
+        <sphere radius="0.0709883"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="-0.000046 0.000020 -0.010502"/>
+      <geometry>
+        <sphere radius="0.0709883"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ball1_tip"/>
+  <joint name="j_arm1_8" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm1_7"/>
+    <child link="ball1"/>
+  </joint>
+  <joint name="j_ball1_tip" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.07"/>
+    <parent link="ball1"/>
+    <child link="ball1_tip"/>
+  </joint>
+  <joint name="j_ball1_fixed" type="fixed">
+    <parent link="ball1"/>
+    <child link="arm1_8"/>
+  </joint>
+  <link name="arm1_8">
+    <inertial>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <link name="ball2">
+    <inertial>
+      <origin rpy="0.0 0.0 0.0" xyz="-1.0072498e-05 3.7590658e-05 0.019772332"/>
+      <mass value="1.27"/>
+      <inertia ixx="0.0023061092" ixy="2.9181758e-07" ixz="-2.1246684e-07" iyy="0.0023053155" iyz="7.9290978e-07" izz="0.0030675616"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/BallHand.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="-2.6825e-07 1.2015e-06 -0.0105021"/>
+      <geometry>
+        <cylinder length="9.94006756802e-05" radius="0.0709883"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="0.000046 -0.000017 -0.010502"/>
+      <geometry>
+        <sphere radius="0.0709883"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.56543904386 -1.18577783239 1.18081773652" xyz="-0.000046 0.000020 -0.010502"/>
+      <geometry>
+        <sphere radius="0.0709883"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ball2_tip"/>
+  <joint name="j_arm2_8" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="arm2_7"/>
+    <child link="ball2"/>
+  </joint>
+  <joint name="j_ball2_tip" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.07"/>
+    <parent link="ball2"/>
+    <child link="ball2_tip"/>
+  </joint>
+  <joint name="j_ball2_fixed" type="fixed">
+    <parent link="ball2"/>
+    <child link="arm2_8"/>
+  </joint>
+  <link name="arm2_8">
+    <inertial>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <link name="neck_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.040479674 0.021377573 -0.014595112"/>
+      <mass value="0.33878686"/>
+      <inertia ixx="0.0003718568" ixy="-9.42983e-05" ixz="-2.80644e-05" iyy="0.0001886879" iyz="-1.54534e-05" izz="0.0005023443"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/neck_yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.57267144283 -0.00154659947237 0.00154950224706" xyz="0.0423438 -0.00223215 -0.0125023"/>
+      <geometry>
+        <cylinder length="0.108366820117" radius="0.0256074"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.57267144283 -0.00154659947237 0.00154950224706" xyz="0.042428 -0.056415 -0.012401"/>
+      <geometry>
+        <sphere radius="0.0256074"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.57267144283 -0.00154659947237 0.00154950224706" xyz="0.042260 0.051951 -0.012604"/>
+      <geometry>
+        <sphere radius="0.0256074"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="neck_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.048466918 -0.059852318 -0.0085314894"/>
+      <mass value="0.78526942"/>
+      <inertia ixx="0.0004682345" ixy="-1.05438e-05" ixz="7.24398e-05" iyy="0.0002635246" iyz="1.6904e-06" izz="0.0003763351"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/neck_pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.59533262848 0.0474825603176 -0.0486616773097" xyz="0.02395555 -0.064118485 0.0181523"/>
+      <geometry>
+        <cylinder length="0.112363456439" radius="0.0421853"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59533262848 0.0474825603176 -0.0486616773097" xyz="0.021289 -0.120220 0.019529"/>
+      <geometry>
+        <sphere radius="0.0421853"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59533262848 0.0474825603176 -0.0486616773097" xyz="0.026622 -0.008017 0.016776"/>
+      <geometry>
+        <sphere radius="0.0421853"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="neck_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.048466918 -0.059852318 -0.0085314894"/>
+      <mass value="0.78526942"/>
+      <inertia ixx="0.0004682345" ixy="-1.05438e-05" ixz="7.24398e-05" iyy="0.0002635246" iyz="1.6904e-06" izz="0.0003763351"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/lidar.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-2.90551175335 -0.594683839427 2.40306629733" xyz="0.019732435 -0.006818435 0.029163165"/>
+      <geometry>
+        <cylinder length="0.0482807313495" radius="0.0568348"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-2.90551175335 -0.594683839427 2.40306629733" xyz="0.033257 -0.011495 0.048605"/>
+      <geometry>
+        <sphere radius="0.0568348"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-2.90551175335 -0.594683839427 2.40306629733" xyz="0.006208 -0.002141 0.009722"/>
+      <geometry>
+        <sphere radius="0.0568348"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="neck_yaw" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2795"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="torso_2"/>
+    <child link="neck_1"/>
+    <limit effort="35.0" lower="-0.78539816" upper="0.78539816" velocity="5.7"/>
+    <dynamics friction="10.0"/>
+  </joint>
+  <joint name="neck_pitch" type="revolute">
+    <origin rpy="0 0 0" xyz="0.054 0.0596 -0.0124975"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="neck_1"/>
+    <child link="neck_2"/>
+    <limit effort="35.0" lower="-0.34906585" upper="0.78539816" velocity="5.7"/>
+    <dynamics friction="10.0"/>
+  </joint>
+  <joint name="neck_velodyne" type="continuous">
+    <origin rpy="0.0 0.0 -1.828" xyz="0.055 0.0 0.473262"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="torso_2"/>
+    <child link="neck_3"/>
+    <limit effort="35.0" lower="0" upper="0" velocity="5.7"/>
+    <dynamics damping="0.2" friction="10.0"/>
+  </joint>
+  <link name="hip1_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0003595855 0.033338818 -0.059190309"/>
+      <mass value="2.3349153"/>
+      <inertia ixx="0.0068405374" ixy="1.8572633e-05" ixz="-4.8325972e-05" iyy="0.0026261815" iyz="0.0001564273" izz="0.0066933354"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-yaw.stl" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="0.000123454 -0.01194966 -0.0631367"/>
+      <geometry>
+        <cylinder length="0.030695458899" radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="-0.000046 -0.026650 -0.067545"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="0.000293 0.002750 -0.058728"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="hip2_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6285952e-06 -0.2214019 0.03316685"/>
+      <mass value="3.4572118"/>
+      <inertia ixx="0.050469853" ixy="-7.7849387e-06" ixz="-9.220581e-06" iyy="0.008181597" iyz="0.0059796848" izz="0.048213809"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-pitch.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="1.10696985e-06 -0.13974034 0.0170087"/>
+      <geometry>
+        <cylinder length="0.291980452173" radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="0.000002 -0.285701 0.019947"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="0.000000 0.006220 0.014071"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="knee_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012063381 0.14620674 0.029740711"/>
+      <mass value="2.1199315"/>
+      <inertia ixx="0.018426403" ixy="2.8226636e-05" ixz="-2.9204348e-05" iyy="0.0047685615" iyz="-0.002640771" izz="0.017793722"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/knee.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-4.076516e-06 0.0958646315 0.0143745"/>
+      <geometry>
+        <cylinder length="0.192750224606" radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-0.000000 -0.000440 0.018066"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-0.000008 0.192169 0.010683"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle1_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012360094 -0.06274712 -0.0049068453"/>
+      <mass value="1.4023368"/>
+      <inertia ixx="0.0049928829" ixy="5.7623557e-06" ixz="1.9606394e-05" iyy="0.0017621464" iyz="0.00045315091" izz="0.0048706328"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-pitch.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-3.39946e-05 -0.0238355765 -1.2084e-05"/>
+      <geometry>
+        <cylinder length="0.0492563156661" radius="0.0792379"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-0.000046 0.000792 0.000068"/>
+      <geometry>
+        <sphere radius="0.0792379"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-0.000022 -0.048464 -0.000093"/>
+      <geometry>
+        <sphere radius="0.0792379"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle2_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0018496706 -0.00051322371 -0.06730924"/>
+      <mass value="1.7656714"/>
+      <inertia ixx="0.0073976286" ixy="9.7557687e-07" ixz="-0.0002295255" iyy="0.0054434358" iyz="3.6337754e-05" izz="0.0043055053"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-yaw.stl" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-1.177807e-05 -0.001827005 -0.0652808"/>
+      <geometry>
+        <cylinder length="0.0737026312964" radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-0.000021 -0.001735 -0.028430"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-0.000003 -0.001919 -0.102132"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="wheel_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.0031155904"/>
+      <mass value="1.11164"/>
+      <inertia ixx="0.0028174054" ixy="0.0" ixz="-0.0" iyy="0.0028175648" iyz="-0.0" izz="0.0041817162"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/wheel.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.11" radius="0.078"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="contact_1"/>
+  <joint name="contact_joint_1" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.176"/>
+    <parent link="ankle2_1"/>
+    <child link="contact_1"/>
+  </joint>
+  <joint name="hip_yaw_1" type="revolute">
+    <origin rpy="0.0 0.0 0.0" xyz="0.25 0.125 -0.0566"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="pelvis"/>
+    <child link="hip1_1"/>
+    <limit effort="304.0" lower="-2.03" upper="2.51" velocity="8.8"/>
+  </joint>
+  <joint name="hip_pitch_1" type="revolute">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 0.1146 -0.0625"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="hip1_1"/>
+    <child link="hip2_1"/>
+    <limit effort="304.0" lower="-2.0226" upper="2.02748" velocity="8.8"/>
+  </joint>
+  <joint name="knee_pitch_1" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 -0.3 0.1182"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="hip2_1"/>
+    <child link="knee_1"/>
+    <limit effort="304.0" lower="-2.4056" upper="2.3994" velocity="8.8"/>
+  </joint>
+  <joint name="ankle_pitch_1" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 0.2 0.10015"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="knee_1"/>
+    <child link="ankle1_1"/>
+    <limit effort="147.0" lower="-2.4056" upper="2.3184" velocity="8.1"/>
+  </joint>
+  <joint name="ankle_yaw_1" type="revolute">
+    <origin rpy="-1.57079632679 0.0 0.0" xyz="0.0 -0.139 -0.00085"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle1_1"/>
+    <child link="ankle2_1"/>
+    <limit effort="35.0" lower="-2.5626" upper="2.5384" velocity="20.0"/>
+  </joint>
+  <joint name="j_wheel_1" type="continuous">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 -0.0 -0.09835"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle2_1"/>
+    <child link="wheel_1"/>
+    <limit effort="35.0" lower="0" upper="0" velocity="20.0"/>
+  </joint>
+  <link name="hip1_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0003595855 -0.033338818 -0.059190309"/>
+      <mass value="2.3349153"/>
+      <inertia ixx="0.0068405374" ixy="-1.8572633e-05" ixz="-4.8325972e-05" iyy="0.0026261815" iyz="-0.0001564273" izz="0.0066933354"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="0.000123454 0.01194966 -0.0631367"/>
+      <geometry>
+        <cylinder length="0.030695458899" radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="-0.000046 0.026650 -0.067545"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="0.000293 -0.002750 -0.058728"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="hip2_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6285952e-06 -0.2214019 -0.03316685"/>
+      <mass value="3.4572118"/>
+      <inertia ixx="0.050469853" ixy="-7.7849387e-06" ixz="9.220581e-06" iyy="0.008181597" iyz="-0.0059796848" izz="0.048213809"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="1.10696985e-06 -0.13974034 -0.0170087"/>
+      <geometry>
+        <cylinder length="0.291980452173" radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="0.000002 -0.285701 -0.019947"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="0.000000 0.006220 -0.014071"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="knee_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012063381 0.14620674 -0.029740711"/>
+      <mass value="2.1199315"/>
+      <inertia ixx="0.018426403" ixy="2.8226636e-05" ixz="2.9204348e-05" iyy="0.0047685615" iyz="0.002640771" izz="0.017793722"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/knee.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-4.076516e-06 0.0958646315 -0.0143745"/>
+      <geometry>
+        <cylinder length="0.192750224606" radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-0.000000 -0.000440 -0.018066"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-0.000008 0.192169 -0.010683"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle1_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012360094 -0.06274712 0.0049068453"/>
+      <mass value="1.4023368"/>
+      <inertia ixx="0.0049928829" ixy="5.7623557e-06" ixz="-1.9606394e-05" iyy="0.0017621464" iyz="-0.00045315091" izz="0.0048706328"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="2.26075e-07 -0.020764665 0.0001088925"/>
+      <geometry>
+        <cylinder length="0.0478840512856" radius="0.0781037"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="-0.000007 -0.044702 0.000598"/>
+      <geometry>
+        <sphere radius="0.0781037"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="0.000007 0.003172 -0.000380"/>
+      <geometry>
+        <sphere radius="0.0781037"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle2_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0018496706 0.00051322371 -0.06730924"/>
+      <mass value="1.7656714"/>
+      <inertia ixx="0.0073976286" ixy="-9.7557687e-07" ixz="-0.0002295255" iyy="0.0054434358" iyz="-3.6337754e-05" izz="0.0043055053"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-1.177807e-05 0.001827005 -0.0652808"/>
+      <geometry>
+        <cylinder length="0.0737026312964" radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-0.000021 0.001735 -0.028430"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-0.000003 0.001919 -0.102132"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="wheel_2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0031155904"/>
+      <mass value="1.11164"/>
+      <inertia ixx="0.0028174054" ixy="0.0" ixz="0.0" iyy="0.0028175648" iyz="0.0" izz="0.0041817162"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.11" radius="0.078"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="contact_2"/>
+  <joint name="contact_joint_2" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.176"/>
+    <parent link="ankle2_2"/>
+    <child link="contact_2"/>
+  </joint>
+  <joint name="hip_yaw_2" type="revolute">
+    <origin rpy="0.0 0.0 0.0" xyz="0.25 -0.125 -0.0566"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="pelvis"/>
+    <child link="hip1_2"/>
+    <limit effort="304.0" lower="-2.51" upper="2.03" velocity="8.8"/>
+  </joint>
+  <joint name="hip_pitch_2" type="revolute">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 -0.1146 -0.0625"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="hip1_2"/>
+    <child link="hip2_2"/>
+    <limit effort="304.0" lower="-2.0156" upper="2.0354" velocity="8.8"/>
+  </joint>
+  <joint name="knee_pitch_2" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 -0.3 -0.1182"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="hip2_2"/>
+    <child link="knee_2"/>
+    <limit effort="304.0" lower="-2.4006" upper="2.4034" velocity="8.8"/>
+  </joint>
+  <joint name="ankle_pitch_2" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 0.2 -0.10015"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="knee_2"/>
+    <child link="ankle1_2"/>
+    <limit effort="147.0" lower="-2.3266" upper="2.3914" velocity="8.1"/>
+  </joint>
+  <joint name="ankle_yaw_2" type="revolute">
+    <origin rpy="-1.57079632679 0.0 0.0" xyz="0.0 -0.139 0.00085"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle1_2"/>
+    <child link="ankle2_2"/>
+    <limit effort="35.0" lower="-2.5546" upper="2.5484" velocity="20.0"/>
+  </joint>
+  <joint name="j_wheel_2" type="continuous">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 0.0 -0.09835"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="ankle2_2"/>
+    <child link="wheel_2"/>
+    <limit effort="35.0" lower="0" upper="0" velocity="20.0"/>
+  </joint>
+  <link name="hip1_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0003595855 0.033338818 -0.059190309"/>
+      <mass value="2.3349153"/>
+      <inertia ixx="0.0068405374" ixy="1.8572633e-05" ixz="-4.8325972e-05" iyy="0.0026261815" iyz="0.0001564273" izz="0.0066933354"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-yaw.stl" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="0.000123454 -0.01194966 -0.0631367"/>
+      <geometry>
+        <cylinder length="0.030695458899" radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="-0.000046 -0.026650 -0.067545"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.27942578591 0.0110593857297 -0.00822930041247" xyz="0.000293 0.002750 -0.058728"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="hip2_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6285952e-06 -0.2214019 0.03316685"/>
+      <mass value="3.4572118"/>
+      <inertia ixx="0.050469853" ixy="-7.7849387e-06" ixz="-9.220581e-06" iyy="0.008181597" iyz="0.0059796848" izz="0.048213809"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-pitch.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="1.10696985e-06 -0.13974034 0.0170087"/>
+      <geometry>
+        <cylinder length="0.291980452173" radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="0.000002 -0.285701 0.019947"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59092232037 -7.2456230692e-06 7.3929358127e-06" xyz="0.000000 0.006220 0.014071"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="knee_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012063381 0.14620674 0.029740711"/>
+      <mass value="2.1199315"/>
+      <inertia ixx="0.018426403" ixy="2.8226636e-05" ixz="-2.9204348e-05" iyy="0.0047685615" iyz="-0.002640771" izz="0.017793722"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/knee.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-4.076516e-06 0.0958646315 0.0143745"/>
+      <geometry>
+        <cylinder length="0.192750224606" radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-0.000000 -0.000440 0.018066"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.60911434838 -4.05121603261e-05 4.20950259774e-05" xyz="-0.000008 0.192169 0.010683"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle1_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012360094 -0.06274712 -0.0049068453"/>
+      <mass value="1.4023368"/>
+      <inertia ixx="0.0049928829" ixy="5.7623557e-06" ixz="1.9606394e-05" iyy="0.0017621464" iyz="0.00045315091" izz="0.0048706328"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-pitch.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-3.39946e-05 -0.0238355765 -1.2084e-05"/>
+      <geometry>
+        <cylinder length="0.0492563156661" radius="0.0792379"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-0.000046 0.000792 0.000068"/>
+      <geometry>
+        <sphere radius="0.0792379"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57406212334 0.000493439280986 0.000495053390331" xyz="-0.000022 -0.048464 -0.000093"/>
+      <geometry>
+        <sphere radius="0.0792379"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle2_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0018496706 -0.00051322371 -0.06730924"/>
+      <mass value="1.7656714"/>
+      <inertia ixx="0.0073976286" ixy="9.7557687e-07" ixz="-0.0002295255" iyy="0.0054434358" iyz="3.6337754e-05" izz="0.0043055053"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-yaw.stl" scale="0.001 -0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-1.177807e-05 -0.001827005 -0.0652808"/>
+      <geometry>
+        <cylinder length="0.0737026312964" radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-0.000021 -0.001735 -0.028430"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="3.13909898148 0.000240993569151 0.192685601701" xyz="-0.000003 -0.001919 -0.102132"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="wheel_3">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 -0.0031155904"/>
+      <mass value="1.11164"/>
+      <inertia ixx="0.0028174054" ixy="0.0" ixz="-0.0" iyy="0.0028175648" iyz="-0.0" izz="0.0041817162"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/wheel.stl" scale="0.001 0.001 -0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.11" radius="0.078"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="contact_3"/>
+  <joint name="contact_joint_3" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.176"/>
+    <parent link="ankle2_3"/>
+    <child link="contact_3"/>
+  </joint>
+  <joint name="hip_yaw_3" type="revolute">
+    <origin rpy="0.0 0.0 0.0" xyz="-0.25 0.125 -0.0566"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="pelvis"/>
+    <child link="hip1_3"/>
+    <limit effort="304.0" lower="-2.51" upper="2.03" velocity="8.8"/>
+  </joint>
+  <joint name="hip_pitch_3" type="revolute">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 0.1146 -0.0625"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="hip1_3"/>
+    <child link="hip2_3"/>
+    <limit effort="304.0" lower="-2.0126" upper="2.0384" velocity="8.8"/>
+  </joint>
+  <joint name="knee_pitch_3" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 -0.3 0.1182"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="hip2_3"/>
+    <child link="knee_3"/>
+    <limit effort="304.0" lower="-2.4056" upper="2.4064" velocity="8.8"/>
+  </joint>
+  <joint name="ankle_pitch_3" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 0.2 0.10015"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="knee_3"/>
+    <child link="ankle1_3"/>
+    <limit effort="147.0" lower="-2.4696" upper="2.4464" velocity="8.1"/>
+  </joint>
+  <joint name="ankle_yaw_3" type="revolute">
+    <origin rpy="-1.57079632679 0.0 0.0" xyz="0.0 -0.139 -0.00085"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle1_3"/>
+    <child link="ankle2_3"/>
+    <limit effort="35.0" lower="-2.5606" upper="2.5454" velocity="20.0"/>
+  </joint>
+  <joint name="j_wheel_3" type="continuous">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 -0.0 -0.09835"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle2_3"/>
+    <child link="wheel_3"/>
+    <limit effort="35.0" lower="0" upper="0" velocity="20.0"/>
+  </joint>
+  <link name="hip1_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0003595855 -0.033338818 -0.059190309"/>
+      <mass value="2.3349153"/>
+      <inertia ixx="0.0068405374" ixy="-1.8572633e-05" ixz="-4.8325972e-05" iyy="0.0026261815" iyz="-0.0001564273" izz="0.0066933354"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="0.000123454 0.01194966 -0.0631367"/>
+      <geometry>
+        <cylinder length="0.030695458899" radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="-0.000046 0.026650 -0.067545"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.27942578591 0.0110593857297 0.00822930041247" xyz="0.000293 -0.002750 -0.058728"/>
+      <geometry>
+        <sphere radius="0.0747223"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="hip2_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-4.6285952e-06 -0.2214019 -0.03316685"/>
+      <mass value="3.4572118"/>
+      <inertia ixx="0.050469853" ixy="-7.7849387e-06" ixz="9.220581e-06" iyy="0.008181597" iyz="-0.0059796848" izz="0.048213809"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/hip-pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="1.10696985e-06 -0.13974034 -0.0170087"/>
+      <geometry>
+        <cylinder length="0.291980452173" radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="0.000002 -0.285701 -0.019947"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.55067033322 -7.2456230692e-06 7.10124570144e-06" xyz="0.000000 0.006220 -0.014071"/>
+      <geometry>
+        <sphere radius="0.0808941"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="knee_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012063381 0.14620674 -0.029740711"/>
+      <mass value="2.1199315"/>
+      <inertia ixx="0.018426403" ixy="2.8226636e-05" ixz="2.9204348e-05" iyy="0.0047685615" iyz="0.002640771" izz="0.017793722"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/knee.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-4.076516e-06 0.0958646315 -0.0143745"/>
+      <geometry>
+        <cylinder length="0.192750224606" radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-0.000000 -0.000440 -0.018066"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.53247830521 -4.05121603261e-05 3.8988813908e-05" xyz="-0.000008 0.192169 -0.010683"/>
+      <geometry>
+        <sphere radius="0.0664305"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle1_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.00012360094 -0.06274712 0.0049068453"/>
+      <mass value="1.4023368"/>
+      <inertia ixx="0.0049928829" ixy="5.7623557e-06" ixz="-1.9606394e-05" iyy="0.0017621464" iyz="-0.00045315091" izz="0.0048706328"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-pitch.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="2.26075e-07 -0.020764665 0.0001088925"/>
+      <geometry>
+        <cylinder length="0.0478840512856" radius="0.0781037"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="-0.000007 -0.044702 0.000598"/>
+      <geometry>
+        <sphere radius="0.0781037"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-1.59121249732 0.000297363941178 -0.000303497802052" xyz="0.000007 0.003172 -0.000380"/>
+      <geometry>
+        <sphere radius="0.0781037"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ankle2_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0018496706 0.00051322371 -0.06730924"/>
+      <mass value="1.7656714"/>
+      <inertia ixx="0.0073976286" ixy="-9.7557687e-07" ixz="-0.0002295255" iyy="0.0054434358" iyz="-3.6337754e-05" izz="0.0043055053"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/ankle-yaw.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-1.177807e-05 0.001827005 -0.0652808"/>
+      <geometry>
+        <cylinder length="0.0737026312964" radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-0.000021 0.001735 -0.028430"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="-3.13909898148 0.000240993569151 -0.192685601701" xyz="-0.000003 0.001919 -0.102132"/>
+      <geometry>
+        <sphere radius="0.0813545"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="wheel_4">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0031155904"/>
+      <mass value="1.11164"/>
+      <inertia ixx="0.0028174054" ixy="0.0" ixz="0.0" iyy="0.0028175648" iyz="0.0" izz="0.0041817162"/>
+    </inertial>
+    <visual>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://centauro_urdf/meshes/v2/wheel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.11" radius="0.078"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="contact_4"/>
+  <joint name="contact_joint_4" type="fixed">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.176"/>
+    <parent link="ankle2_4"/>
+    <child link="contact_4"/>
+  </joint>
+  <joint name="hip_yaw_4" type="revolute">
+    <origin rpy="0.0 0.0 0.0" xyz="-0.25 -0.125 -0.0566"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="pelvis"/>
+    <child link="hip1_4"/>
+    <limit effort="304.0" lower="-2.03" upper="2.51" velocity="8.8"/>
+  </joint>
+  <joint name="hip_pitch_4" type="revolute">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 -0.1146 -0.0625"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="hip1_4"/>
+    <child link="hip2_4"/>
+    <limit effort="304.0" lower="-2.0326" upper="2.0524" velocity="8.8"/>
+  </joint>
+  <joint name="knee_pitch_4" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 -0.3 -0.1182"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="hip2_4"/>
+    <child link="knee_4"/>
+    <limit effort="304.0" lower="-2.4176" upper="2.3884" velocity="8.8"/>
+  </joint>
+  <joint name="ankle_pitch_4" type="revolute">
+    <origin rpy="3.14159265359 0.0 0.0" xyz="0.0 0.2 -0.10015"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="knee_4"/>
+    <child link="ankle1_4"/>
+    <limit effort="147.0" lower="-2.3426" upper="2.3934" velocity="8.1"/>
+  </joint>
+  <joint name="ankle_yaw_4" type="revolute">
+    <origin rpy="-1.57079632679 0.0 0.0" xyz="0.0 -0.139 0.00085"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <parent link="ankle1_4"/>
+    <child link="ankle2_4"/>
+    <limit effort="35.0" lower="-2.6046" upper="2.5514" velocity="20.0"/>
+  </joint>
+  <joint name="j_wheel_4" type="continuous">
+    <origin rpy="1.57079632679 0.0 0.0" xyz="0.0 0.0 -0.09835"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="ankle2_4"/>
+    <child link="wheel_4"/>
+    <limit effort="35.0" lower="0" upper="0" velocity="20.0"/>
+  </joint>
+  <link name="world"/>
+  <joint name="reference" type="floating">
+    <parent link="world"/>
+    <child link="pelvis"/>
+  </joint>
+</robot>
