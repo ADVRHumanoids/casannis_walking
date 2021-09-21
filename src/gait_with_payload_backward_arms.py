@@ -416,7 +416,7 @@ class Gait(ParentGait):
 
 class GaitNonlinearBackward(GaitNonlinearForward):
 
-    def __init__(self, mass, N, dt, payload_masses, slope_deg, conservative_box):
+    def __init__(self, mass, N, dt, payload_masses, slope_deg, conservative_box=True):
         """Gait class constructor
 
         Args:
@@ -450,6 +450,9 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         self._dimp_mov = dimp_mov = 3
         self._ncontacts = ncontacts = 4
         self._dimf_tot = dimf_tot = ncontacts * dimf
+
+        # list with constraint names
+        self._g_string = []
 
         # define cs variables
         delta_t = sym_t.sym('delta_t', 1)  # symbolic in order to pass values for optimization/interpolation
@@ -558,12 +561,14 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
+            self._g_string.extend(newton_euler_constraint['name'])
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
 
             # friction pyramid
             friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
-            g.append(np.array(friction_pyramid_constraint))
+            self._g_string.extend(friction_pyramid_constraint['name'])
+            g.append(np.array(friction_pyramid_constraint['constraint']))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -572,7 +577,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                 x_curr = X[x_slice1:x_slice2]
                 state_constraint = constraints.state_constraint(
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
-                g.append(state_constraint)
+                self._g_string.extend(state_constraint['name'])
+                g.append(state_constraint['constraint'])
 
                 # newton constraint for the payload mass, virtual force has opposite sign
                 payload_mass_constraint_l = constraints.newton_point_mass_constraint(P_mov_l[u_slice0:u_slice2],
@@ -582,9 +588,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                                                                                   self._payload_mass_l,
                                                                                   self._gravity,
                                                                                   -F_virt_l[u_slice0:u_slice1])
-                g.append(payload_mass_constraint_l['x'])
-                g.append(payload_mass_constraint_l['y'])
-                g.append(payload_mass_constraint_l['z'])
+                self._g_string.extend(payload_mass_constraint_l['name'])
+                g.append(payload_mass_constraint_l['constraint'])
 
                 payload_mass_constraint_r = constraints.newton_point_mass_constraint(P_mov_r[u_slice0:u_slice2],
                                                                                   DP_mov_r[u_slice0:u_slice2],
@@ -593,9 +598,8 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                                                                                   self._payload_mass_r,
                                                                                   self._gravity,
                                                                                   -F_virt_r[u_slice0:u_slice1])
-                g.append(payload_mass_constraint_r['x'])
-                g.append(payload_mass_constraint_r['y'])
-                g.append(payload_mass_constraint_r['z'])
+                self._g_string.extend(payload_mass_constraint_r['name'])
+                g.append(payload_mass_constraint_r['constraint'])
 
             # moving contact spline acceleration continuity
             if 0 < k < (self._knot_number - 1):
@@ -607,13 +611,11 @@ class GaitNonlinearBackward(GaitNonlinearForward):
                     P_mov_r[u_slice0:u_slice2 + 3], DP_mov_r[u_slice0:u_slice2 + 3], dt, k
                 )
 
-                g.append(left_mov_contact_spline_acc_constraint['x'])
-                g.append(left_mov_contact_spline_acc_constraint['y'])
-                g.append(left_mov_contact_spline_acc_constraint['z'])
+                self._g_string.extend(left_mov_contact_spline_acc_constraint['name'])
+                self._g_string.extend(right_mov_contact_spline_acc_constraint['name'])
 
-                g.append(right_mov_contact_spline_acc_constraint['x'])
-                g.append(right_mov_contact_spline_acc_constraint['y'])
-                g.append(right_mov_contact_spline_acc_constraint['z'])
+                g.append(left_mov_contact_spline_acc_constraint['constraint'])
+                g.append(right_mov_contact_spline_acc_constraint['constraint'])
 
             # box constraint - moving contact
             left_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
@@ -622,13 +624,20 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             right_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
                 P_mov_r[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
 
-            g.append(left_mov_contact_box_constraint['x'])
-            g.append(left_mov_contact_box_constraint['y'])
-            g.append(left_mov_contact_box_constraint['z'])
+            self._g_string.extend(left_mov_contact_box_constraint['name'])
+            self._g_string.extend(right_mov_contact_box_constraint['name'])
 
-            g.append(right_mov_contact_box_constraint['x'])
-            g.append(right_mov_contact_box_constraint['y'])
-            g.append(right_mov_contact_box_constraint['z'])
+            g.append(left_mov_contact_box_constraint['constraint'])
+            g.append(right_mov_contact_box_constraint['constraint'])
+
+            # constraint for self collision avoidance of arm ee
+            avoid_arm_collision_constraint = constraints.avoid_arm_self_collision_constraint(
+                P_mov_l[u_slice1:u_slice2],
+                P_mov_r[u_slice1:u_slice2]
+            )
+
+            self._g_string.extend(avoid_arm_collision_constraint['name'])
+            g.append(avoid_arm_collision_constraint['constraint'])
 
         # construct the solver
         self._nlp = {
@@ -693,7 +702,7 @@ class GaitNonlinearBackward(GaitNonlinearForward):
 
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
-        P = list()  # parameter values
+        self._P = P = list()  # parameter values
 
         # time that maximum clearance occurs
         clearance_times = [0.5 * (x[0] + x[1]) for x in swing_t]
@@ -725,6 +734,9 @@ class GaitNonlinearBackward(GaitNonlinearForward):
 
         # get box bounds for arms
         arm_bounds = parameters.get_arm_box_bounds('backward')
+
+        # get bounds for arm self collision avoidance
+        arm_distance_bounds = parameters.get_distance_between_arms(conservative=False)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -780,11 +792,12 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-10.0, -10.0, - 3.0]
-            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [10.0, 10.0, 3.0]
+            f_magn = 8.0
+            F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-f_magn, -f_magn, - 3.0]
+            F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [f_magn, f_magn, 3.0]
 
-            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-10.0, -10.0, - 3.0]
-            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [10.0, 10.0, 3.0]
+            F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-f_magn, -f_magn, - 3.0]
+            F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [f_magn, f_magn, 3.0]
 
             # foothold positions
             contact_params = constraints.set_contact_parameters(
@@ -819,6 +832,10 @@ class GaitNonlinearBackward(GaitNonlinearForward):
             gl.append(arm_bounds['right_l'])
             gu.append(arm_bounds['right_u'])
 
+            # arm self collision avoidance
+            gl.append(arm_distance_bounds['lower'])
+            gu.append(arm_distance_bounds['upper'])
+
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
         Xu[-6:] = [0.0 for i in range(6)]
@@ -835,12 +852,12 @@ class GaitNonlinearBackward(GaitNonlinearForward):
         # format bounds and params according to solver
         lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virt_l_l, F_virt_r_l)
         ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virt_l_u, F_virt_r_u)
-        lbg = cs.vertcat(*gl)
-        ubg = cs.vertcat(*gu)
+        self._lbg = lbg = cs.vertcat(*gl)
+        self._ubg = ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
 
         # compute solution-call solver
-        sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
+        self._sol = sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
 
         # plot state, forces, control input, quantities to be computed by evaluate function
         x_trj = cs.horzcat(self._trj['x'])  # pack states in a desired matrix
@@ -922,7 +939,8 @@ if __name__ == "__main__":
 
     step_clear = 0.05
 
-    w = GaitNonlinearBackward(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0])
+    w = GaitNonlinearBackward(mass=95, N=int((swing_time[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=[5.0, 5.0],
+                              slope_deg=0, )
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,

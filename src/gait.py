@@ -63,6 +63,9 @@ class Gait:
         self._ncontacts = ncontacts = 4
         self._dimf_tot = dimf_tot = ncontacts * dimf
 
+        # list with constraint names
+        self._g_string = []
+
         # define cs variables
         delta_t = sym_t.sym('delta_t', 1)   # symbolic in order to pass values for optimization/interpolation
         c = sym_t.sym('c', dimc)
@@ -85,6 +88,7 @@ class Gait:
         X = sym_t.sym('X', knot_number * dimx)  # state is an SX for all knots
         U = sym_t.sym('U', knot_number * dimu)  # for all knots
         F = sym_t.sym('F', knot_number * (ncontacts * dimf))  # for all knots
+
         P = list()
         g = list()  # list of constraint expressions
         J = list()  # list of cost function expressions
@@ -123,8 +127,14 @@ class Gait:
             newton_euler_constraint = constraints.newton_euler_constraint(
                 X[x_slice1:x_slice2], mass, self._gravity, ncontacts, F[f_slice1:f_slice2], p_k
             )
+            self._g_string.extend(newton_euler_constraint['name'])
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
+
+            # friction pyramid
+            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
+            self._g_string.extend(friction_pyramid_constraint['name'])
+            g.append(np.array(friction_pyramid_constraint['constraint']))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -133,11 +143,8 @@ class Gait:
                 x_curr = X[x_slice1:x_slice2]
                 state_constraint = constraints.state_constraint(
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
-                g.append(state_constraint)
-
-            # friction pyramid
-            friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
-            g.append(np.array(friction_pyramid_constraint))
+                self._g_string.extend(state_constraint['name'])
+                g.append(state_constraint['constraint'])
 
         # construct the solver
         self._nlp = {
@@ -181,7 +188,7 @@ class Gait:
         Fu = [0] * self._dimf_tot * self._knot_number  # force upper bounds
         gl = list()  # constraint lower bounds
         gu = list()  # constraint upper bounds
-        P = list()  # parameter values
+        self._P = P = list()  # parameter values
 
         # time that maximum clearance occurs
         clearance_times = [0.5 * (x[0] + x[1]) for x in swing_t]
@@ -247,17 +254,17 @@ class Gait:
             )
             P.append(contact_params)
 
-            if k > 0:
-                gl.append(np.zeros(self._dimx))
-                gu.append(np.zeros(self._dimx))
-
             # constraint bounds (newton-euler eq.)
-            gl.append(np.zeros(6)) 
+            gl.append(np.zeros(6))
             gu.append(np.zeros(6))
 
             # friction pyramid
             gl.append(np.array([-cs.inf, 0.0, -cs.inf, 0.0] * self._ncontacts))
             gu.append(np.array([0.0, cs.inf, 0.0, cs.inf] * self._ncontacts))
+
+            if k > 0:       # state constraint
+                gl.append(np.zeros(self._dimx))
+                gu.append(np.zeros(self._dimx))
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
@@ -269,12 +276,12 @@ class Gait:
         # format bounds and params according to solver
         lbv = cs.vertcat(Xl, Ul, Fl)
         ubv = cs.vertcat(Xu, Uu, Fu)
-        lbg = cs.vertcat(*gl)
-        ubg = cs.vertcat(*gu)
+        self._lbg = lbg = cs.vertcat(*gl)
+        self._ubg = ubg = cs.vertcat(*gu)
         params = cs.vertcat(*P)
 
         # compute solution-call solver
-        sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
+        self._sol = sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
 
         # plot state, forces, control input, quantities to be computed by evaluate function
         x_trj = cs.horzcat(self._trj['x'])  # pack states in a desired matrix
@@ -309,6 +316,78 @@ class Gait:
         expr_value_flat = [i for sublist in expr_value for i in sublist]
 
         return expr_value_flat
+
+    def evaluate_with_params(self, solution, parameters, expr):
+        """ Evaluate a given expression
+
+        Args:
+            solution: given solution
+            parameters: params of nlp
+            expr: expression to be evaluated
+
+        Returns:
+            Numerical value of the given expression
+
+        """
+
+        # casadi function that symbolically maps the _nlp to the given expression
+        expr_fun = cs.Function('expr_fun', [self._nlp['x'], self._nlp['p']], [expr], ['v', 'p'], ['expr'])
+
+        expr_value = expr_fun(v=solution, p=parameters)['expr'].toarray()
+
+        # make it a flat list
+        expr_value_flat = [i for sublist in expr_value for i in sublist]
+
+        return expr_value_flat
+
+    def compute_constraint_violation(self, solution, parameters_list, constraints_list, lower_bounds, upper_bounds):
+        '''
+        Compute the constraint violation and check if it is accepted or not. Plot constraints and bounds
+        :param solution: symbolical expression of the solution
+        :param parameters_list: list of nlp params
+        :param constraints_list: symbolical expression of constraints
+        :param lower_bounds: list with lower constraint bounds
+        :param upper_bounds: list with upper constraint bounds
+        :return: The constraints that are violated and the constraints plots.
+        '''
+
+        # evaluate the constraints
+        constraint_violation = self.evaluate_with_params(solution, parameters_list, constraints_list)
+
+        # default tolerance of ipopt for the unscaled problem
+        constr_viol_tolerance = 1e-4
+
+        # loop over all constraints
+        for i in range(self._nconstr):
+
+            # check for violations
+            if constraint_violation[i] < lower_bounds[i] - constr_viol_tolerance or \
+                    constraint_violation[i] > upper_bounds[i] + constr_viol_tolerance:
+                print('Violated constraint: ', self._g_string[i])
+
+        # get names and sizes of constraints (in dictionary) to plot them
+        constraint_names_sizes = parameters.get_constraint_names(formulation='gait')
+
+        # loop over constraint names (e.g. 'dynamics')
+        for i, name in enumerate(constraint_names_sizes):
+
+            # indices for each cosntraint
+            constraint_indices = np.where(np.isin(self._g_string, name))[0].tolist()
+
+            # size of each constraint (#coordinates) to create subplots
+            subplot_size = constraint_names_sizes[name]
+
+            plt.figure()
+            for ii in range(subplot_size):  # loop over coordinates
+                plt.subplot(subplot_size, 1, ii + 1)
+                plt.plot([constraint_violation[j] for j in constraint_indices[ii::subplot_size]], '.-', label=name)
+                plt.plot([lower_bounds[j] - constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
+                         'r', label='lower_bound')
+                plt.plot([upper_bounds[j] + constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
+                         'r', label='upper_bound')
+            plt.suptitle(name)
+            plt.legend()
+        # plt.show()
 
     def interpolate(self, solution, sw_curr, sw_tgt, clearance, sw_t, resol):
         """ Interpolate the trajectories generated by the solution of the problem
@@ -454,35 +533,35 @@ class Gait:
         plt.xlabel('Time [s]')
         # plt.savefig('../plots/gait_forces.png')
 
-        # plot swing trajectory
-        # All points to be published
-        N_total = int(self._problem_duration * resol)  # total points --> total time * frequency
-        s = np.linspace(0, self._problem_duration, N_total)
-        coord_labels = ['x', 'y', 'z']
-        for j in range(len(results['sw'])):
-            plt.figure()
-            for i, name in enumerate(coord_labels):
-                plt.subplot(3, 1, i + 1)
-                plt.plot(s, results['sw'][j][name])  # nominal trj
-                plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
-                plt.grid()
-                plt.legend(['nominal', 'real'])
-                plt.title('Trajectory ' + name)
-            plt.xlabel('Time [s]')
-            # plt.savefig('../plots/gait_swing.png')
-
-        # plot swing trajectory in two dimensions Z - X
-        plt.figure()
-        for j in range(len(results['sw'])):
-            plt.subplot(2, 2, j + 1)
-            plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
-            plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
-            plt.grid()
-            plt.legend(['nominal', 'real'])
-            plt.title('Trajectory Z- X')
-            plt.xlabel('X [m]')
-            plt.ylabel('Z [m]')
-            # plt.savefig('../plots/gait_swing_zx.png')
+        # # plot swing trajectory
+        # # All points to be published
+        # N_total = int(self._problem_duration * resol)  # total points --> total time * frequency
+        # s = np.linspace(0, self._problem_duration, N_total)
+        # coord_labels = ['x', 'y', 'z']
+        # for j in range(len(results['sw'])):
+        #     plt.figure()
+        #     for i, name in enumerate(coord_labels):
+        #         plt.subplot(3, 1, i + 1)
+        #         plt.plot(s, results['sw'][j][name])  # nominal trj
+        #         plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+        #         plt.grid()
+        #         plt.legend(['nominal', 'real'])
+        #         plt.title('Trajectory ' + name)
+        #     plt.xlabel('Time [s]')
+        #     # plt.savefig('../plots/gait_swing.png')
+        #
+        # # plot swing trajectory in two dimensions Z - X
+        # plt.figure()
+        # for j in range(len(results['sw'])):
+        #     plt.subplot(2, 2, j + 1)
+        #     plt.plot(results['sw'][j]['x'], results['sw'][j]['z'])  # nominal trj
+        #     plt.plot(results['sw'][j]['x'][0:t_exec[j]], results['sw'][j]['z'][0:t_exec[j]])  # real trj
+        #     plt.grid()
+        #     plt.legend(['nominal', 'real'])
+        #     plt.title('Trajectory Z- X')
+        #     plt.xlabel('X [m]')
+        #     plt.ylabel('Z [m]')
+        #     # plt.savefig('../plots/gait_swing_zx.png')
 
         # Support polygon and CoM motion in the plane
         color_labels = ['red', 'green', 'blue', 'yellow']
@@ -500,7 +579,10 @@ class Gait:
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
         plt.xlim(0.5, -0.5)
-        plt.show()
+
+        # compute the violated constraints and plot
+        self.compute_constraint_violation(self._sol['x'], np.array(self._P).flatten(),
+                                          self._nlp['g'], self._lbg, self._ubg)
 
         plt.show()
 

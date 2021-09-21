@@ -29,11 +29,11 @@ def get_arm_box_bounds(side, conservative = True):
         right_upper_bound = np.array([0.55, 0.1, 0.35])
 
     elif side == 'backward':
-        left_lower_bound = np.array([-0.3, 0.0, 0.35])
+        left_lower_bound = np.array([-0.3, -0.1, 0.35])
         left_upper_bound = np.array([-0.08, 0.35, 0.45])
 
         right_lower_bound = np.array([-0.3, -0.35, 0.35])
-        right_upper_bound = np.array([-0.08, -0.0, 0.45])
+        right_upper_bound = np.array([-0.08, 0.1, 0.45])
 
     elif side == 'sideways':
         # to be specified
@@ -55,19 +55,41 @@ def get_arm_box_bounds(side, conservative = True):
     }
 
 
-def get_constraint_names():
+def get_constraint_names(formulation='gait'):
+    '''
+    A simple hardcoded function to return names and sizes of constraints in the form of a directory. Currently the
+    formulation includes dynamics, point mass dynamics, state constraint, acceleration continuity, friction pyramid,
+    box constraints, arm self collision.
+    :param formulation: gait/payload
+    :return: The directory of names and size of every constraint.
+    '''
 
     leg_num = 4
     arm_num = 2
-    names_sizes = {
-        'dynamics': 6,
-        'point_mass_dynamics': 3 * arm_num,
-        'state_constraint': 9,
-        'acceleration_continuity': 3 * arm_num,
-        'friction_pyramid': 4 * leg_num,
-        'box_constraint': 3 * arm_num,
-        'arm_self_collision': 1
-    }
+
+    if formulation == 'gait':
+
+        names_sizes = {
+            'dynamics': 6,
+            'state_constraint': 9,
+            'friction_pyramid': 4 * leg_num,
+        }
+
+    elif formulation == 'payload':
+
+        names_sizes = {
+            'dynamics': 6,
+            'point_mass_dynamics': 3 * arm_num,
+            'state_constraint': 9,
+            'acceleration_continuity': 3 * arm_num,
+            'friction_pyramid': 4 * leg_num,
+            'box_constraint': 3 * arm_num,
+            'arm_self_collision': 1
+        }
+
+    else:
+        names_sizes = None
+        print('Wrong type of formulation.')
 
     return names_sizes
 
@@ -157,6 +179,7 @@ def get_distance_of_gravity_from_urdf_frame(link_name):
         right_grav_urdf = np.array([4.8407693e+01 * mmTom, - 2.0035723e+01 * mmTom, 7.7533287e+01 * mmTom])
 
     else:
+        left_grav_urdf = right_grav_urdf = None
         print('Wrong arm EE link name.')
 
     return {
