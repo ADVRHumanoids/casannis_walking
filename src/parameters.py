@@ -55,6 +55,23 @@ def get_arm_box_bounds(side, conservative = True):
     }
 
 
+def get_constraint_names():
+
+    leg_num = 4
+    arm_num = 2
+    names_sizes = {
+        'dynamics': 6,
+        'point_mass_dynamics': 3 * arm_num,
+        'state_constraint': 9,
+        'acceleration_continuity': 3 * arm_num,
+        'friction_pyramid': 4 * leg_num,
+        'box_constraint': 3 * arm_num,
+        'arm_self_collision': 1
+    }
+
+    return names_sizes
+
+
 def get_distance_between_arms(conservative = True):
     '''
     The returned distance will be the bound for the arm self collision avoidance constraint

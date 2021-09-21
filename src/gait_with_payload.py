@@ -440,10 +440,33 @@ class Gait(object):
 
         """
 
-        # casadi function that symbolically maps the _nlp to the given expression
+        # casadi function that symbolically maps the _nlp['x'] to the given expression
         expr_fun = cs.Function('expr_fun', [self._nlp['x']], [expr], ['v'], ['expr'])
 
         expr_value = expr_fun(v=solution)['expr'].toarray()
+
+        # make it a flat list
+        expr_value_flat = [i for sublist in expr_value for i in sublist]
+
+        return expr_value_flat
+
+    def evaluate_with_params(self, solution, parameters, expr):
+        """ Evaluate a given expression
+
+        Args:
+            solution: given solution
+            parameters: params of nlp
+            expr: expression to be evaluated
+
+        Returns:
+            Numerical value of the given expression
+
+        """
+
+        # casadi function that symbolically maps the _nlp to the given expression
+        expr_fun = cs.Function('expr_fun', [self._nlp['x'], self._nlp['p']], [expr], ['v', 'p'], ['expr'])
+
+        expr_value = expr_fun(v=solution, p=parameters)['expr'].toarray()
 
         # make it a flat list
         expr_value_flat = [i for sublist in expr_value for i in sublist]
@@ -786,6 +809,9 @@ class GaitNonlinear(Gait):
         self._ncontacts = ncontacts = 4
         self._dimf_tot = dimf_tot = ncontacts * dimf
 
+        # list with constraint names
+        self._g_string = []
+
         # define cs variables
         delta_t = sym_t.sym('delta_t', 1)  # symbolic in order to pass values for optimization/interpolation
         c = sym_t.sym('c', dimc)
@@ -893,12 +919,14 @@ class GaitNonlinear(Gait):
                 p_k, P_mov_l[u_slice1:u_slice2], P_mov_r[u_slice1:u_slice2],
                 F_virt_l[u_slice1:u_slice2], F_virt_r[u_slice1:u_slice2]
             )
+            self._g_string.extend(newton_euler_constraint['name'])
             g.append(newton_euler_constraint['newton'])
             g.append(newton_euler_constraint['euler'])
 
             # friction pyramid
             friction_pyramid_constraint = constraints.friction_pyramid(F[f_slice1:f_slice2], 0.3)
-            g.append(np.array(friction_pyramid_constraint))
+            self._g_string.extend(friction_pyramid_constraint['name'])
+            g.append(np.array(friction_pyramid_constraint['constraint']))
 
             # state constraint (triple integrator)
             if k > 0:
@@ -907,7 +935,8 @@ class GaitNonlinear(Gait):
                 x_curr = X[x_slice1:x_slice2]
                 state_constraint = constraints.state_constraint(
                     self._integrator(x0=x_old, u=u_old, delta_t=dt)['xf'], x_curr)
-                g.append(state_constraint)
+                self._g_string.extend(state_constraint['name'])
+                g.append(state_constraint['constraint'])
 
                 # newton constraint for the payload mass, virtual force has opposite sign
                 payload_mass_constraint_l = constraints.newton_point_mass_constraint(P_mov_l[u_slice0:u_slice2],
@@ -917,9 +946,8 @@ class GaitNonlinear(Gait):
                                                                                   self._payload_mass_l,
                                                                                   self._gravity,
                                                                                   -F_virt_l[u_slice0:u_slice1])
-                g.append(payload_mass_constraint_l['x'])
-                g.append(payload_mass_constraint_l['y'])
-                g.append(payload_mass_constraint_l['z'])
+                self._g_string.extend(payload_mass_constraint_l['name'])
+                g.append(payload_mass_constraint_l['constraint'])
 
                 payload_mass_constraint_r = constraints.newton_point_mass_constraint(P_mov_r[u_slice0:u_slice2],
                                                                                   DP_mov_r[u_slice0:u_slice2],
@@ -928,9 +956,8 @@ class GaitNonlinear(Gait):
                                                                                   self._payload_mass_r,
                                                                                   self._gravity,
                                                                                   -F_virt_r[u_slice0:u_slice1])
-                g.append(payload_mass_constraint_r['x'])
-                g.append(payload_mass_constraint_r['y'])
-                g.append(payload_mass_constraint_r['z'])
+                self._g_string.extend(payload_mass_constraint_r['name'])
+                g.append(payload_mass_constraint_r['constraint'])
 
             # moving contact spline acceleration continuity
             if 0 < k < (self._knot_number - 1):
@@ -942,13 +969,11 @@ class GaitNonlinear(Gait):
                     P_mov_r[u_slice0:u_slice2 + 3], DP_mov_r[u_slice0:u_slice2 + 3], dt, k
                 )
 
-                g.append(left_mov_contact_spline_acc_constraint['x'])
-                g.append(left_mov_contact_spline_acc_constraint['y'])
-                g.append(left_mov_contact_spline_acc_constraint['z'])
+                self._g_string.extend(left_mov_contact_spline_acc_constraint['name'])
+                self._g_string.extend(right_mov_contact_spline_acc_constraint['name'])
 
-                g.append(right_mov_contact_spline_acc_constraint['x'])
-                g.append(right_mov_contact_spline_acc_constraint['y'])
-                g.append(right_mov_contact_spline_acc_constraint['z'])
+                g.append(left_mov_contact_spline_acc_constraint['constraint'])
+                g.append(right_mov_contact_spline_acc_constraint['constraint'])
 
             # box constraint - moving contact
             left_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
@@ -957,13 +982,11 @@ class GaitNonlinear(Gait):
             right_mov_contact_box_constraint = constraints.moving_contact_box_constraint(
                 P_mov_r[u_slice1:u_slice2], X[x_slice1:x_slice1 + 3])
 
-            g.append(left_mov_contact_box_constraint['x'])
-            g.append(left_mov_contact_box_constraint['y'])
-            g.append(left_mov_contact_box_constraint['z'])
+            self._g_string.extend(left_mov_contact_box_constraint['name'])
+            self._g_string.extend(right_mov_contact_box_constraint['name'])
 
-            g.append(right_mov_contact_box_constraint['x'])
-            g.append(right_mov_contact_box_constraint['y'])
-            g.append(right_mov_contact_box_constraint['z'])
+            g.append(left_mov_contact_box_constraint['constraint'])
+            g.append(right_mov_contact_box_constraint['constraint'])
 
             # constraint for self collision avoidance of arm ee
             avoid_arm_collision_constraint = constraints.avoid_arm_self_collision_constraint(
@@ -971,7 +994,8 @@ class GaitNonlinear(Gait):
                 P_mov_r[u_slice1:u_slice2]
             )
 
-            g.append(avoid_arm_collision_constraint)
+            self._g_string.extend(avoid_arm_collision_constraint['name'])
+            g.append(avoid_arm_collision_constraint['constraint'])
 
         # construct the solver
         self._nlp = {
@@ -1061,7 +1085,7 @@ class GaitNonlinear(Gait):
                 final_contacts.append(swing_tgt[swing_id.index(i)])
             else:
                 final_contacts.append(contacts[i])
-        print("Final contacts are", final_contacts)
+        # print("Final contacts are", final_contacts)
 
         final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
@@ -1211,6 +1235,9 @@ class GaitNonlinear(Gait):
         f_virt_l_trj = cs.horzcat(self._trj['F_virt_l'])  # pack moving contact trj in a desired matrix
         f_virt_r_trj = cs.horzcat(self._trj['F_virt_r'])  # pack moving contact trj in a desired matrix
 
+        # compute the violated constraints
+        self.compute_constraint_violation(sol['x'], np.array(P).flatten(), self._nlp['g'], lbg, ubg)
+
         # return values of the quantities *_trj
         return {
             'x': self.evaluate(sol['x'], x_trj),
@@ -1224,6 +1251,56 @@ class GaitNonlinear(Gait):
             'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj)  # virtual force
         }
 
+    def compute_constraint_violation(self, solution, parameters_list, constraints_list, lower_bounds, upper_bounds):
+        '''
+        Compute the constraint violation and check if it is accepted or not. Plot constraints and bounds
+        :param solution: symbolical expression of the solution
+        :param parameters_list: list of nlp params
+        :param constraints_list: symbolical expression of constraints
+        :param lower_bounds: list with lower constraint bounds
+        :param upper_bounds: list with upper constraint bounds
+        :return: The constraints that are violated and the constraints plots.
+        '''
+
+        # evaluate the constraints
+        constraint_violation = self.evaluate_with_params(solution, parameters_list, constraints_list)
+
+        # default tolerance of ipopt for the unscaled problem
+        constr_viol_tolerance = 1e-4
+
+        # loop over all constraints
+        for i in range(self._nconstr):
+
+            # check for violations
+            if constraint_violation[i] < lower_bounds[i] - constr_viol_tolerance or\
+                    constraint_violation[i] > upper_bounds[i] + constr_viol_tolerance:
+
+                print('Violated constraint: ', self._g_string[i])
+
+        # get names and sizes of constraints (in dictionary) to plot them
+        constraint_names_sizes = parameters.get_constraint_names()
+
+        # loop over constraint names (e.g. 'dynamics')
+        for i, name in enumerate(constraint_names_sizes):
+
+            # indices for each cosntraint
+            constraint_indices = np.where(np.isin(self._g_string, name))[0].tolist()
+
+            # size of each constraint (#coordinates) to create subplots
+            subplot_size = constraint_names_sizes[name]
+
+            plt.figure()
+            for ii in range(subplot_size):  # loop over coordinates
+                plt.subplot(subplot_size, 1, ii+1)
+                plt.plot([constraint_violation[j] for j in constraint_indices[ii::subplot_size]], '.-', label=name)
+                plt.plot([lower_bounds[j] - constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
+                         'r', label='lower_bound')
+                plt.plot([upper_bounds[j] + constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
+                         'r', label='upper_bound')
+            plt.suptitle(name)
+            plt.legend()
+        plt.show()
+        
     def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
         # plot virtual force
         plt.figure()

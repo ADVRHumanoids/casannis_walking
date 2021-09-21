@@ -30,7 +30,9 @@ def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, c
 
     return {
         'newton': newton_violation,
-        'euler': euler_violation
+        'euler': euler_violation,
+        'size': 6,
+        'name': ['dynamics' for i in range(6)]
     }
 
 
@@ -90,9 +92,9 @@ def newton_point_mass_constraint(p_mov_list, dp_mov_list, dt, junction_index, pa
     newton_violation = payload_mass * np.array(acceleration_at_start) - accel_grav * payload_mass - virtual_force
 
     return {
-        'x': newton_violation[0],
-        'y': newton_violation[1],
-        'z': newton_violation[2]
+        'constraint': newton_violation,
+        'size': 3,
+        'name': ['point_mass_dynamics' for i in range(3)]
     }
 
 
@@ -101,7 +103,11 @@ def state_constraint(state_function, current_state):
     # state constraint (triple integrator)
     state_constraint_violation = state_function - current_state
 
-    return state_constraint_violation
+    return {
+        'constraint': state_constraint_violation,
+        'size': 9,
+        'name': ['state_constraint' for i in range(9)]
+    }
 
 
 def spline_acc_constraint(poly1, poly2, t):
@@ -149,7 +155,11 @@ def spline_acc_constraint(poly1, poly2, t):
 
     acc_continuity_violation = acceleration1 - acceleration2
 
-    return acc_continuity_violation
+    return {
+        'constraint': acc_continuity_violation,
+        'size': acc_continuity_violation.size1(),
+        'name': ['acceleration_continuity' for i in range(acc_continuity_violation.size1())]
+    }
 
 
 def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
@@ -181,12 +191,12 @@ def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
             't0': junction_index * dt
         }
 
-        acc_continuity_violation.append(spline_acc_constraint(current_polynomial, next_polynomial, t_current))
+        acc_continuity_violation.append(spline_acc_constraint(current_polynomial, next_polynomial, t_current)['constraint'])
 
     return {
-        'x': acc_continuity_violation[0],
-        'y': acc_continuity_violation[1],
-        'z': acc_continuity_violation[2]
+        'constraint': np.array(acc_continuity_violation),
+        'size': 3,
+        'name': ['acceleration_continuity' for i in range(3)]
     }
 
 
@@ -250,7 +260,11 @@ def friction_pyramid(force_vector, friction_coeff, ncontacts=4):
 
         friction_violation += [x_violation_neg, x_violation_pos, y_violation_neg, y_violation_pos]
 
-    return friction_violation
+    return {
+        'constraint': friction_violation,
+        'size': len(friction_violation),
+        'name': ['friction_pyramid' for i in range(len(friction_violation))]
+    }
 
 
 def bound_moving_contact_variables(p_mov_initial, dp_mov_initial, p_mov_bound, dp_mov_bound,
@@ -290,9 +304,9 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
     constraint_violation = p_mov - CoM_pos
 
     return {
-        'x': constraint_violation[0],
-        'y': constraint_violation[1],
-        'z': constraint_violation[2],
+        'constraint': constraint_violation,
+        'size': 3,
+        'name': ['box_constraint' for i in range(3)]
     }
 
 
@@ -300,7 +314,11 @@ def avoid_arm_self_collision_constraint(ee_left, ee_right):
 
     constraint_violation = ee_left[1] - ee_right[1]
 
-    return constraint_violation
+    return {
+        'constraint': constraint_violation,
+        'size': constraint_violation.size1(),
+        'name': ['arm_self_collision' for i in range(constraint_violation.size1())]
+    }
 
 
 def bound_state_variables(initial_state, state_bound, knot, knot_num, final_state=None):
