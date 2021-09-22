@@ -6,7 +6,7 @@ import parameters
 import costs
 import trj_interpolation as interpol
 
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation
 
 
 class Gait:
@@ -147,7 +147,7 @@ class Gait:
                                                      k, knot_number)  # penalize CoM jerk, that is the control
 
             # orientation
-            cost_function += costs.penalize_quantity(1e3, X_euler[x_slice1:x_slice1 + 3],
+            cost_function += costs.penalize_quantity(1e1, X_euler[x_slice1:x_slice1 + 3],
                                                      k, knot_number)  # penalize orientation state
             cost_function += costs.penalize_quantity(1e-0, U_euler[u_slice1:u_slice2],
                                                      k, knot_number)  # penalize CoM jerk, that is the control
@@ -566,7 +566,7 @@ class Gait:
 
         quaternion_trj = []
         for j in range(self._Nseg * self._n):  # loop for every point of interpolation
-            quaternion_trj.append(R.from_euler('xyz', [coord[j] for coord in euler_orient_trj], degrees=False).as_quat())
+            quaternion_trj.append(Rotation.from_euler('xyz', [coord[j] for coord in euler_orient_trj], degrees=False).as_quat())
 
         return quaternion_trj
 

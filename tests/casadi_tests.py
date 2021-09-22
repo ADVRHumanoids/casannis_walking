@@ -4,135 +4,57 @@ import scipy.interpolate as ip
 from matplotlib import pyplot as plt
 from scipy.stats import norm
 
-a = "[0.5,2.5]"
-a = a.rstrip(']').lstrip('[').split(',')
-a = [float(i) for i in a]
-print(a)
-x=a[0]
-print(x)
-'''
-#initialize a normal distribution with frozen in mean=-1, std. dev.= 1
-rv = norm(loc = -1, scale = 55.0)
-rv1 = norm(loc = 0., scale = 2.0)
-rv2 = norm(loc = 2., scale = 3.0)
-print(rv.pdf(-10))
 
-x = np.arange(-10, 10, .1)
+def get_skew_symmetric(vector):
+    skew_matrix = sym_t.zeros(3, 3)
+    skew_matrix[0, 1] = - vector[2]
+    skew_matrix[0, 2] = vector[1]
 
-#plot the pdfs of these normal distributions
-plt.figure()
-plt.plot(x, rv.pdf(x))
-plt.show()
-'''
-'''
-# select a sym type
-sym_t = cs.SX
-a0 = sym_t.sym('a0', 1)
-a1 = sym_t.sym('a1', 1)
-a2 = sym_t.sym('a2', 1)
-a3 = sym_t.sym('a3', 1)
-a4 = sym_t.sym('a4', 1)
-a5 = sym_t.sym('a5', 1)
+    skew_matrix[1, 0] = vector[2]
+    skew_matrix[1, 2] = - vector[0]
 
-t = sym_t.sym('t', 1)
+    skew_matrix[2, 0] = - vector[1]
+    skew_matrix[2, 1] = vector[0]
 
-# initial and final position, vel, acc
+    print('Skew symmetric matrix: ', skew_matrix)
+
+    return skew_matrix
 
 
-# the 5th order polynomial expression
-spline = a0 + a1*t + a2*t**2 + a3*t**3 + a4*t**4 + a5*t**5
+if __name__ == "__main__":
 
-# wrap the polynomial expression in a function
-p = cs.Function('p', [t, a0, a1, a2, a3, a4, a5], [spline], ['t', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5'], ['spline'])
-#spline = cs.Function('spline', [t], [p], ['t'], ['p'])
+    sym_t = cs.SX
 
-# initial and final conditions
-p0 = sym_t.sym('p0', 1)
-v0 = sym_t.sym('v0', 1)
-ac0 = sym_t.sym('ac0', 1)
-p1 = sym_t.sym('p1', 1)
-v1 = sym_t.sym('v1', 1)
-ac1 = sym_t.sym('ac1', 1)
+    c = sym_t.sym('c', 3)
+    dc = sym_t.sym('dc', 3)
+    ddc = sym_t.sym('ddc', 3)
+    theta = cs.vertcat(c, dc, ddc)
 
-# velocity
-first_der = cs.jacobian(spline, t)
-dp = cs.Function('dp', [t, a1, a2, a3, a4, a5], [first_der], ['t', 'a1', 'a2', 'a3', 'a4', 'a5'], ['first_der'])
-print(cs.jacobian(spline, t))
-print(dp)
+    x = c[0]
+    y = c[1]
+    z = c[2]
 
-# acceleration
-sec_der = cs.jacobian(first_der, t)
-ddp = cs.Function('ddp', [t, a2, a3, a4, a5], [sec_der], ['t', 'a2', 'a3', 'a4', 'a5'], ['sec_der'])
-print(cs.jacobian(first_der, t))
-print(ddp)
+    C_matrix = sym_t.zeros(3, 3)
 
-print("-------->", dp(1, a1, a2, a3, a4, a5))
-'''
-'''d_spl = spline.jacobian()
-print(d_spl(t=t))
-dd_spl = d_spl.jacobian()
-print(dd_spl)
-#sec_der = cs.Function('sec_der', [t], [dd_spl], ['t'], ['dd_spl'])
-#print(sec_der(t=0))
-#print("---------", dd_spl(t=0))'''
+    C_matrix[0, 0] = cs.cos(y) * cs.cos(z)
+    C_matrix[0, 1] = - cs.sin(z)
+    C_matrix[1, 0] = cs.cos(y) * cs.sin(z)
+    C_matrix[1, 1] = cs.cos(z)
+    C_matrix[2, 0] = -cs.sin(y)
+    C_matrix[2, 2] = 1.0
 
+    # sym_t([[cs.cos(y) * cs.cos(z), - cs.sin(z), 0.0],
+    #       [cs.cos(y) * cs.sin(z), cs.cos(z), 0.0],
+    #       [-cs.sin(y), 0.0, 1.0]])
+    print('C matrix is: ', C_matrix)
 
+    omega = cs.mtimes(C_matrix, dc)
+    print('Omega is: ', omega)
 
-'''
-dimp = 3
-p = sym_t.sym('p', dimp)
+    omega_skew = get_skew_symmetric(omega)
 
-f = cs.sumsqr(p)  # symbolic expression
-print(f)
+    dC_matrix = cs.mtimes(omega_skew, C_matrix)
+    print('dC matrix is: ', dC_matrix)
 
-F = cs.Function('f', # function name
-                {  # dict of variables (inputs, outputs)
-                    'p': p,
-                    'f': f
-                }, 
-                ['p'],  # list of inputs
-                ['f']  # list of outputs
-                )
-
-print(F)
-print(float(F(p=[1, 1, 1])['f']))
-
-jacF = F.jacobian()
-print(jacF(p=p)['jac'])
-
-hesF = jacF.jacobian()
-print(hesF)
-print(hesF(p=p)['jac'])
-
-# ---------------------------------------------
-
-xgrid = np.linspace(1,6,6)
-V = [-1, -1, -2, -3, 0, 2]
-print(V)
-
-# interpolation
-lut = cs.interpolant('LUT', 'bspline', [xgrid], V)
-print (lut(2.5))
-
-interp = ip.InterpolatedUnivariateSpline(xgrid, V)
-print(interp(2.5))
-
-# evaluation points
-N=100
-x = np.linspace(1, 6, N)
-print(x[1])
-y = []
-y1 = []
-
-for i in range(0, N):
-    y.append(lut(x[i]))
-for i in range(0, N):
-    y1.append(interp(x[i]))
-
-plt.figure()
-plt.plot(x, y, x, y1, xgrid, V, 'o-')
-plt.grid()
-plt.title('State trajectory')
-plt.legend(['x', 'y', 'z'])
-plt.xlabel('Time [s]')
-plt.show()'''
+    omega_dot = cs.mtimes(dC_matrix, dc) + cs.mtimes(C_matrix, ddc)
+    print('Omega dot is: ', omega_dot)

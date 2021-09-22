@@ -10,23 +10,22 @@ def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, c
     CoM_acc = CoM_state[6:9]
     newton_violation = mass * CoM_acc - mass * accel_grav
 
-    for i in range(contacts_num):
-        f_i_k = forces[3 * i:3 * (i + 1)]  # force of i-th contact
-        newton_violation -= f_i_k
-    newton_violation -= virtual_force_l
-    newton_violation -= virtual_force_r
-
     # euler
     CoM_pos = CoM_state[0:3]
     euler_violation = 0.0
 
     for i in range(contacts_num):
         f_i_k = forces[3 * i:3 * (i + 1)]  # force of i-th contact
-        p_i_k = contact_positions[3 * i:3 * (i + 1)]  # contact of i-th contact
+        newton_violation -= f_i_k
 
-        euler_violation += cs.cross(f_i_k, CoM_pos - p_i_k)
-    euler_violation += cs.cross(virtual_force_l, CoM_pos - lmoving_contact)    # payload addition
-    euler_violation += cs.cross(virtual_force_r, CoM_pos - rmoving_contact)    # payload addition
+        p_i_k = contact_positions[3 * i:3 * (i + 1)]  # contact of i-th contact
+        euler_violation -= cs.cross(f_i_k, CoM_pos - p_i_k)
+
+    # additional for arm ee contacts
+    newton_violation -= virtual_force_l
+    newton_violation -= virtual_force_r
+    euler_violation -= cs.cross(virtual_force_l, CoM_pos - lmoving_contact)
+    euler_violation -= cs.cross(virtual_force_r, CoM_pos - rmoving_contact)
 
     return {
         'newton': newton_violation,
@@ -34,6 +33,131 @@ def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, c
         'size': 6,
         'name': ['dynamics' for i in range(6)]
     }
+
+
+def SRBD_dynamics_constraint(CoM_state, base_euler_state, mass, accel_grav, contacts_num, forces, contact_positions,
+                             lmoving_contact=cs.SX.zeros(3), rmoving_contact=cs.SX.zeros(3),
+                             virtual_force_l=[0.0, 0.0, 0.0], virtual_force_r=[0.0, 0.0, 0.0]
+                             ):
+    # CoM
+    CoM_acc = CoM_state[6:9]
+    CoM_pos = CoM_state[0:3]
+
+    # base euler angles and rates
+    theta = base_euler_state[0:3]
+    d_theta = base_euler_state[3:6]
+    dd_theta = base_euler_state[6:9]
+
+    # angular velocity in world frame
+    C, C_dot = get_mapper_from_euler_to_omega(theta, d_theta)
+    omega = cs.mtimes(C, d_theta)
+
+    # derivative of angular velocity
+    omega_dot = cs.mtimes(C_dot, d_theta) + cs.mtimes(C, dd_theta)
+
+    # inertia tensor at homing position wrt frame anchored at CoM and parallel to base frame
+    I_b = cs.SX([[18.7613, 0.0278677, -3.27003],
+                 [0.0278677, 21.2494, -0.0110752],
+                 [-3.27003, -0.0110752, 15.9858]]
+                )
+
+    # inertia tensor expressed in world frame based on current body orientation
+    w_R_b = get_rotation_matrix_from_euler(theta)
+    I_w = cs.mtimes(w_R_b, cs.mtimes(I_b, w_R_b.T))
+
+    # dynamics
+    newton_violation = mass * CoM_acc - mass * accel_grav
+    euler_violation = cs.mtimes(I_w, omega_dot) + cs.cross(omega, cs.mtimes(I_w, omega))
+
+    for i in range(contacts_num):
+        f_i_k = forces[3 * i:3 * (i + 1)]  # force of i-th contact
+        newton_violation -= f_i_k
+
+        p_i_k = contact_positions[3 * i:3 * (i + 1)]  # contact of i-th contact
+        euler_violation -= cs.cross(f_i_k, CoM_pos - p_i_k)
+
+    # additional for arm ee contacts
+    newton_violation -= virtual_force_l
+    newton_violation -= virtual_force_r
+    euler_violation -= cs.cross(virtual_force_l, CoM_pos - lmoving_contact)
+    euler_violation -= cs.cross(virtual_force_r, CoM_pos - rmoving_contact)
+
+    return {
+        'newton': newton_violation,
+        'euler': euler_violation,
+        'size': 6,
+        'name': ['dynamics' for i in range(6)]
+    }
+
+
+def get_mapper_from_euler_to_omega(theta, theta_dot):
+
+    # roll, pitch, yaw
+    x = theta[0]
+    y = theta[1]
+    z = theta[2]
+    xdot = theta_dot[0]
+    ydot = theta_dot[1]
+    zdot = theta_dot[2]
+
+    M = cs.SX.zeros(3, 3)
+
+    M[0, 0] = cs.cos(y) * cs.cos(z)
+    M[0, 1] = - cs.sin(z)
+    M[1, 0] = cs.cos(y) * cs.sin(z)
+    M[1, 1] = cs.cos(z)
+    M[2, 0] = -cs.sin(y)
+    M[2, 2] = 1.0
+    # mapping_matrix = np.array(np.array([np.cos(y)*np.cos(z), - np.sin(z), 0.0]),
+    #                           np.array([np.cos(y)*np.sin(z), np.cos(z),   0.0]),
+    #                           np.array([- np.sin(y),         0.0,         1.0])
+    #                           )
+
+    # derivative of mapping matrix
+    Mdot = cs.SX.zeros(3, 3)
+
+    Mdot[0, 0] = -cs.cos(z)*cs.sin(y)*ydot - cs.cos(y)*cs.sin(z)*zdot
+    Mdot[0, 1] = -cs.cos(z)*zdot
+    Mdot[1, 0] = cs.cos(y)*cs.cos(z)*zdot - cs.sin(y)*cs.sin(z)*ydot
+    Mdot[1, 1] = -cs.sin(z)*zdot
+    Mdot[2, 0] = -cs.cos(y)*ydot
+
+    return M, Mdot
+
+
+def get_rotation_matrix_from_euler(theta):
+
+    # roll, pitch, yaw
+    x = theta[0]
+    y = theta[1]
+    z = theta[2]
+
+    R = cs.SX.zeros(3, 3)
+    R[0, 0] = cs.cos(y) * cs.cos(z)
+    R[0, 1] = - cs.sin(y) * cs.sin(z)
+    R[0, 2] = cs.sin(y)
+    R[1, 0] = cs.cos(x) * cs.sin(z) + cs.cos(z) * cs.sin(x) * cs.sin(y)
+    R[1, 1] = cs.cos(x) * cs.cos(z) - cs.sin(x) * cs.sin(y) * cs.sin(z)
+    R[1, 2] = - cs.cos(y) * cs.sin(x)
+    R[2, 0] = cs.sin(x) * cs.sin(z) - cs.cos(x) * cs.cos(z) * cs.sin(y)
+    R[2, 1] = cs.cos(z) * cs.sin(x) + cs.cos(x) * cs.sin(y) * cs.sin(z)
+    R[2, 2] = cs.cos(x) * cs.cos(y)
+
+    return R
+
+
+def get_skew_symmetric(vector):
+    skew_matrix = cs.SX.zeros(3, 3)
+    skew_matrix[0, 1] = - vector[2]
+    skew_matrix[0, 2] = vector[1]
+
+    skew_matrix[1, 0] = vector[2]
+    skew_matrix[1, 2] = - vector[0]
+
+    skew_matrix[2, 0] = - vector[1]
+    skew_matrix[2, 1] = vector[0]
+
+    return skew_matrix
 
 
 def newton_point_mass_constraint(p_mov_list, dp_mov_list, dt, junction_index, payload_mass, accel_grav, virtual_force):

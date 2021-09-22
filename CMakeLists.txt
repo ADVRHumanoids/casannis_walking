@@ -132,6 +132,10 @@ catkin_install_python(PROGRAMS tests/feet_contacts_window.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+# catkin_install_python(PROGRAMS tests/node.py
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/cartesio_with_py.cpp
