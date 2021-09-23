@@ -185,6 +185,24 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        ball1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ball1_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ball2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ball2_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         base_link:
           Alpha: 1
           Show Axes: false
@@ -297,24 +315,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        rod_plate1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        rod_plate1_tip:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        rod_plate2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        rod_plate2_tip:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         torso_2:
           Alpha: 1
           Show Axes: false
@@ -372,56 +372,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        ankle1_1:
-          Value: false
-        ankle1_2:
-          Value: false
-        ankle1_3:
-          Value: false
-        ankle1_4:
-          Value: false
-        ankle2_1:
-          Value: false
-        ankle2_2:
-          Value: false
-        ankle2_3:
-          Value: false
-        ankle2_4:
-          Value: false
-        arm1_1:
-          Value: false
-        arm1_2:
-          Value: false
-        arm1_3:
-          Value: false
-        arm1_4:
-          Value: false
-        arm1_5:
-          Value: false
-        arm1_6:
-          Value: false
-        arm1_7:
-          Value: false
-        arm1_8:
-          Value: false
-        arm2_1:
-          Value: false
-        arm2_2:
-          Value: false
-        arm2_3:
-          Value: false
-        arm2_4:
-          Value: false
-        arm2_5:
-          Value: false
-        arm2_6:
-          Value: false
-        arm2_7:
-          Value: false
-        arm2_8:
-          Value: false
-        base_link:
-          Value: false
         ci/ankle1_1:
           Value: false
         ci/ankle1_2:
@@ -453,7 +403,7 @@ Visualization Manager:
         ci/arm1_7:
           Value: false
         ci/arm1_8:
-          Value: false
+          Value: true
         ci/arm2_1:
           Value: false
         ci/arm2_2:
@@ -469,6 +419,14 @@ Visualization Manager:
         ci/arm2_7:
           Value: false
         ci/arm2_8:
+          Value: true
+        ci/ball1:
+          Value: false
+        ci/ball1_tip:
+          Value: false
+        ci/ball2:
+          Value: false
+        ci/ball2_tip:
           Value: false
         ci/base_link:
           Value: false
@@ -520,14 +478,6 @@ Visualization Manager:
           Value: false
         ci/pelvis:
           Value: false
-        ci/rod_plate1:
-          Value: false
-        ci/rod_plate1_tip:
-          Value: false
-        ci/rod_plate2:
-          Value: false
-        ci/rod_plate2_tip:
-          Value: false
         ci/torso_2:
           Value: false
         ci/wheel_1:
@@ -539,70 +489,6 @@ Visualization Manager:
         ci/wheel_4:
           Value: false
         ci/world:
-          Value: false
-        contact_1:
-          Value: false
-        contact_2:
-          Value: false
-        contact_3:
-          Value: false
-        contact_4:
-          Value: false
-        ft_arm1:
-          Value: false
-        ft_arm2:
-          Value: false
-        hip1_1:
-          Value: false
-        hip1_2:
-          Value: false
-        hip1_3:
-          Value: false
-        hip1_4:
-          Value: false
-        hip2_1:
-          Value: false
-        hip2_2:
-          Value: false
-        hip2_3:
-          Value: false
-        hip2_4:
-          Value: false
-        imu_link:
-          Value: false
-        knee_1:
-          Value: false
-        knee_2:
-          Value: false
-        knee_3:
-          Value: false
-        knee_4:
-          Value: false
-        neck_1:
-          Value: false
-        neck_2:
-          Value: false
-        neck_3:
-          Value: false
-        pelvis:
-          Value: false
-        rod_plate1:
-          Value: false
-        rod_plate1_tip:
-          Value: false
-        rod_plate2:
-          Value: false
-        rod_plate2_tip:
-          Value: false
-        torso_2:
-          Value: false
-        wheel_1:
-          Value: false
-        wheel_2:
-          Value: false
-        wheel_3:
-          Value: false
-        wheel_4:
           Value: false
       Marker Scale: 1
       Name: TF
@@ -662,13 +548,13 @@ Visualization Manager:
                       ci/arm1_5:
                         ci/arm1_6:
                           ci/arm1_7:
-                            ci/ft_arm1:
-                              {}
-                            ci/rod_plate1:
+                            ci/ball1:
                               ci/arm1_8:
                                 {}
-                              ci/rod_plate1_tip:
+                              ci/ball1_tip:
                                 {}
+                            ci/ft_arm1:
+                              {}
               ci/arm2_1:
                 ci/arm2_2:
                   ci/arm2_3:
@@ -676,13 +562,13 @@ Visualization Manager:
                       ci/arm2_5:
                         ci/arm2_6:
                           ci/arm2_7:
-                            ci/ft_arm2:
-                              {}
-                            ci/rod_plate2:
+                            ci/ball2:
                               ci/arm2_8:
                                 {}
-                              ci/rod_plate2_tip:
+                              ci/ball2_tip:
                                 {}
+                            ci/ft_arm2:
+                              {}
               ci/neck_1:
                 ci/neck_2:
                   {}
@@ -718,25 +604,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.744311809539795
+      Distance: 3.855560302734375
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.15326029062271118
-        Y: 0.29047998785972595
-        Z: -0.13539406657218933
+        X: 0.7677516937255859
+        Y: 0.4009580612182617
+        Z: -0.16292278468608856
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4452047348022461
+      Pitch: 0.2152051031589508
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.746347904205322
+      Yaw: 5.051313400268555
     Saved: ~
 Window Geometry:
   Displays:
@@ -754,5 +640,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1920
-  X: 0
+  X: 1920
   Y: 0
