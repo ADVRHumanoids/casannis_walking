@@ -2,6 +2,7 @@ import casadi as cs
 import numpy as np
 from matplotlib import pyplot as plt
 import trj_interpolation as interpol
+import matplotlib
 
 import costs
 import constraints
@@ -510,15 +511,20 @@ class Gait(object):
 
             # size of each constraint (#coordinates) to create subplots
             subplot_size = constraint_names_sizes[name]
-
+            if subplot_size >= 2:
+                column_size = 2.0 + (subplot_size%2)
+            else:
+                column_size = 1
             plt.figure()
+            matplotlib.rc('xtick', labelsize=16)
+            matplotlib.rc('ytick', labelsize=16)
             for ii in range(subplot_size):  # loop over coordinates
-                plt.subplot(subplot_size, 1, ii+1)
-                plt.plot([constraint_violation[j] for j in constraint_indices[ii::subplot_size]], '.-', label=name)
+                plt.subplot(subplot_size/column_size, column_size, ii+1)
+                plt.plot([constraint_violation[j] for j in constraint_indices[ii::subplot_size]], '.-', markersize=10, label=name, linewidth=3)
                 plt.plot([lower_bounds[j] - constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
-                         'r', label='lower_bound')
+                         'r', label='lower_bound', linewidth=3)
                 plt.plot([upper_bounds[j] + constr_viol_tolerance for j in constraint_indices[ii::subplot_size]],
-                         'r', label='upper_bound')
+                         'r', label='upper_bound', linewidth=3)
             plt.suptitle(name)
             plt.legend()
         # plt.show()
@@ -1370,7 +1376,7 @@ if __name__ == "__main__":
     step_clear = 0.05
 
     w = GaitNonlinear(mass=112, N=int((swing_time[0:step_num][-1][1] + 1.0)/0.2), dt=0.2,
-                      payload_masses=[10.0, 10.0], slope_deg=0)
+                      payload_masses=[10.0, 10.0], slope_deg=0, conservative_box=False)
 
     # sol is the directory returned by solve class function contains state, forces, control values
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
