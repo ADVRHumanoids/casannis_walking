@@ -38,8 +38,8 @@
         <arg name="swing_t4" value="[12.5, 15.0]"/-->
     <!--/group-->
 
-    <!--node name="casannis" pkg="casannis_walking" type="gait_node.py" output="screen"-->
-    <node name="casannis" pkg="casannis_walking" type="gait_base_node.py" output="screen">
+    <node name="casannis" pkg="casannis_walking" type="gait_node.py" output="screen">
+    <!--node name="casannis" pkg="casannis_walking" type="gait_base_node.py" output="screen"-->
 
         <param name="inclination_deg" value="$(arg slope_x)"/>
         <param name="centauro_mass" value="$(arg robot_mass)"/>
