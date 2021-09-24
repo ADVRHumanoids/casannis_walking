@@ -20,7 +20,7 @@ Collision:
     collision_srdf_path: $(rospack find centauro_srdf)/srdf/capsule/centauro_capsules.srdf
 
 params:
- - &arm_indices [0, 1, 2, 3, 4, 5]
+ - &arm_indices [0, 1, 2]
  - &wh_indices [0, 1, 2, 3, 4]
 
 PelvisRPY:

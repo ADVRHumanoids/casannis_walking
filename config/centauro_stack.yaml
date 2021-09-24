@@ -11,11 +11,12 @@ constraints: ["JointLimits", "VelocityLimits"]
 
 params:
  - &wh_indices [0, 1, 2, 3, 4]
+ - &arm_indices [0, 1, 2]
 
 PelvisRPY:
     type: "Cartesian"
     lambda: 0.1
-    indices: [3, 4]
+    indices: [3, 4, 5]
     name: "PelvisRPY"
     distal_link: "pelvis"
     weight: 0.1
@@ -65,6 +66,7 @@ LeftArm:
     distal_link: "arm1_8"
     lambda: 0.1
     base_link: "pelvis"
+    indices: *arm_indices
 
 RightArm:
     type: "Cartesian"
@@ -72,7 +74,8 @@ RightArm:
     distal_link: "arm2_8"
     lambda: 0.1
     base_link: "pelvis"
-    
+    indices: *arm_indices
+
 Postural:
     type: "Postural"
     lambda: 0.01
