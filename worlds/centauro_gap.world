@@ -47,12 +47,12 @@
 
   <model name='unit_box'>
       <static>true</static>
-      <pose frame=''>2.5 -0.5 0.15 0 -0 0</pose>
+      <pose frame=''>0.0 -0.0 0.15 0 -0 0</pose>
       <link name='link'>
         <collision name='collision'>
           <geometry>
             <box>
-              <size>2 1 0.30</size>
+              <size>2 2 0.10</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -72,7 +72,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>2 1 0.3</size>
+              <size>2 2 0.1</size>
             </box>
           </geometry>
           <material>
@@ -88,24 +88,14 @@
       </link>
     </model>
 
-    <model name='wall'>
-      <pose frame=''>2.5 0.7 1.0 0 0 0</pose>
+  <model name='unit_box2'>
+      <static>true</static>
+      <pose frame=''>2.25 -0.0 0.15 0 -0 0</pose>
       <link name='link'>
-        <inertial>
-          <mass>1000</mass>
-          <inertia>
-            <ixx>100</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>100</iyy>
-            <iyz>0</iyz>
-            <izz>166</izz>
-          </inertia>
-        </inertial>
         <collision name='collision'>
           <geometry>
             <box>
-              <size>3 0.3 2.0</size>
+              <size>2 2 0.10</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -125,12 +115,12 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>3 0.3 2.0</size>
+              <size>2 2 0.1</size>
             </box>
           </geometry>
           <material>
             <script>
-              <name>Gazebo/Bricks</name>
+              <name>Gazebo/WoodPallet</name>
               <uri>file://media/materials/scripts/gazebo.material</uri>
             </script>
           </material>
