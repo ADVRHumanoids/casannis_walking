@@ -37,7 +37,7 @@ class Gait:
         robot_mass = 112.0
         if mass > robot_mass:
             payload = mass - robot_mass
-            self._CoM_vert_offset = CoM_vert_offset = 0.068
+            self._CoM_vert_offset = CoM_vert_offset = 0.063 #0.0468533  #0.068
             print(payload, ' kg payload detected. Check input for robot mass.')
 
         else:
