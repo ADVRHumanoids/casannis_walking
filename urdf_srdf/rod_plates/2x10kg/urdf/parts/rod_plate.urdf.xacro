@@ -7,7 +7,7 @@
 
 <link name="rod_plate${arm_num}">
     <inertial>
-      <origin xyz="${4.8407693e+01*mmTom} ${rot*2.0035723e+01*mmTom} ${7.7533287e+01*mmTom}" rpy="0 0 0"/>
+      <origin xyz="${4.8407693e+01*mmTom} ${-rot*2.0035723e+01*mmTom} ${-7.7533287e+01*mmTom}" rpy="0 0 0"/>
       <!--mass value="3.45345"/-->
       <mass value="${rod_mass}"/>
       <inertia ixx="${1.1323020e+04*mm2Tom2}"  ixy="${-6.7302376e+02*rot*mm2Tom2}"  ixz="${-2.8429136e+03*mm2Tom2}" iyy="${1.2661574e+04*mm2Tom2}" iyz="${-1.1815269e+03*rot*mm2Tom2}" izz="${8.4787328e+03*mm2Tom2}" />
@@ -35,6 +35,7 @@
       <parent link="${parent_link}"/>
       <child link="rod_plate${arm_num}"/>
       <xacro:insert_block name="origin"/>
+
 </joint>
 
 <!-- tip frame is not perfectly correct, need to receive tf from cad -->
@@ -45,9 +46,11 @@
 </joint>
 
 <!-- add armX_8 link for legacy reasons (same as ballX) -->
+<!-- setted arm*_8 in the CoG to control this frame -->
 <joint name="j_rod_plate${arm_num}_fixed" type="fixed">
       <parent link="rod_plate${arm_num}"/>
       <child link="arm${arm_num}_8"/>
+      <origin xyz="${4.8407693e+01*mmTom} ${-rot*2.0035723e+01*mmTom} ${-7.7533287e+01*mmTom}" rpy="0 0 0"/>
 </joint>
 
 <link name="arm${arm_num}_8">

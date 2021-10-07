@@ -578,7 +578,7 @@
   <!-- This is an attempt to model rod plate, the file is based on the ball hand -->
   <link name="rod_plate1">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.048407693 0.020035723 0.077533287"/>
+      <origin rpy="0 0 0" xyz="0.048407693 -0.020035723 -0.077533287"/>
       <!--mass value="3.45345"/-->
       <mass value="10.01"/>
       <inertia ixx="0.01132302" ixy="-0.00067302376" ixz="-0.0028429136" iyy="0.012661574" iyz="-0.0011815269" izz="0.0084787328"/>
@@ -612,9 +612,11 @@
     <origin rpy="0.0 0.0 0.349066" xyz="0.06 0.0 -0.16"/>
   </joint>
   <!-- add armX_8 link for legacy reasons (same as ballX) -->
+  <!-- setted arm*_8 in the CoG to control this frame -->
   <joint name="j_rod_plate1_fixed" type="fixed">
     <parent link="rod_plate1"/>
     <child link="arm1_8"/>
+    <origin rpy="0 0 0" xyz="0.048407693 -0.020035723 -0.077533287"/>
   </joint>
   <link name="arm1_8">
     <inertial>
@@ -624,7 +626,7 @@
   </link>
   <link name="rod_plate2">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.048407693 -0.020035723 0.077533287"/>
+      <origin rpy="0 0 0" xyz="0.048407693 0.020035723 -0.077533287"/>
       <!--mass value="3.45345"/-->
       <mass value="10.01"/>
       <inertia ixx="0.01132302" ixy="0.00067302376" ixz="-0.0028429136" iyy="0.012661574" iyz="0.0011815269" izz="0.0084787328"/>
@@ -658,9 +660,11 @@
     <origin rpy="0.0 0.0 -0.349066" xyz="0.06 0.0 -0.16"/>
   </joint>
   <!-- add armX_8 link for legacy reasons (same as ballX) -->
+  <!-- setted arm*_8 in the CoG to control this frame -->
   <joint name="j_rod_plate2_fixed" type="fixed">
     <parent link="rod_plate2"/>
     <child link="arm2_8"/>
+    <origin rpy="0 0 0" xyz="0.048407693 0.020035723 -0.077533287"/>
   </joint>
   <link name="arm2_8">
     <inertial>

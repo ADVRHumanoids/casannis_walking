@@ -43,6 +43,7 @@
 <joint name="j_ball${arm_num}_fixed" type="fixed">
       <parent link="ball${arm_num}"/>
       <child link="arm${arm_num}_8"/>
+      <origin xyz="${-1.0072498e-02*mmTom} ${3.7590658e-02*mmTom} ${1.9772332e+01*mmTom}" rpy="0 0 0"/>
 </joint>
 <link name="arm${arm_num}_8">
     <inertial>
