@@ -39,7 +39,8 @@
        WARNING: exactly one parameter has to be true, otherwise simulation behaviour is undefined -->
   <!--arg name="world_name" default="$(find casannis_walking)/worlds/centauro_platform.world"/-->
   <!--arg name="world_name" default="$(find centauro_gazebo)/worlds/centauro_inclined_10.world"/-->
-  <arg name="world_name" default="$(find casannis_walking)/worlds/different_steps.world"/>
+  <!--arg name="world_name" default="$(find casannis_walking)/worlds/different_steps.world"/-->
+  <arg name="world_name" default="$(find casannis_walking)/worlds/stairs.world"/>
 
   <!-- Load the URDF/SRDF into the ROS Parameter Server -->
   <group if="$(arg rod_plates)">
