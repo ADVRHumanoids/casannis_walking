@@ -262,12 +262,12 @@
 
   <model name='stair6'>
       <static>true</static>
-      <pose frame=''>1.6 0.0 0.55 0 -0 0</pose>
+      <pose frame=''>2.5 0.0 0.55 0 -0 0</pose>
       <link name='link'>
         <collision name='collision'>
           <geometry>
             <box>
-              <size>0.2 1.5 0.10</size>
+              <size>2.0 1.5 0.10</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -287,50 +287,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.2 1.5 0.10</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <name>Gazebo/WoodPallet</name>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-            </script>
-          </material>
-        </visual>
-        <self_collide>0</self_collide>
-        <enable_wind>0</enable_wind>
-        <kinematic>1</kinematic>
-      </link>
-    </model>
-
-  <model name='stair7'>
-      <static>true</static>
-      <pose frame=''>1.8 0.0 0.65 0 -0 0</pose>
-      <link name='link'>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>0.2 1.5 0.10</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <torsional>
-                <ode/>
-              </torsional>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>0.2 1.5 0.10</size>
+              <size>2.0 1.5 0.10</size>
             </box>
           </geometry>
           <material>

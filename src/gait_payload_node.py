@@ -32,7 +32,7 @@ def casannis(int_freq):
 
     """
 
-    rospy.init_node('casannis', anonymous=True)
+    #rospy.init_node('casannis', anonymous=True)
 
     # get inclination of terrain
     inclination_deg = rospy.get_param("~inclination_deg")
@@ -139,7 +139,7 @@ def casannis(int_freq):
     swing_contacts = []         # contact positions of the swing feet
 
     for i in range(step_num):
-
+        print(i)
         # targets
         swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
                           contacts[swing_id[i] - 1][1] + tgt_dy[i],
@@ -148,7 +148,7 @@ def casannis(int_freq):
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
-        swing_t[i] = [float(i) for i in swing_t[i]]
+        swing_t[i] = [float(ii) for ii in swing_t[i]]
 
         # swing feet trj publishers
         '''f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
