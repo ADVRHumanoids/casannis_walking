@@ -7,9 +7,9 @@
     <arg name="slope_x" default="0.0"/>
 
     <arg name="swing_id" default="[3, 1, 4, 2]"/>
-    <arg name="target_dx" default="0.1"/>
-    <arg name="target_dy" default="0.0"/>
-    <arg name="target_dz" default="0.0"/>
+    <arg name="target_dx" default="[0.1, 0.1, 0.1, 0.1]"/>
+    <arg name="target_dy" default="[0.0, 0.0, 0.0, 0.0]"/>
+    <arg name="target_dz" default="[0.0, 0.0, 0.0, 0.0]"/>
 
     <arg name="swing_t1" default="[1.0, 3.0]" unless="$(arg dynamic)"/>
     <arg name="swing_t2" default="[4.0, 6.0]" unless="$(arg dynamic)"/>

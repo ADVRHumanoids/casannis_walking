@@ -80,10 +80,18 @@ def casannis(int_freq):
     # number of steps
     step_num = len(swing_id)
 
-    # Target position of the foot wrt to the current position
-    tgt_dx = rospy.get_param("~tgt_dx")  # get from command line as target_dx
-    tgt_dy = rospy.get_param("~tgt_dy")
-    tgt_dz = rospy.get_param("~tgt_dz")
+    # Target position of feet wrt to the current position
+    tgt_dx = rospy.get_param("~tgt_dx")    # from command line as swing_id:=1/2/3/4
+    tgt_dx = tgt_dx.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
+    tgt_dx = [float(i) for i in tgt_dx]
+
+    tgt_dy = rospy.get_param("~tgt_dy")    # from command line as swing_id:=1/2/3/4
+    tgt_dy = tgt_dy.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
+    tgt_dy = [float(i) for i in tgt_dy]
+
+    tgt_dz = rospy.get_param("~tgt_dz")    # from command line as swing_id:=1/2/3/4
+    tgt_dz = tgt_dz.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
+    tgt_dz = [float(i) for i in tgt_dz]
 
     # Clearance to be achieved, counted from the highest point
     swing_clear = rospy.get_param("~clear")  # get from command line as target_dx
@@ -103,9 +111,11 @@ def casannis(int_freq):
     swing_contacts = []         # contact positions of the swing feet
 
     for i in range(step_num):
-        # targets
-        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx, contacts[swing_id[i] - 1][1] + tgt_dy, contacts[swing_id[i] - 1][2] + tgt_dz])
 
+        # targets
+        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
+                          contacts[swing_id[i] - 1][1] + tgt_dy[i],
+                          contacts[swing_id[i] - 1][2] + tgt_dz[i]])
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
