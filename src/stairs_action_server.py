@@ -62,7 +62,7 @@ class DemoAction(object):
             rospy.set_param("~cont_det", False)
             rospy.set_param("~plots", False)
             rospy.set_param("~clear", 0.05)
-            rospy.set_param("~min_for", 100)
+            rospy.set_param("~min_for", 120)
             rospy.set_param("~mass_payl", "[10.0, 10.0]")
             rospy.set_param("~forward_arms", True)
             rospy.set_param("~linear_fvirt", False)
@@ -74,43 +74,47 @@ class DemoAction(object):
 
             rospy.set_param("~imu_sensor", True)
 
-            for i in range(3):
+            for i in range(2):
                 gait_payload.casannis(freq)
-                initialize_cartesio.cartesio_initializer()
+                #rospy.sleep(3)
+                #initialize_cartesio.cartesio_initializer()
 
-            rospy.set_param("~tgt_dx", "[0.2 ,0.3, 0.2, 0.3]")
+            rospy.set_param("~tgt_dx", "[0.2 ,0.25, 0.2, 0.25]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+
+            rospy.set_param("~tgt_dx", "[0.2 ,0.25, 0.2, 0.25]")
+            gait_payload.casannis(freq)
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~sw_id", "[3, 4, 1, 2]")
-            rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
+            rospy.set_param("~tgt_dx", "[0.24 ,0.24, 0.24, 0.24]")
             rospy.set_param("~tgt_dy", "[0.0 ,0.0, 0.0, 0.0]")
             rospy.set_param("~tgt_dz", "[0.1 ,0.1, 0.1, 0.1]")
 
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
-            rospy.set_param("~tgt_dx", "[0.3 ,0.3, 0.3, 0.3]")
+            rospy.set_param("~tgt_dx", "[0.25 ,0.25, 0.25, 0.25]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #rospy.sleep(3)
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
-            rospy.set_param("~tgt_dz", "[0.1 ,0.0, 0.1, 0.0]")
-
+            rospy.set_param("~tgt_dz", "[0.1 ,0.1, 0.0, 0.0]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.3 ,0.3, 0.3, 0.3]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.3 ,0.3, 0.3, 0.3]")
             gait_payload.casannis(freq)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
