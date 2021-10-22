@@ -79,11 +79,11 @@
 <xacro:if value="${ADD_BALL_END_EFFECTOR}">
 
 <gazebo reference="ball1">
-	<material>Gazebo/BlackTransparent</material>
+	<material>Gazebo/GreenTransparent</material>
 </gazebo>
 
 <gazebo reference="ball2">
-	<material>Gazebo/BlackTransparent</material>
+	<material>Gazebo/GreenTransparent</material>
 </gazebo>
 
 </xacro:if>

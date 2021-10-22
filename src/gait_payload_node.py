@@ -32,8 +32,6 @@ def casannis(int_freq):
 
     """
 
-    #rospy.init_node('casannis', anonymous=True)
-
     # get inclination of terrain
     inclination_deg = rospy.get_param("~inclination_deg")
 
@@ -329,6 +327,8 @@ if __name__ == '__main__':
 
     # desired interpolation frequency
     interpolation_freq = 300
+
+    rospy.init_node('casannis', anonymous=True)
 
     try:
         casannis(interpolation_freq)
