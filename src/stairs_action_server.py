@@ -121,7 +121,7 @@ class DemoAction(object):
             gait_payload.casannis(freq)
             rospy.sleep(2)
             initialize_cartesio.cartesio_initializer()
-            
+
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
         if success:

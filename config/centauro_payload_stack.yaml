@@ -81,7 +81,7 @@ RightArm:
     distal_link: "arm2_8"
     lambda: 0.1
     indices: *arm_indices
-    #    base_link: "pelvis"
+#    base_link: "pelvis"
     
 Postural:
     type: "Postural"
@@ -99,3 +99,6 @@ JointLimits:
 
 VelocityLimits:
     type: "VelocityLimits"
+#    limits:
+#      j_arm1_7: 0
+#      j_arm2_7: 0
