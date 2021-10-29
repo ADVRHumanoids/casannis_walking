@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- mirror_link = -1 for left side, otherwise mirror_link = 1 -->
+<xacro:macro name="heri_hand" params="prefix mirror_link ft_sensor_roll ft_sensor_pitch ft_sensor_yaw">
+
+<link name ="${prefix}_heri_hand">
+    <inertial>
+      <origin xyz="${-5.6986901e+01*mmTom} ${-1.5128372e+01*mmTom*mirror_link} ${-2.1668015*mmTom}" rpy="0 0 0"/>
+      <mass value="1.8392958"/>
+      <inertia ixx="${3.8098386e+03*mm2Tom2}"  ixy="${-5.3392851e+02*mm2Tom2*mirror_link}"  ixz="${5.9172246e+01*mm2Tom2}" iyy="${5.0433222e+03*mm2Tom2}" iyz="${-2.8898991e+02*mm2Tom2*mirror_link}" izz="${6.5516125e+03*mm2Tom2}" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry name="${prefix}_heri_hand_visual">
+        <mesh filename="package://pholus_urdf/meshes/hand_v6_left.stl" scale="0.001 ${-0.001*mirror_link} 0.001" />
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry name="${prefix}_heri_hand_collision">
+        <mesh filename="package://pholus_urdf/meshes/simple/hand_v6_left.stl" scale="0.001 ${-0.001*mirror_link} 0.001" />
+      </geometry>             
+    </collision>
+</link>
+
+<link name="${prefix}_TCP"/>
+
+<link name="${prefix}_force_torque_sensor"/>
+
+
+<joint name="${prefix}_heri_hand_joint" type="fixed">
+       <parent link="${prefix}_wrist_yaw"/>
+       <child link="${prefix}_heri_hand"/>
+       <origin xyz="0 0 0" rpy="0 ${-PI_2} 0"/>
+</joint>
+
+<joint name="${prefix}_TCP_joint" type="fixed">
+       <parent link="${prefix}_wrist_yaw"/>
+       <child link="${prefix}_TCP"/>
+       <origin xyz="0 0 ${-95*mmTom}" rpy="0 ${PI} ${PI}"/>
+</joint>
+
+<joint name="${prefix}_force_torque_sensor_joint" type="fixed">
+       <parent link="${prefix}_wrist_yaw"/>
+       <child link="${prefix}_force_torque_sensor"/>
+       <origin xyz="0 0 ${-23.5*mmTom}" rpy="${ft_sensor_roll} ${ft_sensor_pitch} ${ft_sensor_yaw}"/>
+</joint>
+
+</xacro:macro>
+
+</robot>
