@@ -23,7 +23,7 @@
     <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
     <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
 
-    <arg name="payload_masses" default="[10.0, 10.0]"/>
+    <arg name="payload_masses" default="[8.5, 8.5]"/>
 
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
