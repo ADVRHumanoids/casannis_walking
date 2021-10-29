@@ -918,8 +918,10 @@ class GaitNonlinear(Gait):
         }
 
         # get default arm position for final penalty
-        arms_default_pos = parameters.get_arm_default_pos('forward', self._box_conservative)
-
+        if slope_deg != 0:
+            arms_default_pos = parameters.get_arm_default_pos('forward_slope', self._box_conservative)
+        else:
+            arms_default_pos = parameters.get_arm_default_pos('forward', self._box_conservative)
         # iterate over knots starting from k = 0
         for k in range(knot_number):
 

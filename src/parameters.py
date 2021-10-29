@@ -135,6 +135,16 @@ def get_arm_default_pos(side, conservative=True):
         left = [0.43, 0.179, 0.3]
         right = [0.43, -0.179, 0.3]
 
+    elif side == 'forward_slope' and not conservative:
+
+        left = [0.43, 0.179, 0.3]
+        right = [0.43, -0.179, 0.3]
+
+    elif side == 'forward_slope' and conservative:  # starting from homing suitable for negative slope and with rod plates
+        print('slope exists and rod plates are mounted')
+        left = [0.44316, 0.179, 0.37505]
+        right = [0.44316, -0.179, 0.37505]
+
     elif side == 'backward':
         left = [-0.0947, 0.15, 0.415]
         right = [-0.0947, -0.15, 0.415]
