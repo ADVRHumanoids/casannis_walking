@@ -60,7 +60,7 @@
 
     <node name="feet_contacts_node" pkg="centauro_contact_detection" type="contact_detection_time_window" output="screen">
         <param name="pub_freq" value="800"/>
-        <param name="force_thold" value="20"/>
+        <param name="force_thold" value="100"/>
         <!--param name="window" value="$(arg time_window)"/-->
     </node>
 
