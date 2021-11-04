@@ -10,6 +10,9 @@ import parameters
 
 import cubic_hermite_polynomial as cubic_spline
 
+import copy
+from yiannis_centauro_pytools import plots
+
 
 class Gait(object):
     """
@@ -701,7 +704,7 @@ class Gait(object):
 
         return eq_CoM_trj
 
-    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, contacts, swing_id, swing_dx, swing_dy, sw_times, t_exec=[0, 0, 0, 0]):
         '''
 
         Args:
@@ -799,24 +802,55 @@ class Gait(object):
         # call the function that computes the equivalent CoM
         total_CoM = self.compute_equivalent_CoM([self._mass, self._payload_mass_l, self._payload_mass_r],
                                                 [CoM_optimal_position, payload1_optimal_position, payload2_optimal_position])
+        # create phase durations
+        step_number = len(swing_id)
+        phase_times = [[0.0, sw_times[0][0]], sw_times[0]]
+        for i in range(1, step_number):
+            phase_times.append([sw_times[i-1][1], sw_times[i][0]])
+            phase_times.append(sw_times[i])
+        phase_times.append([sw_times[-1][1], self._problem_duration])
+        phases_num = len(phase_times)
+
+        # separate total_CoM based on phase
+        coords = ['x', 'y', 'z']
+        total_CoM_sep = {coords[0]: [[] for i in range(phases_num)],
+                         coords[1]: [[] for i in range(phases_num)],
+                         coords[2]: [[] for i in range(phases_num)]}
+        for ii in range(phases_num):
+            for i in range(self._knot_number):
+                current_phase = (phase_times[ii][0] <= self._dt*i <= phase_times[ii][1])
+                if current_phase:
+                    for iii, name in enumerate(coords):
+                        total_CoM_sep[name][ii].append(total_CoM[iii][i])
+
+        # construct support polygons
+        contacts_clockwise = [contacts[0], contacts[1], contacts[-1], contacts[-2]]
+        starting_polygon = {
+            'x': [x_coords[0] for x_coords in contacts_clockwise] + [contacts_clockwise[0][0]],
+            'y': [y_coords[1] for y_coords in contacts_clockwise] + [contacts_clockwise[0][1]]
+        }
+        support_polygons = plots.reconstruct_support_polygons([k+1 for k in swing_id], swing_dx, swing_dy, initial_polygon=starting_polygon)
 
         # Support polygon and CoM motion in the plane
-        color_labels = ['red', 'green', 'blue', 'yellow']
+        colors = ['g', 'b', 'r', 'm', 'y', 'k']
+        st_color = 'gray'
         line_labels = ['-', '--', '-.', ':']
         plt.figure()
-        for i in range(len(swing_id)):
-            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [swing_id[i]]]
-            SuP_x_coords.append(SuP_x_coords[0])
-            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [swing_id[i]]]
-            SuP_y_coords.append(SuP_y_coords[0])
-            plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2-0.4*i, color=color_labels[i])
+        for i in range(phases_num):
+            swing_index = int(i/2)
+            if i % 2 != 0:
+                plt.plot(support_polygons[i]['y'], support_polygons[i]['x'],
+                         '-', color=colors[swing_index], linewidth=6-0.3 * i, label=str(i+1))
+                plt.plot(total_CoM_sep['y'][i], total_CoM_sep['x'][i], color=colors[swing_index], linewidth=3)  # equivalent CoM
+            else:
+                plt.plot(total_CoM_sep['y'][i], total_CoM_sep['x'][i], color=st_color, linewidth=3)  # equivalent CoM
         plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)       # robot links - based CoM
-        plt.plot(total_CoM[1], total_CoM[0])        # equivalent CoM
         plt.grid()
+        plt.legend(fontsize=15)
         plt.title('Support polygon and CoM')
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
-        plt.xlim(0.5, -0.5)
+        plt.xlim(0.8, -0.8)
         plt.show()
 
 
@@ -1306,7 +1340,7 @@ class GaitNonlinear(Gait):
             'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj)  # virtual force
         }
 
-    def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, contacts, swing_id, swing_dx, swing_dy, sw_times, t_exec=[0, 0, 0, 0]):
         # plot virtual force
         plt.figure()
         for k in range(3):
@@ -1321,7 +1355,7 @@ class GaitNonlinear(Gait):
         self.compute_constraint_violation(self._sol['x'], np.array(self._P).flatten(),
                                           self._nlp['g'], self._lbg, self._ubg)
 
-        super(GaitNonlinear, self).print_trj(solution, results, resol, contacts, swing_id, t_exec)
+        super(GaitNonlinear, self).print_trj(solution, results, resol, contacts, swing_id, swing_dx, swing_dy, sw_times, t_exec)
 
 
 if __name__ == "__main__":
@@ -1356,18 +1390,21 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [2,3,0,1]
+    sw_id = [2, 0, 3, 1]
 
     step_num = len(sw_id)
 
     # swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
-    dy = 0.0
-    dz = 0.0
+    step_dx = [0.1, 0.1, 0.1, 0.1]
+    step_dy = [0.2, 0.2, 0.2, 0.2]
+    step_dz = [0.0, 0.0, 0.0, 0.0]
 
     swing_target = []
     for i in range(step_num):
-        swing_target.append([foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz])
+        swinging_foot = sw_id[i]
+        swing_target.append([foot_contacts[sw_id[i]][0] + step_dx[swinging_foot],
+                             foot_contacts[sw_id[i]][1] + step_dy[swinging_foot],
+                             foot_contacts[sw_id[i]][2] + step_dz[swinging_foot]])
 
     swing_target = np.array(swing_target)
 
@@ -1393,5 +1430,5 @@ if __name__ == "__main__":
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time[0:step_num], res)
 
     # print the results
-    w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+    w.print_trj(sol, interpl, res, foot_contacts, sw_id, step_dx, step_dy, swing_time[0:step_num])
 

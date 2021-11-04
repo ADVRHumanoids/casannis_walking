@@ -8,6 +8,8 @@ import trj_interpolation as interpol
 import costs
 import constraints
 
+from yiannis_centauro_pytools import plots
+
 
 class Gait:
     """
@@ -491,7 +493,7 @@ class Gait:
 
         return int_force
 
-    def print_trj(self, solution, results, resol, contacts, sw_id, t_exec=[0, 0, 0, 0]):
+    def print_trj(self, solution, results, resol, contacts, sw_id, swing_dx, swing_dy, sw_times, t_exec=[0, 0, 0, 0]):
         '''
         Args:
             solution: optimized decision variables
@@ -563,22 +565,62 @@ class Gait:
         #     plt.ylabel('Z [m]')
         #     # plt.savefig('../plots/gait_swing_zx.png')
 
+        CoM_optimal_position = []
+
+        for i in range(3):  # loop over cartesian coordinates
+            CoM_optimal_position.append(solution['x'][i::self._dimx])
+
+        # create phase durations
+        step_number = len(sw_id)
+        phase_times = [[0.0, sw_times[0][0]], sw_times[0]]
+        for i in range(1, step_number):
+            phase_times.append([sw_times[i-1][1], sw_times[i][0]])
+            phase_times.append(sw_times[i])
+        phase_times.append([sw_times[-1][1], self._problem_duration])
+        phases_num = len(phase_times)
+
+        # separate total_CoM based on phase
+        coords = ['x', 'y', 'z']
+        CoM_sep = {coords[0]: [[] for i in range(phases_num)],
+                         coords[1]: [[] for i in range(phases_num)],
+                         coords[2]: [[] for i in range(phases_num)]}
+        for ii in range(phases_num):
+            for i in range(self._knot_number):
+                current_phase = (phase_times[ii][0] <= self._dt*i <= phase_times[ii][1])
+                if current_phase:
+                    for iii, name in enumerate(coords):
+                        CoM_sep[name][ii].append(CoM_optimal_position[iii][i])
+
+        # construct support polygons
+        contacts_clockwise = [contacts[0], contacts[1], contacts[-1], contacts[-2]]
+        starting_polygon = {
+            'x': [x_coords[0] for x_coords in contacts_clockwise] + [contacts_clockwise[0][0]],
+            'y': [y_coords[1] for y_coords in contacts_clockwise] + [contacts_clockwise[0][1]]
+        }
+        support_polygons = plots.reconstruct_support_polygons([k+1 for k in sw_id], swing_dx, swing_dy,
+                                                              initial_polygon=starting_polygon)
+
         # Support polygon and CoM motion in the plane
-        color_labels = ['red', 'green', 'blue', 'yellow']
+        colors = ['g', 'b', 'r', 'm', 'y', 'k']
+        st_color = 'gray'
         line_labels = ['-', '--', '-.', ':']
         plt.figure()
-        for i in range(len(sw_id)):
-            SuP_x_coords = [contacts[k][1] for k in range(4) if k not in [sw_id[i]]]
-            SuP_x_coords.append(SuP_x_coords[0])
-            SuP_y_coords = [contacts[k][0] for k in range(4) if k not in [sw_id[i]]]
-            SuP_y_coords.append(SuP_y_coords[0])
-            plt.plot(SuP_x_coords, SuP_y_coords, line_labels[0], linewidth=2 - 0.4 * i, color=color_labels[i])
-        plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)  # robot links - based CoM
+        for i in range(phases_num):
+            swing_index = int(i/2)
+            if i % 2 != 0:
+                plt.plot(support_polygons[i]['y'], support_polygons[i]['x'],
+                         '-', color=colors[swing_index], linewidth=6-0.3 * i, label=str(i+1))
+                plt.plot(CoM_sep['y'][i], CoM_sep['x'][i], color=colors[swing_index], linewidth=3)  # equivalent CoM
+            else:
+                plt.plot(CoM_sep['y'][i], CoM_sep['x'][i], color=st_color, linewidth=3)  # equivalent CoM
+        # plt.plot(results['x'][1], results['x'][0], '--', linewidth=3)       # robot links - based CoM
         plt.grid()
+        plt.legend(fontsize=15)
         plt.title('Support polygon and CoM')
         plt.xlabel('Y [m]')
         plt.ylabel('X [m]')
-        plt.xlim(0.5, -0.5)
+        plt.xlim(0.8, -0.8)
+        plt.show()
 
         # compute the violated constraints and plot
         self.compute_constraint_violation(self._sol['x'], np.array(self._P).flatten(),
@@ -612,11 +654,16 @@ if __name__ == "__main__":
     step_num = len(sw_id)
 
     #swing_target = np.array([-0.35, -0.35, -0.719])
-    dx = 0.1
-    dy = 0.0
-    dz = 0.0
-    swing_target = np.array([[foot_contacts[sw_id[i]][0] + dx, foot_contacts[sw_id[i]][1] + dy, foot_contacts[sw_id[i]][2] + dz]
-                             for i in range(len(sw_id))])
+    step_dx = [0.1, 0.1, 0.1, 0.1]
+    step_dy = [0.2, 0.2, 0.2, 0.2]
+    step_dz = [0.0, 0.0, 0.0, 0.0]
+
+    swing_target = []
+    for i in range(step_num):
+        swinging_foot = sw_id[i]
+        swing_target.append([foot_contacts[sw_id[i]][0] + step_dx[swinging_foot],
+                             foot_contacts[sw_id[i]][1] + step_dy[swinging_foot],
+                             foot_contacts[sw_id[i]][2] + step_dz[swinging_foot]])
 
     # swing_time
     #swing_time = [[1.0, 4.0], [5.0, 8.0]]
@@ -647,6 +694,6 @@ if __name__ == "__main__":
     interpl = w.interpolate(sol, swing_currents, swing_target, step_clear, swing_time, res)
 
     # print the results
-    w.print_trj(sol, interpl, res, foot_contacts, sw_id)
+    w.print_trj(sol, interpl, res, foot_contacts, sw_id, step_dx, step_dy, swing_time[0:step_num])
 
 
