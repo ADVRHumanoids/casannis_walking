@@ -32,6 +32,9 @@ def casannis(int_freq):
 
     """
 
+    # get parameter for stop publishing at specific time, mainly for debugging reasons
+    publish_until_param = rospy.get_param("~publish_until")
+
     # get inclination of terrain
     inclination_deg = rospy.get_param("~inclination_deg")
 
@@ -223,9 +226,15 @@ def casannis(int_freq):
     mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
     print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
 
+    # trajectory point to start publishing the trajectory (for debugging reasons we may need to stop earlier)
+    if publish_until_param > 0.0:
+        publish_until_point = int(publish_until_param * int_freq)
+    else:
+        publish_until_point = N_total
+
     rate = rospy.Rate(int_freq)  # Frequency trj publishing
     # loop interpolation points to publish on a specified frequency
-    for counter in range(N_total):
+    for counter in range(publish_until_point):
 
         if not rospy.is_shutdown():
 

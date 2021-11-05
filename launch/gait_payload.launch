@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <launch>
+    <arg name="publish_until" default="-1.0"/>
+
     <arg name="dynamic" default="False"/>
 
     <arg name="slope_x" default="0.0"/>
@@ -35,6 +37,8 @@
     <arg name="linear_fvirtual" default="False"/>
 
     <node name="casannis" pkg="casannis_walking" type="gait_payload_node.py" output="screen">
+        <param name="publish_until" value="$(arg publish_until)"/>
+
         <param name="inclination_deg" value="$(arg slope_x)"/>
         <param name="box_conservative" value="$(arg box_far_from_chest)"/>
         <param name="sw_id" value="$(arg swing_id)"/>
