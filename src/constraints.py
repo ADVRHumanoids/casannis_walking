@@ -324,6 +324,72 @@ def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
     }
 
 
+def chp_acc_constraint(poly1, t):
+    '''
+    Cubic Hermite polynomial acceleration constraint
+    :param poly1: current polynomial
+    poly1 = {
+        'p_list': p_list,
+        'v_list': v_list,
+        'T': T,
+        't0': t0
+    }
+    :param t: time to impose the constraint
+    :return: constraint violation
+    '''
+
+    # junction values and times for polynomial 1
+    p10 = poly1['p_list'][0]
+    p11 = poly1['p_list'][1]
+    v10 = poly1['v_list'][0]
+    v11 = poly1['v_list'][1]
+    T1 = poly1['T']
+    t10 = poly1['t0']
+
+    # c, d coefficients of polynomial 1
+    d1 = (2 * p10 - 2 * p11 + T1 * v10 + T1 * v11) / T1 ** 3
+    c1 = - (3 * p10 - 3 * p11 + 2 * T1 * v10 + T1 * v11) / T1 ** 2 - 3 * d1 * t10
+
+    acceleration1 = 2.0 * c1 + 6.0 * d1 * t
+
+    acc_violation = acceleration1
+
+    return {
+        'constraint': acc_violation,
+        'size': acc_violation.size1(),
+        'name': ['chp_acceleration' for i in range(acc_violation.size1())]
+    }
+
+
+def chp_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
+
+    dimensions = 3
+    t_current = junction_index * dt
+
+    p_mov_previous = p_mov_list[0:dimensions]
+    p_mov_current = p_mov_list[dimensions:]
+
+    dp_mov_previous = dp_mov_list[0:dimensions]
+    dp_mov_current = dp_mov_list[dimensions:]
+
+    acc_violation = []
+    for i in range(3):
+        current_polynomial = {
+            'p_list': [p_mov_previous[i], p_mov_current[i]],
+            'v_list': [dp_mov_previous[i], dp_mov_current[i]],
+            'T': dt,
+            't0': (junction_index - 1) * dt
+        }
+
+        acc_violation.append(chp_acc_constraint(current_polynomial, t_current)['constraint'])
+
+    return {
+        'constraint': np.array(acc_violation),
+        'size': 3,
+        'name': ['chp_acceleration' for i in range(3)]
+    }
+
+
 def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, ncontacts, dt, steps_number=1):
     """
     Assigns bounds for the force decision variables. Especially for the fz, it consists the unilateral constraint.
