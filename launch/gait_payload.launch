@@ -3,6 +3,7 @@
 <launch>
     <arg name="publish_until" default="-1.0"/>
     <arg name="replay_freq" default="1.0"/>
+    <arg name="static_liftoff" default="False"/>
 
     <arg name="dynamic" default="False"/>
 
@@ -40,6 +41,7 @@
     <node name="casannis" pkg="casannis_walking" type="gait_payload_node.py" output="screen">
         <param name="publish_until" value="$(arg publish_until)"/>
         <param name="replay_freq" value="$(arg replay_freq)"/>
+        <param name="static_liftoff" value="$(arg static_liftoff)"/>
 
         <param name="inclination_deg" value="$(arg slope_x)"/>
         <param name="box_conservative" value="$(arg box_far_from_chest)"/>

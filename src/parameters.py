@@ -87,6 +87,20 @@ def get_constraint_names(formulation='gait'):
             'arm_self_collision': 1
         }
 
+    # static lift off point for debugging
+    elif formulation == 'static_payload':
+
+        names_sizes = {
+            'dynamics': 6,
+            'point_mass_dynamics': 3 * arm_num,
+            'state_constraint': 9,
+            'acceleration_continuity': 3 * arm_num,
+            'chp_acceleration': 3 * arm_num,
+            'friction_pyramid': 4 * leg_num,
+            'box_constraint': 3 * arm_num,
+            'arm_self_collision': 1
+        }
+
     else:
         names_sizes = None
         print('Wrong type of formulation.')

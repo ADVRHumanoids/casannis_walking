@@ -35,6 +35,9 @@ def casannis(int_freq):
     # get parameter for stop publishing at specific time, mainly for debugging reasons
     publish_until_param = rospy.get_param("~publish_until")
 
+    # param to run payload gait with static lift off point for debugging
+    static_liftoff = rospy.get_param("~static_liftoff")
+
     # factor of int_freq to be the replayed motion frequency
     replay_freq_factor = rospy.get_param("~replay_freq")
 
@@ -52,7 +55,12 @@ def casannis(int_freq):
         if linear_fvirt:
             from gait_with_payload import Gait as SelectedGait
         else:
-            from gait_with_payload import GaitNonlinear as SelectedGait
+            # debugging
+            if static_liftoff:
+                from static_gait_with_payload import GaitNonlinear as SelectedGait
+            else:
+                from gait_with_payload import GaitNonlinear as SelectedGait
+
     else:
         if linear_fvirt:
             from gait_with_payload_backward_arms import Gait as SelectedGait
