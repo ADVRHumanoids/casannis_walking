@@ -67,6 +67,10 @@ class DemoAction(object):
             rospy.set_param("~forward_arms", True)
             rospy.set_param("~linear_fvirt", False)
 
+            rospy.set_param("~publish_until", -1.0)
+            rospy.set_param("~replay_freq", 1.0)
+            rospy.set_param("~static_liftoff", False)
+
             rospy.set_param("~sw_id", "[3, 1, 4, 2]")
             rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
             rospy.set_param("~tgt_dy", "[0.0 ,0.0, 0.0, 0.0]")
