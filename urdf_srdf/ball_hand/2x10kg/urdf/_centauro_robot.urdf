@@ -1476,12 +1476,12 @@
       <surface>
         <friction>
           <ode>
-            <mu>0.5</mu>
-            <mu2>0.5</mu2>
+            <mu>1.0</mu>
+            <mu2>1.0</mu2>
           </ode>
           <bullet>
-            <friction>0.5</friction>
-            <friction2>0.5</friction2>
+            <friction>1.0</friction>
+            <friction2>1.0</friction2>
           </bullet>
         </friction>
         <contact>
@@ -1506,12 +1506,12 @@
       <surface>
         <friction>
           <ode>
-            <mu>0.5</mu>
-            <mu2>0.5</mu2>
+            <mu>1.0</mu>
+            <mu2>1.0</mu2>
           </ode>
           <bullet>
-            <friction>0.5</friction>
-            <friction2>0.5</friction2>
+            <friction>1.0</friction>
+            <friction2>1.0</friction2>
           </bullet>
         </friction>
         <contact>
@@ -1536,12 +1536,12 @@
       <surface>
         <friction>
           <ode>
-            <mu>0.5</mu>
-            <mu2>0.5</mu2>
+            <mu>1.0</mu>
+            <mu2>1.0</mu2>
           </ode>
           <bullet>
-            <friction>0.5</friction>
-            <friction2>0.5</friction2>
+            <friction>1.0</friction>
+            <friction2>1.0</friction2>
           </bullet>
         </friction>
         <contact>
@@ -1566,12 +1566,12 @@
       <surface>
         <friction>
           <ode>
-            <mu>0.5</mu>
-            <mu2>0.5</mu2>
+            <mu>1.0</mu>
+            <mu2>1.0</mu2>
           </ode>
           <bullet>
-            <friction>0.5</friction>
-            <friction2>0.5</friction2>
+            <friction>1.0</friction>
+            <friction2>1.0</friction2>
           </bullet>
         </friction>
         <contact>
