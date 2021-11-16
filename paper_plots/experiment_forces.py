@@ -9,6 +9,10 @@ if __name__ == "__main__":
     # get data from stepup experiment saved in yiannis_centauro_pytools module
     with open('/home/ioannis/centauro_ws/src/yiannis_centauro_pytools/txt/stepup_forces.txt', 'rb') as f:
         estimated_forces = pickle.load(f)
+    # momentum_based estimated forces
+    with open('/home/ioannis/centauro_ws/src/yiannis_centauro_pytools/txt/stepup_momentumbased_forces.txt', 'rb') as f:
+        momentumbased_estimated_forces = pickle.load(f)
+
     swing_timings = {'1': [], '2': [], '3': [], '4': []}
     trj_start = [0.0, 17.8, 35.8, 55.0, 63.5, 80.0]
     force_sol = []
@@ -74,6 +78,8 @@ if __name__ == "__main__":
             plt.subplot(4, 1, i+1)
             plt.plot(time_trj, [filt_value[j] for filt_value in estimated_forces[i]][:int(end_estimation*1000)],      # filtered
                      color='r', label='est', linewidth=2)
+            plt.plot(time_trj, [filt_value[j] for filt_value in momentumbased_estimated_forces[i]][:int(end_estimation*1000)],      # momentum based
+                     ':', color='g', label='est', linewidth=1)
             plt.plot(planned_time_trj, force_sol[3 * i + j::12], '-', color='b', label='plan', linewidth=3)
             plt.xlabel('Time $[s]$', fontsize=20)
             plt.xlim([0.0, end_estimation+2.0])
