@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- torso links -->
+
+<link name="torso_2">
+	<inertial>
+		<origin xyz="${Torso_2_x} ${Torso_2_y} ${Torso_2_z}"/>
+		<mass value="${Torso_2_mass}"/> 
+                <inertia ixx="${Torso_2_xx}" ixy="${Torso_2_xy}" ixz="${Torso_2_xz}" iyy="${Torso_2_yy}" iyz="${Torso_2_yz}" izz="${Torso_2_zz}"/>
+        </inertial>
+
+	<visual>
+          <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+   	  <geometry>
+      	  <mesh filename="package://centauro_urdf/meshes/link1.stl" scale="0.001 0.001 0.001" />
+   	  </geometry>
+	</visual>
+
+	<collision>
+          <origin xyz="0.0 0 0.0"  rpy="0.0 0.0 0.0"/>
+   	  <geometry>
+      	  <mesh filename="package://centauro_urdf/meshes/simple/link1.stl" scale="0.001 0.001 0.001" />
+   	  </geometry>
+	</collision>
+</link>
+<!-- /torso links -->
+
+<!-- torso joints -->
+<joint name="torso_yaw" type="revolute">
+   <parent link="pelvis"/>
+   <origin xyz="${Torso_2_Ox} ${Torso_2_Oy} ${Torso_2_Oz}"/>
+   <child link="torso_2"/>
+   <axis xyz="0 0 1"/>
+   <limit lower="${torso_yaw_lower}" upper="${torso_yaw_upper}" effort="147" velocity="5.7"/> <!-- TODO -->
+</joint>
+<!-- /torso joints -->
+
+</robot>
