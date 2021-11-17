@@ -5,7 +5,7 @@
 
     <arg name="slope_x" default="0.0"/>
 
-    <arg name="box_far_from_chest" default="True"/>
+    <arg name="box_far_from_chest" default="False"/>
 
     <arg name="swing_id" default="[3, 1, 4, 2]"/>
 

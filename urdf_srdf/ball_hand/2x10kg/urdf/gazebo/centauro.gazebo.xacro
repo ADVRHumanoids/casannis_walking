@@ -1,20 +1,23 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:property name="friction_coeff" value="0.9" />
+
 
 <xacro:if value="${ADD_LEGS}">
 
 <gazebo reference="wheel_1">
+
     <material>Gazebo/Residential </material>
     <collision>
         <surface>
             <friction>
                 <ode>
-                    <mu>1.0</mu>
-                    <mu2>1.0</mu2>
+                    <mu>${friction_coeff}</mu>
+                    <mu2>${friction_coeff}</mu2>
                 </ode>
                 <bullet>
-                    <friction>1.0</friction>
-                    <friction2>1.0</friction2>
+                    <friction>${friction_coeff}</friction>
+                    <friction2>${friction_coeff}</friction2>
                 </bullet>
             </friction>
             <contact>
@@ -40,12 +43,12 @@
         <surface>
             <friction>
                 <ode>
-                    <mu>1.0</mu>
-                    <mu2>1.0</mu2>
+                    <mu>${friction_coeff}</mu>
+                    <mu2>${friction_coeff}</mu2>
                 </ode>
                 <bullet>
-                    <friction>1.0</friction>
-                    <friction2>1.0</friction2>
+                    <friction>${friction_coeff}</friction>
+                    <friction2>${friction_coeff}</friction2>
                 </bullet>
             </friction>
             <contact>
@@ -72,12 +75,12 @@
         <surface>
             <friction>
                 <ode>
-                    <mu>1.0</mu>
-                    <mu2>1.0</mu2>
+                    <mu>${friction_coeff}</mu>
+                    <mu2>${friction_coeff}</mu2>
                 </ode>
                 <bullet>
-                    <friction>1.0</friction>
-                    <friction2>1.0</friction2>
+                    <friction>${friction_coeff}</friction>
+                    <friction2>${friction_coeff}</friction2>
                 </bullet>
             </friction>
             <contact>
@@ -102,12 +105,12 @@
         <surface>
             <friction>
                 <ode>
-                    <mu>1.0</mu>
-                    <mu2>1.0</mu2>
+                    <mu>${friction_coeff}</mu>
+                    <mu2>${friction_coeff}</mu2>
                 </ode>
                 <bullet>
-                    <friction>1.0</friction>
-                    <friction2>1.0</friction2>
+                    <friction>${friction_coeff}</friction>
+                    <friction2>${friction_coeff}</friction2>
                 </bullet>
             </friction>
             <contact>
