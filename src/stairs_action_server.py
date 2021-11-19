@@ -77,50 +77,50 @@ class DemoAction(object):
             for i in range(2):
                 gait_payload.casannis(freq)
                 rospy.sleep(2)
-                initialize_cartesio.cartesio_initializer()
+                #initialize_cartesio.cartesio_initializer()
 
-            rospy.set_param("~tgt_dx", "[0.2 ,0.25, 0.2, 0.25]")
+            rospy.set_param("~tgt_dx", "[0.22 ,0.3, 0.22, 0.3]")
             gait_payload.casannis(freq)
 
             rospy.set_param("~tgt_dx", "[0.2 ,0.25, 0.2, 0.25]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~sw_id", "[3, 4, 1, 2]")
-            rospy.set_param("~tgt_dx", "[0.24 ,0.24, 0.24, 0.24]")
+            rospy.set_param("~tgt_dx", "[0.24 ,0.24, 0.25, 0.25]")
             rospy.set_param("~tgt_dy", "[0.0 ,0.0, 0.0, 0.0]")
             rospy.set_param("~tgt_dz", "[0.1 ,0.1, 0.1, 0.1]")
 
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
-            rospy.set_param("~tgt_dx", "[0.25 ,0.25, 0.25, 0.25]")
+            rospy.set_param("~tgt_dx", "[0.27 ,0.27, 0.25, 0.25]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
             rospy.set_param("~tgt_dz", "[0.1 ,0.1, 0.0, 0.0]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.3 ,0.3, 0.3, 0.3]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.2 ,0.2, 0.2, 0.2]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
 
             rospy.set_param("~tgt_dx", "[0.3 ,0.3, 0.3, 0.3]")
             gait_payload.casannis(freq)
             rospy.sleep(2)
-            initialize_cartesio.cartesio_initializer()
+            #initialize_cartesio.cartesio_initializer()
             
             rospy.loginfo('%s: Roll completed' % (self._action_name))
 
