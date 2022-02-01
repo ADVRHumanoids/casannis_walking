@@ -959,6 +959,13 @@ class GaitNonlinear(Gait):
                 cost_function += l_acceleration_analytical_cost['y'] + r_acceleration_analytical_cost['y']
                 cost_function += l_acceleration_analytical_cost['z'] + r_acceleration_analytical_cost['z']
 
+            # simple cost just for comparisons in the paper
+            # if k > 0:
+            #     cost_function += costs.penalize_quantity(5*1e1, DP_mov_l[u_slice1:u_slice2] - DP_mov_l[u_slice0:u_slice1],
+            #                                              k, knot_number)
+            #     cost_function += costs.penalize_quantity(5*1e1, DP_mov_r[u_slice1:u_slice2] - DP_mov_r[u_slice0:u_slice1],
+            #                                              k, knot_number)
+
             # hands penalization over whole trajectory and high final penalty
             cost_fraction = 0.0     # this determines the penalty for the trj except the final knot which is high
             cost_hands = cost_fraction * 1e3
