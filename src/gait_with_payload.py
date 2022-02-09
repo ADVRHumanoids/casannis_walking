@@ -1212,8 +1212,8 @@ class GaitNonlinear(Gait):
             DPr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_min']
 
             # virtual force bounds
-            f_magn_xy = 8.0
-            f_magn_z = 3.0
+            f_magn_xy = 8.0 # cs.inf
+            f_magn_z = 3.0  # cs.inf
             F_virt_l_l[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [-f_magn_xy, -f_magn_xy, - f_magn_z]
             F_virt_l_u[u_slice1:u_slice2] = self._payload_mass_l * self._gravity + [f_magn_xy, f_magn_xy, f_magn_z]
 

@@ -198,11 +198,11 @@ def casannis(int_freq):
     # interpolate the trj, pass solution values and interpolation frequency
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
-    import pickle
-    file = open('/home/ioannis/Desktop/interpl.txt', 'wb')
-    pickle.dump(interpl, file, protocol=2)
-    file.close()
-    print('Saved interpl trj as .txt file')
+    # import pickle
+    # file = open('/home/ioannis/Desktop/interpl.txt', 'wb')
+    # pickle.dump(interpl, file, protocol=2)
+    # file.close()
+    # print('Saved interpl trj as .txt file')
 
     # All points to be published
     N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
