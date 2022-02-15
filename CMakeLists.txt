@@ -55,6 +55,7 @@ add_message_files( DIRECTORY msg
     FILES
     Four_contacts.msg
     Obstacles.msg
+    PayloadAware_plans.msg
 )
 
 ## Generate services in the 'srv' folder

@@ -1,0 +1,9 @@
+float32[] state
+float32[] control
+float32[] leg_forces
+float32[] left_arm_pos
+float32[] right_arm_pos
+float32[] left_arm_vel
+float32[] right_arm_vel
+float32[] left_arm_force
+float32[] right_arm_force
