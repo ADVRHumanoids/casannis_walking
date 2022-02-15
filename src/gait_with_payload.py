@@ -229,8 +229,7 @@ class Gait(object):
         self._nparams = self._nlp['p'].size1()
 
         solver_options = {
-            'ipopt.linear_solver': 'ma57',
-            #'warm_start_init_point': 'yes'
+            'ipopt.linear_solver': 'ma57'
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
@@ -1075,7 +1074,10 @@ class GaitNonlinear(Gait):
         self._nparams = self._nlp['p'].size1()
 
         solver_options = {
-            'ipopt.linear_solver': 'ma57'
+            'ipopt.linear_solver': 'ma57',
+            # 'ipopt.mu_strategy': 'adaptive'
+            # 'ipopt.warm_start_init_point': 'yes'
+            'ipopt.print_level': 6
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
