@@ -34,7 +34,7 @@
     <arg name="forward_arms_config" default="True"/>
     <arg name="linear_fvirtual" default="False"/>
 
-    <node name="casannis" pkg="casannis_walking" type="receding_hz_test.py" output="screen">
+    <node name="casannis_planner" pkg="casannis_walking" type="receding_hz_planner_node.py" output="screen">
         <param name="inclination_deg" value="$(arg slope_x)"/>
         <param name="box_conservative" value="$(arg box_far_from_chest)"/>
         <param name="sw_id" value="$(arg swing_id)"/>

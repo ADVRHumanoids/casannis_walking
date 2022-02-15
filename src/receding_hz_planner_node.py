@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 from centauro_contact_detection.msg import Contacts as Contacts_msg
-
+from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
 # radius of centauro wheels
 R = 0.078
 #task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
@@ -18,6 +18,43 @@ def contacts_callback(msg):
     # pass to global scope
     global sw_contact_msg
     sw_contact_msg = msg
+
+
+def shift_solution(solution, knots_toshift, dims):
+    '''
+    Generate the new initial guess by shifting the previous solution.
+    :param solution: previous solution
+    :param knots_toshift: knots to shift the new solution
+    :param dims: list with dimensions of the different variables
+    :return: the shifted solution which can be used as initial guess
+    '''
+
+    new_values = [0]
+    # solution_keys = solution.keys()
+    solution_based_ordered_keys = ['x', 'u', 'F', 'Pl_mov', 'Pr_mov', 'DPl_mov', 'DPr_mov', 'F_virt_l', 'F_virt_r']
+
+    # shifted_sol = {}
+    shifted_sol_array = []
+    for keyname in solution_based_ordered_keys:
+        shifted_variables = solution[keyname][knots_toshift * dims[keyname]:] + \
+                            knots_toshift * solution[keyname][-knots_toshift * dims[keyname]:]  # same as last knot
+                            # knots_toshift * dims[keyname] * new_values    # zero new values
+
+        # shifted_sol.update({keyname: shifted_variables})
+        shifted_sol_array = np.hstack((shifted_sol_array, shifted_variables))
+
+    # print(shifted_sol)
+    # shifted_sol_array = np.array(shifted_sol['x'] +
+    #                              shifted_sol['u'] +
+    #                              shifted_sol['F'] +
+    #                              shifted_sol['Pl_mov'] +
+    #                              shifted_sol['Pr_mov'] +
+    #                              shifted_sol['DPl_mov'] +
+    #                              shifted_sol['DPr_mov'] +
+    #                              shifted_sol['F_virt_l'] +
+    #                              shifted_sol['F_virt_r'])
+
+    return shifted_sol_array
 
 
 def casannis(int_freq):
@@ -183,6 +220,9 @@ def casannis(int_freq):
     lh_msg.pose.orientation = lhand_init.pose.orientation  # hands
     rh_msg.pose.orientation = rhand_init.pose.orientation
 
+    # motion plans publisher
+    motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
+
     # Subscriber for contact flags
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
@@ -191,9 +231,55 @@ def casannis(int_freq):
                         slope_deg=inclination_deg, conservative_box=arm_box_conservative)
 
     # call the solver of the optimization problem
-    # sol is the directory returned by solve class function contains state, forces, control values
     sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+
+    plan_msg = MotionPlan_msg()
+    plan_msg.state = sol['x']
+    plan_msg.control = sol['u']
+    plan_msg.left_arm_pos = sol['Pl_mov']
+    plan_msg.right_arm_pos = sol['Pr_mov']
+    plan_msg.left_arm_vel = sol['DPl_mov']
+    plan_msg.right_arm_vel = sol['DPr_mov']
+    plan_msg.leg_forces = sol['F']
+    plan_msg.left_arm_force = sol['F_virt_l']
+    plan_msg.right_arm_force = sol['F_virt_r']
+
+    variables_dim = {
+        'x': walk._dimx,
+        'u': walk._dimu,
+        'Pl_mov': walk._dimp_mov,
+        'Pr_mov': walk._dimp_mov,
+        'DPl_mov': walk._dimp_mov,
+        'DPr_mov': walk._dimp_mov,
+        'F': walk._dimf_tot,
+        'F_virt_l': walk._dimf,
+        'F_virt_r': walk._dimf
+    }
+
+    for i in range(1):
+        # update arguments of solve function
+        x0 = sol['x'][9:18]
+        moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
+                          [np.array(sol['Pr_mov'][3:6]), np.array(sol['DPr_mov'][3:6])]]
+
+        swing_t = (np.array(swing_t) - walk._dt).tolist()
+
+        shifted_guess = shift_solution(sol, 1, variables_dim)
+
+        sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
+                             swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
+                             init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
+
+    test_rate = rospy.Rate(100)
+    # loop interpolation points to publish on a specified frequency
+    while True:
+
+        if not rospy.is_shutdown():
+            # plan_msg.header.stamp = rospy.Time.now()
+            motionplan_pub_.publish(plan_msg)
+
+        test_rate.sleep()
 
     # interpolate the trj, pass solution values and interpolation frequency
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
@@ -223,91 +309,6 @@ def casannis(int_freq):
     mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
     print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
 
-    rate = rospy.Rate(int_freq)  # Frequency trj publishing
-    # loop interpolation points to publish on a specified frequency
-    for counter in range(N_total):
-
-        if not rospy.is_shutdown():
-
-            # check if current time is within swing phase and contact detection
-            for i in range(step_num):
-
-                # swing phase check
-                if delta_t_early[i][0] <= interpl['t'][counter] <= delta_t_early[i][2]:
-                    swing_phase = i
-
-                    # time for contact detection
-                    if interpl['t'][counter] >= delta_t_early[i][1]:
-                        early_check = True
-
-                    else:
-                        early_check = False
-                    break
-
-                else:
-                    swing_phase = -1    # not in swing phase
-                    early_check = False
-
-            # com trajectory
-            com_msg.pose.position.x = interpl['x'][0][counter]
-            com_msg.pose.position.y = interpl['x'][1][counter]
-            com_msg.pose.position.z = interpl['x'][2][counter]
-
-            # hands trajectory
-            lh_msg.pose.position.x = interpl['p_mov_l'][0][counter]
-            lh_msg.pose.position.y = interpl['p_mov_l'][1][counter]
-            lh_msg.pose.position.z = interpl['p_mov_l'][2][counter]
-
-            rh_msg.pose.position.x = interpl['p_mov_r'][0][counter]
-            rh_msg.pose.position.y = interpl['p_mov_r'][1][counter]
-            rh_msg.pose.position.z = interpl['p_mov_r'][2][counter]
-
-            # swing foot
-            f_msg[swing_phase].pose.position.x = interpl['sw'][swing_phase]['x'][counter]
-            f_msg[swing_phase].pose.position.y = interpl['sw'][swing_phase]['y'][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] + R
-
-            # publish com trajectory regardless contact detection
-            com_msg.header.stamp = rospy.Time.now()
-            com_pub_.publish(com_msg)
-
-            # publish hands trajectory regardless contact detection
-            lh_msg.header.stamp = rospy.Time.now()
-            left_h_pub_.publish(lh_msg)
-
-            rh_msg.header.stamp = rospy.Time.now()
-            right_h_pub_.publish(rh_msg)
-
-            if swing_phase == -1:
-                pass
-
-            # do not check for early contact
-            elif not cont_detection or early_check is False:
-
-                # publish swing trajectory
-                f_msg[swing_phase].header.stamp = rospy.Time.now()
-                f_pub_[swing_phase].publish(f_msg[swing_phase])
-
-            # If no early contact detected yet
-            elif not early_contact[swing_phase]:
-
-                # if there is contact
-                if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase] - 1]), 'data'):
-
-                    early_contact[swing_phase] = True  # stop swing trajectory of this foot
-
-                    executed_trj.append(counter)    # save counter
-                    print("early contact detected ", counter)
-
-                # if no contact
-                else:
-                    # publish swing trajectory
-                    f_msg[swing_phase].header.stamp = rospy.Time.now()
-                    f_pub_[swing_phase].publish(f_msg[swing_phase])
-
-        rate.sleep()
-
     # print the trajectories
     try:
         # there was early contact detected
@@ -328,7 +329,7 @@ if __name__ == '__main__':
     # desired interpolation frequency
     interpolation_freq = 300
 
-    rospy.init_node('casannis', anonymous=True)
+    rospy.init_node('casannis_planner', anonymous=True)
 
     try:
         casannis(interpolation_freq)
