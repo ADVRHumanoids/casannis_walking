@@ -229,7 +229,8 @@ class Gait(object):
         self._nparams = self._nlp['p'].size1()
 
         solver_options = {
-            'ipopt.linear_solver': 'ma57'
+            'ipopt.linear_solver': 'ma57',
+            #'warm_start_init_point': 'yes'
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
@@ -1079,7 +1080,9 @@ class GaitNonlinear(Gait):
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
-    def solve(self, x0, contacts, mov_contact_initial, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50):
+    def solve(self, x0, contacts, mov_contact_initial, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50,
+              init_guess=None, state_lamult=None, constr_lamult=None):
+
         """Solve the stepping problem
 
         Args:
@@ -1091,7 +1094,12 @@ class GaitNonlinear(Gait):
             swing_clearance: clearance achieved from the highest point between initial and target position
             swing_t ([type]): list of lists with swing times in secs
             min_f: minimum threshold for forces in z direction
+            init_guess: initial guess of the solution
         """
+
+        # zero initial guess if not specified
+        if init_guess is None:
+            init_guess = np.zeros(self._nvars)
 
         # grab moving contacts from the list
         lmov_contact_initial = mov_contact_initial[0]
@@ -1273,9 +1281,6 @@ class GaitNonlinear(Gait):
         DPr_movl[-3:] = [0.0 for i in range(3)]  # zero velocity of the moving contact
         DPr_movu[-3:] = [0.0 for i in range(3)]
 
-        # initial guess
-        v0 = np.zeros(self._nvars)
-
         # format bounds and params according to solver
         lbv = cs.vertcat(Xl, Ul, Fl, Pl_movl, Pr_movl, DPl_movl, DPr_movl, F_virt_l_l, F_virt_r_l)
         ubv = cs.vertcat(Xu, Uu, Fu, Pl_movu, Pr_movu, DPl_movu, DPr_movu, F_virt_l_u, F_virt_r_u)
@@ -1284,7 +1289,11 @@ class GaitNonlinear(Gait):
         params = cs.vertcat(*P)
 
         # compute solution-call solver
-        self._sol = sol = self._solver(x0=v0, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
+        if state_lamult is not None and constr_lamult is not None:
+            self._sol = sol = self._solver(x0=init_guess, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params,
+                                           lam_x0=state_lamult, lam_g0=constr_lamult)
+        else:
+            self._sol = sol = self._solver(x0=init_guess, lbx=lbv, ubx=ubv, lbg=lbg, ubg=ubg, p=params)
 
         # plot state, forces, control input, quantities to be computed by evaluate function
         x_trj = cs.horzcat(self._trj['x'])  # pack states in a desired matrix
@@ -1309,7 +1318,9 @@ class GaitNonlinear(Gait):
             'DPl_mov': self.evaluate(sol['x'], dp_lmov_trj),
             'DPr_mov': self.evaluate(sol['x'], dp_rmov_trj),
             'F_virt_l': self.evaluate(sol['x'], f_virt_l_trj),  # virtual force
-            'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj)  # virtual force
+            'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj),  # virtual force
+            'lam_x': sol['lam_x'],    # lagrange multipliers
+            'lam_g': sol['lam_g']
         }
 
     def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
