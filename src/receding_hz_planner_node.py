@@ -3,8 +3,10 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
-from centauro_contact_detection.msg import Contacts as Contacts_msg
+from std_msgs.msg import Bool
 from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
+import matplotlib.pyplot as plt
+
 # radius of centauro wheels
 R = 0.078
 #task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
@@ -43,18 +45,20 @@ def shift_solution(solution, knots_toshift, dims):
         # shifted_sol.update({keyname: shifted_variables})
         shifted_sol_array = np.hstack((shifted_sol_array, shifted_variables))
 
-    # print(shifted_sol)
-    # shifted_sol_array = np.array(shifted_sol['x'] +
-    #                              shifted_sol['u'] +
-    #                              shifted_sol['F'] +
-    #                              shifted_sol['Pl_mov'] +
-    #                              shifted_sol['Pr_mov'] +
-    #                              shifted_sol['DPl_mov'] +
-    #                              shifted_sol['DPr_mov'] +
-    #                              shifted_sol['F_virt_l'] +
-    #                              shifted_sol['F_virt_r'])
-
     return shifted_sol_array
+
+
+# def get_swing_durations(previous_dur, time_shifting):
+#
+#     # previous_dur = [[1,3], [4,6], [7,9]]
+#     # time shift = 1.2
+#     # swing_dur = [[-0.2, 1.8], [2.8, 4.8], [5.8, 7.8]]
+#
+#     swing_durations = (np.array(previous_dur) - time_shifting)
+#     nonzero_elements = np.transpose(np.nonzero(swing_durations[0]))
+
+
+    return swing_durations
 
 
 def casannis(int_freq):
@@ -168,13 +172,9 @@ def casannis(int_freq):
     # variables to loop for swing legs
     swing_tgt = []  # target positions as list
     swing_t = []    # time periods of the swing phases
-    f_pub_ = []     # list of publishers for the swing foot
-    com_msg = PoseStamped()     # message to be published for com
-    f_msg = []                  # list of messages to be published for swing feet
     swing_contacts = []         # contact positions of the swing feet
 
     for i in range(step_num):
-        print(i)
         # targets
         swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
                           contacts[swing_id[i] - 1][1] + tgt_dy[i],
@@ -185,21 +185,6 @@ def casannis(int_freq):
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
         swing_t[i] = [float(ii) for ii in swing_t[i]]
 
-        # swing feet trj publishers
-        '''f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
-                                      PoseStamped,
-                                      queue_size=10))'''
-
-        f_pub_.append(rospy.Publisher('/cartesian/' + task_name_contact[swing_id[i] - 1] + '/reference',
-                                      PoseStamped,
-                                      queue_size=10))
-
-        # feet trj messages
-        f_msg.append(PoseStamped())
-
-        # keep same orientation
-        f_msg[i].pose.orientation = f_init[swing_id[i] - 1].pose.orientation
-
         swing_contacts.append(contacts[swing_id[i] - 1])
 
     # receive weight of payloads
@@ -209,41 +194,17 @@ def casannis(int_freq):
 
     print('Payload masses', payload_m)
 
-    # CoM trj publisher
-    com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
-
-    # hands' publishers and msgs
-    left_h_pub_ = rospy.Publisher('/cartesian/' + task_name_moving_contact[0] + '/reference', PoseStamped, queue_size=10)
-    right_h_pub_ = rospy.Publisher('/cartesian/' + task_name_moving_contact[1] + '/reference', PoseStamped, queue_size=10)
-    lh_msg = PoseStamped()
-    rh_msg = PoseStamped()
-    lh_msg.pose.orientation = lhand_init.pose.orientation  # hands
-    rh_msg.pose.orientation = rhand_init.pose.orientation
+    # publisher to start replaying
+    starting_pub_ = rospy.Publisher('PayloadAware/connection', Bool, queue_size=10)
+    start_msg = Bool()
+    start_msg.data = True
 
     # motion plans publisher
     motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
 
-    # Subscriber for contact flags
-    rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
-
     # object class of the optimization problem
     walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m,
                         slope_deg=inclination_deg, conservative_box=arm_box_conservative)
-
-    # call the solver of the optimization problem
-    sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
-                     swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
-
-    plan_msg = MotionPlan_msg()
-    plan_msg.state = sol['x']
-    plan_msg.control = sol['u']
-    plan_msg.left_arm_pos = sol['Pl_mov']
-    plan_msg.right_arm_pos = sol['Pr_mov']
-    plan_msg.left_arm_vel = sol['DPl_mov']
-    plan_msg.right_arm_vel = sol['DPr_mov']
-    plan_msg.leg_forces = sol['F']
-    plan_msg.left_arm_force = sol['F_virt_l']
-    plan_msg.right_arm_force = sol['F_virt_r']
 
     variables_dim = {
         'x': walk._dimx,
@@ -257,7 +218,26 @@ def casannis(int_freq):
         'F_virt_r': walk._dimf
     }
 
-    for i in range(1):
+    # call the solver of the optimization problem
+    sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
+                     swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+
+    # set fields of the message
+    plan_msg = MotionPlan_msg()
+    plan_msg.state = sol['x']
+    plan_msg.control = sol['u']
+    plan_msg.left_arm_pos = sol['Pl_mov']
+    plan_msg.right_arm_pos = sol['Pr_mov']
+    plan_msg.left_arm_vel = sol['DPl_mov']
+    plan_msg.right_arm_vel = sol['DPr_mov']
+    plan_msg.leg_forces = sol['F']
+    plan_msg.left_arm_force = sol['F_virt_l']
+    plan_msg.right_arm_force = sol['F_virt_r']
+
+    motionplan_pub_.publish(plan_msg)  # publish plan
+    starting_pub_.publish(start_msg)    # publish to start replay
+
+    for i in range(5):
         # update arguments of solve function
         x0 = sol['x'][9:18]
         moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
@@ -267,61 +247,66 @@ def casannis(int_freq):
 
         shifted_guess = shift_solution(sol, 1, variables_dim)
 
+        print('Initial state:', x0)
+        print('Moving contact:', moving_contact)
+        print('Swing timings:', swing_t)
+
         sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
                              swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
                              init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
 
-    test_rate = rospy.Rate(100)
-    # loop interpolation points to publish on a specified frequency
-    while True:
+        # # debug force plot
+        # tt = np.linspace(0.0, (swing_t[-1][1] + 1.0), walk._knot_number)
+        # plt.figure()
+        # for i, name in enumerate(['fl', 'fr', 'hl', 'hr']):
+        #     plt.subplot(2, 2, i + 1)
+        #     for k in range(3):
+        #         plt.plot(tt, sol['F'][3 * i + k::12], '.-')
+        #     plt.grid()
+        #     plt.title(name)
+        #     plt.legend([str(name) + '_x', str(name) + '_y', str(name) + '_z'])
+        # plt.xlabel('Time [s]')
+        # plt.show()
 
-        if not rospy.is_shutdown():
-            # plan_msg.header.stamp = rospy.Time.now()
-            motionplan_pub_.publish(plan_msg)
+        interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+        # walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id])
 
-        test_rate.sleep()
+        # set fields of the message
+        plan_msg.state = sol['x']
+        plan_msg.control = sol['u']
+        plan_msg.left_arm_pos = sol['Pl_mov']
+        plan_msg.right_arm_pos = sol['Pr_mov']
+        plan_msg.left_arm_vel = sol['DPl_mov']
+        plan_msg.right_arm_vel = sol['DPr_mov']
+        plan_msg.leg_forces = sol['F']
+        plan_msg.left_arm_force = sol['F_virt_l']
+        plan_msg.right_arm_force = sol['F_virt_r']
 
-    # interpolate the trj, pass solution values and interpolation frequency
-    interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+        motionplan_pub_.publish(plan_msg)       # publish
 
-    # All points to be published
-    N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
-
-    # executed trj points
-    executed_trj = []
-
-    # early contact flags default values
-    early_contact = [False, False, False, False]
-
-    # times activating contact detection
-    t_early = [swing_t[i][0] + 0.7 * (swing_t[i][1] - swing_t[i][0]) for i in range(step_num)]
-
-    # time intervals [swing_start, early_cont_detection_start, swing_stop]
-    delta_t_early = [[swing_t[i][0], t_early[i], swing_t[i][1]] for i in range(step_num)]
-
-    # trj points during all swing phases
-    N_swing_total = int(int_freq * sum([swing_t[i][1] - swing_t[i][0] for i in range(step_num)]))
-
-    # approximate distance covered during swing
-    tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
-
-    # mean velocity of the swing foot
-    mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
-    print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
+    # # # interpolate the trj, pass solution values and interpolation frequency
+    # interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+    #
+    # # approximate distance covered during swing
+    # tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
+    #
+    # # mean velocity of the swing foot
+    # mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
+    # print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
 
     # print the trajectories
-    try:
-        # there was early contact detected
-        if early_contact.index(True) + 1:
-            print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
-
-            if rospy.get_param("~plots"):
-                walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], executed_trj)
-    except:
-        print("No early contact detected")
-
-        if rospy.get_param("~plots"):
-            walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], [N_total-1, N_total-1, N_total-1, N_total-1])
+    # try:
+    #     # there was early contact detected
+    #     if early_contact.index(True) + 1:
+    #         print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
+    #
+    #         if rospy.get_param("~plots"):
+    #             walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], executed_trj)
+    # except:
+    #     print("No early contact detected")
+    #
+    #     if rospy.get_param("~plots"):
+    #         walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], [N_total-1, N_total-1, N_total-1, N_total-1])
 
 
 if __name__ == '__main__':

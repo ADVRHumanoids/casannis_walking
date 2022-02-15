@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 from centauro_contact_detection.msg import Contacts as Contacts_msg
 from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
+from std_msgs.msg import Bool
 # radius of centauro wheels
 R = 0.078
 #task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
@@ -22,6 +23,10 @@ def contacts_callback(msg):
 
 
 def motion_plan_callback(msg):
+
+    global motion_plan_waiting
+    motion_plan_waiting = True
+
     # pass message to global scope
     global received_motion_plan
     received_motion_plan = {
@@ -35,6 +40,7 @@ def motion_plan_callback(msg):
         'F_virt_l': msg.left_arm_force,
         'F_virt_r': msg.right_arm_force,
     }
+    print('Received message')
 
 
 def casannis(int_freq):
@@ -217,11 +223,9 @@ def casannis(int_freq):
     # sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
     #                  swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
 
-    # interpolate the trj, pass solution values and interpolation frequency
-    interpl = walk.interpolate(received_motion_plan, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
-
     # All points to be published
-    N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
+    # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
+    N_total = int(walk._dt * int_freq)  # total points --> total time * interpolation frequency
 
     # executed trj points
     executed_trj = []
@@ -238,97 +242,105 @@ def casannis(int_freq):
     # trj points during all swing phases
     N_swing_total = int(int_freq * sum([swing_t[i][1] - swing_t[i][0] for i in range(step_num)]))
 
-    # approximate distance covered during swing
-    tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
+    # wait until planners sends a message that is connected
+    planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
 
-    # mean velocity of the swing foot
-    mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
-    print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
+    while True:
+        print('Current motion plan:', received_motion_plan)
+        # interpolate the trj, pass solution values and interpolation frequency
+        interpl = walk.interpolate(received_motion_plan, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
-    rate = rospy.Rate(int_freq)  # Frequency trj publishing
-    # loop interpolation points to publish on a specified frequency
-    for counter in range(N_total):
+        # # approximate distance covered during swing
+        # tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
+        #
+        # # mean velocity of the swing foot
+        # mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
+        # print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
 
-        if not rospy.is_shutdown():
+        rate = rospy.Rate(int_freq)  # Frequency trj publishing
+        # loop interpolation points to publish on a specified frequency
+        for counter in range(N_total):
 
-            # check if current time is within swing phase and contact detection
-            for i in range(step_num):
+            if not rospy.is_shutdown():
 
-                # swing phase check
-                if delta_t_early[i][0] <= interpl['t'][counter] <= delta_t_early[i][2]:
-                    swing_phase = i
+                # check if current time is within swing phase and contact detection
+                for i in range(step_num):
 
-                    # time for contact detection
-                    if interpl['t'][counter] >= delta_t_early[i][1]:
-                        early_check = True
+                    # swing phase check
+                    if delta_t_early[i][0] <= interpl['t'][counter] <= delta_t_early[i][2]:
+                        swing_phase = i
+
+                        # time for contact detection
+                        if interpl['t'][counter] >= delta_t_early[i][1]:
+                            early_check = True
+
+                        else:
+                            early_check = False
+                        break
 
                     else:
+                        swing_phase = -1    # not in swing phase
                         early_check = False
-                    break
 
-                else:
-                    swing_phase = -1    # not in swing phase
-                    early_check = False
+                # com trajectory
+                com_msg.pose.position.x = interpl['x'][0][counter]
+                com_msg.pose.position.y = interpl['x'][1][counter]
+                com_msg.pose.position.z = interpl['x'][2][counter]
 
-            # com trajectory
-            com_msg.pose.position.x = interpl['x'][0][counter]
-            com_msg.pose.position.y = interpl['x'][1][counter]
-            com_msg.pose.position.z = interpl['x'][2][counter]
+                # hands trajectory
+                lh_msg.pose.position.x = interpl['p_mov_l'][0][counter]
+                lh_msg.pose.position.y = interpl['p_mov_l'][1][counter]
+                lh_msg.pose.position.z = interpl['p_mov_l'][2][counter]
 
-            # hands trajectory
-            lh_msg.pose.position.x = interpl['p_mov_l'][0][counter]
-            lh_msg.pose.position.y = interpl['p_mov_l'][1][counter]
-            lh_msg.pose.position.z = interpl['p_mov_l'][2][counter]
+                rh_msg.pose.position.x = interpl['p_mov_r'][0][counter]
+                rh_msg.pose.position.y = interpl['p_mov_r'][1][counter]
+                rh_msg.pose.position.z = interpl['p_mov_r'][2][counter]
 
-            rh_msg.pose.position.x = interpl['p_mov_r'][0][counter]
-            rh_msg.pose.position.y = interpl['p_mov_r'][1][counter]
-            rh_msg.pose.position.z = interpl['p_mov_r'][2][counter]
+                # swing foot
+                f_msg[swing_phase].pose.position.x = interpl['sw'][swing_phase]['x'][counter]
+                f_msg[swing_phase].pose.position.y = interpl['sw'][swing_phase]['y'][counter]
+                # add radius as origin of the wheel frame is in the center
+                f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] + R
 
-            # swing foot
-            f_msg[swing_phase].pose.position.x = interpl['sw'][swing_phase]['x'][counter]
-            f_msg[swing_phase].pose.position.y = interpl['sw'][swing_phase]['y'][counter]
-            # add radius as origin of the wheel frame is in the center
-            f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] + R
+                # publish com trajectory regardless contact detection
+                com_msg.header.stamp = rospy.Time.now()
+                com_pub_.publish(com_msg)
 
-            # publish com trajectory regardless contact detection
-            com_msg.header.stamp = rospy.Time.now()
-            com_pub_.publish(com_msg)
+                # publish hands trajectory regardless contact detection
+                lh_msg.header.stamp = rospy.Time.now()
+                left_h_pub_.publish(lh_msg)
 
-            # publish hands trajectory regardless contact detection
-            lh_msg.header.stamp = rospy.Time.now()
-            left_h_pub_.publish(lh_msg)
+                rh_msg.header.stamp = rospy.Time.now()
+                right_h_pub_.publish(rh_msg)
 
-            rh_msg.header.stamp = rospy.Time.now()
-            right_h_pub_.publish(rh_msg)
+                if swing_phase == -1:
+                    pass
 
-            if swing_phase == -1:
-                pass
+                # do not check for early contact
+                elif not cont_detection or early_check is False:
 
-            # do not check for early contact
-            elif not cont_detection or early_check is False:
-
-                # publish swing trajectory
-                f_msg[swing_phase].header.stamp = rospy.Time.now()
-                f_pub_[swing_phase].publish(f_msg[swing_phase])
-
-            # If no early contact detected yet
-            elif not early_contact[swing_phase]:
-
-                # if there is contact
-                if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase] - 1]), 'data'):
-
-                    early_contact[swing_phase] = True  # stop swing trajectory of this foot
-
-                    executed_trj.append(counter)    # save counter
-                    print("early contact detected ", counter)
-
-                # if no contact
-                else:
                     # publish swing trajectory
                     f_msg[swing_phase].header.stamp = rospy.Time.now()
                     f_pub_[swing_phase].publish(f_msg[swing_phase])
 
-        rate.sleep()
+                # If no early contact detected yet
+                elif not early_contact[swing_phase]:
+
+                    # if there is contact
+                    if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase] - 1]), 'data'):
+
+                        early_contact[swing_phase] = True  # stop swing trajectory of this foot
+
+                        executed_trj.append(counter)    # save counter
+                        print("early contact detected ", counter)
+
+                    # if no contact
+                    else:
+                        # publish swing trajectory
+                        f_msg[swing_phase].header.stamp = rospy.Time.now()
+                        f_pub_[swing_phase].publish(f_msg[swing_phase])
+
+            rate.sleep()
 
     # print the trajectories
     try:
