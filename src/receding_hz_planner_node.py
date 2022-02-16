@@ -15,6 +15,7 @@ task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 task_name_moving_contact = ['left_hand', 'right_hand']
 rod_plate_CoG_urdf = [4.8407693e-02,  2.0035723e-02,  7.7533287e-02]    # not used currently
 
+
 def contacts_callback(msg):
 
     # pass to global scope
@@ -48,17 +49,115 @@ def shift_solution(solution, knots_toshift, dims):
     return shifted_sol_array
 
 
-# def get_swing_durations(previous_dur, time_shifting):
-#
-#     # previous_dur = [[1,3], [4,6], [7,9]]
-#     # time shift = 1.2
-#     # swing_dur = [[-0.2, 1.8], [2.8, 4.8], [5.8, 7.8]]
-#
-#     swing_durations = (np.array(previous_dur) - time_shifting)
-#     nonzero_elements = np.transpose(np.nonzero(swing_durations[0]))
+def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shifting, horizon_dur, swing_dur=2.0, stance_dur=1.0):
+    '''
+    Compute the swing durations for the next optimization based on a default duration of swing and stance periods and
+    the optimization horizon. Compute also the swing_id for the next optimization based on desired gait pattern and
+    swing_id of previous solution.
+    :param previous_dur: swing durations of last optimization
+    :param swing_id: swing id of last optimization
+    :param desired_gait_pattern: desired gait pattern to be followed
+    :param time_shifting: shifting of the optimization horizon
+    :param horizon_dur: duration of the horizon
+    :param swing_dur: duration of swing periods
+    :param stance_dur: duration of stance periods
+    :return: swing_durations and new_swing_id for the next optimization
+    '''
+
+    max_step_num = len(desired_gait_pattern)    # maximum number of steps defined in the desired gait pattern
+    new_swing_id = swing_id                     # first set the new swing id same as the previous
+
+    durations_flat = [a for k in previous_dur for a in k]   # convert to flat list
+    durations_flat = (np.array(durations_flat) - time_shifting).tolist()    # shift all timings
+    durations_flat = [round(a, 2) for a in durations_flat]      # round on 2 decimal digits
+
+    # if first swing phase has elapsed already
+    if durations_flat[1] <= 0.0:
+        durations_flat = durations_flat[2:]     # delete first swing phase
+        new_swing_id = new_swing_id[1:]         # delete first swing id
+
+    # else if first swing phase has started but not elapsed
+    elif durations_flat[0] < 0.0:
+        durations_flat[0] = 0.0     # set starting of first swing phase to 0.0 time of the horizon
+
+    # time of the next swing phase
+    new_swing_time = durations_flat[-1] + stance_dur
+
+    # if next swing phase is within the horizon to plan
+    if horizon_dur > new_swing_time:
+        last_swing_id = new_swing_id[-1]        # the last leg that is stepping in the horizon
+        last_swing_index = desired_gait_pattern.index(last_swing_id)        # index of the last step
+        new_swing_id.append(        # append new swing leg id based of desired gait pattern
+            desired_gait_pattern[last_swing_index - max_step_num + 1]
+        )
+
+        # append new swing phase timings
+        durations_flat.append(new_swing_time)
+        durations_flat.append(min(new_swing_time + swing_dur, horizon_dur))
+
+    # if duration of the last swing phase to be planned is less than default duration, then swing phase should
+    # last until the end of the horizon
+    last_duration = round(durations_flat[-1] - durations_flat[-2], 2)
+    if last_duration < swing_dur:
+        durations_flat[-1] = horizon_dur
+
+    # convert to list of lists
+    half_list_size = int(len(durations_flat)/2)     # half size of the flat list
+    swing_durations = [[durations_flat[2*a], durations_flat[2*a+1]] for a in range(half_list_size)]
+
+    return swing_durations, new_swing_id
 
 
-    return swing_durations
+def get_swing_targets(gait_pattern, contacts, strides):
+    '''
+    Returns the target positions of the legs that are planned to swing.
+    :param gait_pattern: order of legs to be swinged
+    :param contacts: current contact positions = leg ee positions
+    :param strides: the stride length in the 3 directions --> [dx, dy, dz] where dx is a list of length for each
+    swing leg
+    :return: Returns swing_tgt which is a list of lists with the target position for the legs to swing.
+    '''
+
+    tgt_dx = strides[0]
+    tgt_dy = strides[1]
+    tgt_dz = strides[2]
+
+    step_num = len(gait_pattern)    # number of planned steps
+
+    swing_tgt = []  # target positions as list
+    print(gait_pattern)
+    for i in range(step_num):
+        print(i)
+        # targets
+        swing_tgt.append([contacts[gait_pattern[i]][0] + tgt_dx[i],
+                          contacts[gait_pattern[i]][1] + tgt_dy[i],
+                          contacts[gait_pattern[i]][2] + tgt_dz[i]])
+
+    return swing_tgt
+
+
+def get_current_leg_pos(swing_trj, previous_gait_pattern, time_shifting, freq):
+    '''
+    Get the position of the legs at the desired time in the horizon of the last optimization based on this last plan.
+    :param swing_trj: the planned trajectories of the swing legs from the last motion plan.
+    It is a list of dictionaries with keys ['x', 'y', 'z', 's'] as returned by the walking.interpolate method.
+    :param previous_gait_pattern: order of the swing legs of the last optimization
+    :param time_shifting: desired time wrt to the start of the last optimization horizon
+    :param freq: frequency at which the last motion plan was interpolated
+    :return: swing_ee_pos which is a list of np.array(x,y,z). It is the position of the swing legs of the last
+    motion plan at the desired time within the last opt. horizon.
+    '''
+
+    trj_index = int(time_shifting * freq)       # index of the trajectory to which the desired time corresponds
+    step_num = len(previous_gait_pattern)       # number of last planned steps
+
+    # append positions of the legs that were last planned to swing
+    swing_ee_pos = []
+    for i in range(step_num):
+
+        swing_ee_pos.append(np.array([swing_trj[i][coord_name][trj_index] for coord_name in ['x', 'y', 'z']]))
+        print('Swing num ', i, 'is ', np.array([swing_trj[i][coord_name][trj_index] for coord_name in ['x', 'y', 'z']]))
+    return swing_ee_pos
 
 
 def casannis(int_freq):
@@ -142,7 +241,7 @@ def casannis(int_freq):
     # ID of the foot to be moved, get from parameters
     swing_id = rospy.get_param("~sw_id")    # from command line as swing_id:=1/2/3/4
     swing_id = swing_id.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
-    swing_id = [int(i) for i in swing_id]
+    swing_id = [int(i)-1 for i in swing_id]
 
     # number of steps
     step_num = len(swing_id)
@@ -174,18 +273,23 @@ def casannis(int_freq):
     swing_t = []    # time periods of the swing phases
     swing_contacts = []         # contact positions of the swing feet
 
+    # swing_tgt2 = []
     for i in range(step_num):
         # targets
-        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
-                          contacts[swing_id[i] - 1][1] + tgt_dy[i],
-                          contacts[swing_id[i] - 1][2] + tgt_dz[i]])
+        # swing_tgt2.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
+        #                   contacts[swing_id[i] - 1][1] + tgt_dy[i],
+        #                   contacts[swing_id[i] - 1][2] + tgt_dz[i]])
 
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
         swing_t[i] = [float(ii) for ii in swing_t[i]]
 
-        swing_contacts.append(contacts[swing_id[i] - 1])
+        swing_contacts.append(contacts[swing_id[i]])
+
+    swing_tgt = get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
+    print('swing tgt: ', swing_tgt)
+    # print('swing tgt2: ', swing_tgt2)
 
     # receive weight of payloads
     payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
@@ -202,8 +306,10 @@ def casannis(int_freq):
     # motion plans publisher
     motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
 
+    optim_horizon = swing_t[-1][1] + 1.0
+
     # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m,
+    walk = SelectedGait(mass=112, N=int(optim_horizon / 0.2), dt=0.2, payload_masses=payload_m,
                         slope_deg=inclination_deg, conservative_box=arm_box_conservative)
 
     variables_dim = {
@@ -219,8 +325,9 @@ def casannis(int_freq):
     }
 
     # call the solver of the optimization problem
-    sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
+    sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+    interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
     # set fields of the message
     plan_msg = MotionPlan_msg()
@@ -243,15 +350,31 @@ def casannis(int_freq):
         moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
                           [np.array(sol['Pr_mov'][3:6]), np.array(sol['DPr_mov'][3:6])]]
 
-        swing_t = (np.array(swing_t) - walk._dt).tolist()
+        # swing contacts based on previous plan at the desired time (start of next planning horizon)
+        print('-------------', swing_id)
+        prev_swing_contacts = get_current_leg_pos(interpl['sw'], swing_id, walk._dt, 300)
+        print('-------------', prev_swing_contacts)
 
-        shifted_guess = shift_solution(sol, 1, variables_dim)
+        all_contacts = []
+        for i in range(4):
+            if i in swing_id:
+                all_contacts.append(prev_swing_contacts[swing_id.index(i)])
+            else:
+                all_contacts.append(contacts[i])
 
+        swing_t, swind_id = get_swing_durations(swing_t, swing_id, [2, 0, 3, 1], walk._dt, optim_horizon)
+        print('*Initial contacts:', contacts)
+        print('*All contacts:', all_contacts)
         print('Initial state:', x0)
         print('Moving contact:', moving_contact)
         print('Swing timings:', swing_t)
+        print('Swing id:', swing_id)
 
-        sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
+        shifted_guess = shift_solution(sol, 1, variables_dim)
+
+        swing_tgt = get_swing_targets(swing_id, all_contacts, [tgt_dx, tgt_dy, tgt_dz])
+
+        sol = walk.solve(x0=x0, contacts=all_contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                              swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
                              init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
 
@@ -268,8 +391,8 @@ def casannis(int_freq):
         # plt.xlabel('Time [s]')
         # plt.show()
 
-        interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
-        # walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id])
+        interpl = walk.interpolate(sol, prev_swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+        walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
 
         # set fields of the message
         plan_msg.state = sol['x']
@@ -283,30 +406,6 @@ def casannis(int_freq):
         plan_msg.right_arm_force = sol['F_virt_r']
 
         motionplan_pub_.publish(plan_msg)       # publish
-
-    # # # interpolate the trj, pass solution values and interpolation frequency
-    # interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
-    #
-    # # approximate distance covered during swing
-    # tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
-    #
-    # # mean velocity of the swing foot
-    # mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
-    # print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
-
-    # print the trajectories
-    # try:
-    #     # there was early contact detected
-    #     if early_contact.index(True) + 1:
-    #         print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
-    #
-    #         if rospy.get_param("~plots"):
-    #             walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], executed_trj)
-    # except:
-    #     print("No early contact detected")
-    #
-    #     if rospy.get_param("~plots"):
-    #         walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], [N_total-1, N_total-1, N_total-1, N_total-1])
 
 
 if __name__ == '__main__':
