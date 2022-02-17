@@ -111,6 +111,8 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
     half_list_size = int(len(durations_flat)/2)     # half size of the flat list
     swing_durations = [[durations_flat[2*a], durations_flat[2*a+1]] for a in range(half_list_size)]
 
+    # print('IIIIIIIIIIIII', swing_durations)
+    # print('IIIIIIIIIIIII', new_swing_id)
     return swing_durations, new_swing_id, [started_step, finished_step]
 
 
@@ -293,8 +295,6 @@ def casannis(int_freq):
         swing_contacts.append(contacts[swing_id[i]])
 
     swing_tgt = get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
-    print('swing tgt: ', swing_tgt)
-    # print('swing tgt2: ', swing_tgt2)
 
     # receive weight of payloads
     payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
@@ -316,7 +316,8 @@ def casannis(int_freq):
     print('Optimize with horizon: ', optim_horizon)
 
     # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int(optim_horizon / 0.2), dt=0.2, payload_masses=payload_m,
+    nlp_discr = 0.2
+    walk = SelectedGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, payload_masses=payload_m,
                         slope_deg=inclination_deg, conservative_box=arm_box_conservative)
 
     variables_dim = {
@@ -335,6 +336,10 @@ def casannis(int_freq):
     sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+
+    # receding time of the horizon
+    knots_shift = 3
+    horizon_shift = knots_shift * nlp_discr
 
     # set fields of the motion plan message
     sw_leg_tostring = [['fl_leg_pos_x', 'fl_leg_pos_y', 'fl_leg_pos_z'],
@@ -360,6 +365,7 @@ def casannis(int_freq):
 
     # interpolated trj message
     intertrj_msg = Trj_msg()
+    intertrj_msg.horizon_shift = horizon_shift
     intertrj_msg.swing_t = [a for k in swing_t for a in k]
     intertrj_msg.time = interpl['t']
     intertrj_msg.swing_id = swing_id
@@ -376,14 +382,16 @@ def casannis(int_freq):
     intertrj_pub_.publish(intertrj_msg)  # publish trj
     starting_pub_.publish(start_msg)    # publish to start replay
 
-    for i in range(0):
+    for i in range(10):
         # update arguments of solve function
-        x0 = sol['x'][9:18]
-        moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
-                          [np.array(sol['Pr_mov'][3:6]), np.array(sol['DPr_mov'][3:6])]]
+        x0 = sol['x'][knots_shift*walk._dimx : (knots_shift + 1)*walk._dimx]
+        moving_contact = [[np.array(sol['Pl_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov]),
+                           np.array(sol['DPl_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov])],
+                          [np.array(sol['Pr_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov]),
+                           np.array(sol['DPr_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov])]]
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
-        prev_swing_leg_pos = get_current_leg_pos(interpl['sw'], swing_id, walk._dt, 300)
+        prev_swing_leg_pos = get_current_leg_pos(interpl['sw'], swing_id, horizon_shift, 300)
         all_contacts = []   # all contacts at the desired time
         for i in range(4):
             if i in swing_id:
@@ -394,18 +402,22 @@ def casannis(int_freq):
         prev_swing_id = swing_id
 
         # debug some stuff
-        print('**Initial state:', x0)
-        print('**Moving contact:', moving_contact)
-        print('**Initial contacts:', contacts)
-        print('**All contacts:', all_contacts)
+        # print('**Initial state:', x0)
+        # print('**Moving contact:', moving_contact)
+        # print('**Initial contacts:', contacts)
+        # print('**All contacts:', all_contacts)
+
+        print('@@@@@@@@@ prev_swing_t', prev_swing_t)
+        print('@@@@@@@@@ prev_swing_id', prev_swing_id)
 
         # new swing_t and swing_id for next optimization
-        swing_t, swind_id, another_step = get_swing_durations(swing_t, swing_id, [2, 0, 3, 1], walk._dt, optim_horizon)
-
+        swing_t, swing_id, another_step = get_swing_durations(prev_swing_t, prev_swing_id, [2, 0, 3, 1],
+                                                              horizon_shift, optim_horizon)
         # debug some stuff
-        print('==Swing timings:', swing_t)
-        print('==Swing id:', swing_id)
-        print('==Another step:', another_step)
+        print('======', prev_swing_id)
+        print('====== New Swing timings:', swing_t)
+        print('====== New Swing id:', swing_id)
+        print('====== Another step:', another_step)
 
         # form position of swing legs for next optimization
         if another_step[0] is True:
@@ -416,9 +428,9 @@ def casannis(int_freq):
         if another_step[1] is True:
             next_swing_leg_pos = next_swing_leg_pos[1:]
 
-        # debug some stuff
-        print('!!!!Prev swing leg pos:', prev_swing_leg_pos)
-        print('!!!!Next swing leg pos:', next_swing_leg_pos)
+        # # debug some stuff
+        # print('!!!!Prev swing leg pos:', prev_swing_leg_pos)
+        # print('!!!!Next swing leg pos:', next_swing_leg_pos)
 
         # get initial guess
         shifted_guess = shift_solution(sol, 1, variables_dim)
@@ -428,13 +440,14 @@ def casannis(int_freq):
         tgt_dx = [tgt_dx[0]] * new_step_num
         tgt_dy = [tgt_dy[0]] * new_step_num
         tgt_dz = [tgt_dz[0]] * new_step_num
-        print('!!!!', tgt_dx, tgt_dy, tgt_dz)
+        # print('!!!!', tgt_dx, tgt_dy, tgt_dz)
 
         # get target positions fot the swing legs
         swing_tgt = get_swing_targets(swing_id, all_contacts, [tgt_dx, tgt_dy, tgt_dz])
 
         # debug some stuff
         print('================================================')
+        print('================ Solver inputs =====================')
         print('================================================')
         print('**Initial state:', x0)
         print('**All contacts:', all_contacts)
@@ -442,7 +455,7 @@ def casannis(int_freq):
         print('==Swing id:', swing_id)
         print('==Swing tgt:', swing_tgt)
         print('==Swing clear:', swing_clear)
-        print('==Swing timings:', swing_t)
+        print('==Swing_t:', swing_t)
         print('================================================')
         print('================================================')
         sol = walk.solve(x0=x0, contacts=all_contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
@@ -464,7 +477,7 @@ def casannis(int_freq):
 
         interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq)
         # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
-        print('&&&&&', len(interpl['sw']))
+        # print('&&&&&', len(interpl['sw']))
 
         # set fields of the message
         plan_msg.state = sol['x']
@@ -479,6 +492,7 @@ def casannis(int_freq):
 
         # interpolated trj message
         intertrj_msg.time = interpl['t']
+        intertrj_msg.horizon_shift = horizon_shift
         intertrj_msg.swing_t = [a for k in swing_t for a in k]
         intertrj_msg.swing_id = swing_id
         for j, coord_name in enumerate(['x', 'y', 'z']):

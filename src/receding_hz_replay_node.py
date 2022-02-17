@@ -55,6 +55,7 @@ def interpolated_trj_callback(msg):
     # pass message to global scope
     global received_trj
     received_trj = {
+        'horizon_shift': msg.horizon_shift,
         't': msg.time,
         'swing_t': msg.swing_t,
         'swing_id': msg.swing_id,
@@ -131,16 +132,17 @@ def casannis(int_freq):
     rospy.Subscriber('/PayloadAware/motion_plan', MotionPlan_msg, motion_plan_callback)
     rospy.Subscriber('/PayloadAware/interpolated_trj', Trj_msg, interpolated_trj_callback)
 
-    # All points to be published
-    # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
-    shift = 13.0
-    N_total = int(shift * int_freq)  # total points --> total time * interpolation frequency
-
     # wait until planners sends a message that is connected
     planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
 
-    # while True:
-    for iiii in range(1):
+    # All points to be published
+    # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
+    horizon_shift = received_trj['horizon_shift']
+    print('horizon_shift', horizon_shift)
+    N_total = int(horizon_shift * int_freq)  # total points --> total time * interpolation frequency
+
+    while True:
+    # for iiii in range(1):
         swing_id = received_trj['swing_id']
         print('Swing id: ', swing_id)
         step_num = len(received_trj['swing_id'])

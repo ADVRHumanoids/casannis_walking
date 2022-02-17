@@ -26,6 +26,7 @@ float32[] hr_leg_pos_x
 float32[] hr_leg_pos_y
 float32[] hr_leg_pos_z
 
+float32 horizon_shift
 int32[] swing_id
 float32[] swing_t
 float32[] time
