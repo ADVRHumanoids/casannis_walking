@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 from std_msgs.msg import Bool
 from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
+from casannis_walking.msg import Pa_interpolated_trj as Trj_msg
 import matplotlib.pyplot as plt
 
 # radius of centauro wheels
@@ -309,8 +310,10 @@ def casannis(int_freq):
 
     # motion plans publisher
     motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
+    intertrj_pub_ = rospy.Publisher('/PayloadAware/interpolated_trj', Trj_msg, queue_size=10)
 
     optim_horizon = swing_t[-1][1] + 1.0
+    print('Optimize with horizon: ', optim_horizon)
 
     # object class of the optimization problem
     walk = SelectedGait(mass=112, N=int(optim_horizon / 0.2), dt=0.2, payload_masses=payload_m,
@@ -333,7 +336,17 @@ def casannis(int_freq):
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
     interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
-    # set fields of the message
+    # set fields of the motion plan message
+    sw_leg_tostring = [['fl_leg_pos_x', 'fl_leg_pos_y', 'fl_leg_pos_z'],
+                       ['fr_leg_pos_x', 'fr_leg_pos_y', 'fr_leg_pos_z'],
+                       ['hl_leg_pos_x', 'hl_leg_pos_y', 'hl_leg_pos_z'],
+                       ['hr_leg_pos_x', 'hr_leg_pos_y', 'hr_leg_pos_z']]
+
+    sw_arm_tostring = [['left_arm_pos_x', 'left_arm_pos_y', 'left_arm_pos_z'],
+                       ['right_arm_pos_x', 'right_arm_pos_y', 'right_arm_pos_z']]
+
+    com_tostring = ['com_pos_x', 'com_pos_y', 'com_pos_z']
+
     plan_msg = MotionPlan_msg()
     plan_msg.state = sol['x']
     plan_msg.control = sol['u']
@@ -345,10 +358,25 @@ def casannis(int_freq):
     plan_msg.left_arm_force = sol['F_virt_l']
     plan_msg.right_arm_force = sol['F_virt_r']
 
+    # interpolated trj message
+    intertrj_msg = Trj_msg()
+    intertrj_msg.swing_t = [a for k in swing_t for a in k]
+    intertrj_msg.time = interpl['t']
+    intertrj_msg.swing_id = swing_id
+    for j, coord_name in enumerate(['x', 'y', 'z']):
+        setattr(intertrj_msg, com_tostring[j], interpl['x'][j])     # com
+
+        for i, arm_name in enumerate(['p_mov_l', 'p_mov_r']):       # arms
+            setattr(intertrj_msg, sw_arm_tostring[i][j], interpl[arm_name][j])
+
+        for i in range(len(swing_id)):                              # legs
+            setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl['sw'][i][coord_name])
+
     motionplan_pub_.publish(plan_msg)  # publish plan
+    intertrj_pub_.publish(intertrj_msg)  # publish trj
     starting_pub_.publish(start_msg)    # publish to start replay
 
-    for i in range(10):
+    for i in range(0):
         # update arguments of solve function
         x0 = sol['x'][9:18]
         moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
@@ -449,7 +477,21 @@ def casannis(int_freq):
         plan_msg.left_arm_force = sol['F_virt_l']
         plan_msg.right_arm_force = sol['F_virt_r']
 
+        # interpolated trj message
+        intertrj_msg.time = interpl['t']
+        intertrj_msg.swing_t = [a for k in swing_t for a in k]
+        intertrj_msg.swing_id = swing_id
+        for j, coord_name in enumerate(['x', 'y', 'z']):
+            setattr(intertrj_msg, com_tostring[j], interpl['x'][j])     # com
+
+            for i, arm_name in enumerate(['p_mov_l', 'p_mov_r']):       # arms
+                setattr(intertrj_msg, sw_arm_tostring[i][j], interpl[arm_name][j])
+
+            for i in range(len(swing_id)):                              # legs
+                setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl['sw'][i][coord_name])
+
         motionplan_pub_.publish(plan_msg)       # publish
+        intertrj_pub_.publish(intertrj_msg)  # publish trj
 
 
 if __name__ == '__main__':

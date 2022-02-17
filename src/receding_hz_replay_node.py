@@ -5,7 +5,11 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 from centauro_contact_detection.msg import Contacts as Contacts_msg
 from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
+from casannis_walking.msg import Pa_interpolated_trj as Trj_msg
 from std_msgs.msg import Bool
+
+import matplotlib.pyplot as plt
+
 # radius of centauro wheels
 R = 0.078
 #task_name_contact = ["contact1", "contact2", "contact3", "contact4"]  # FL_wheel
@@ -43,6 +47,29 @@ def motion_plan_callback(msg):
     print('Received message')
 
 
+def interpolated_trj_callback(msg):
+
+    global trj_waiting
+    trj_waiting = True
+
+    # pass message to global scope
+    global received_trj
+    received_trj = {
+        't': msg.time,
+        'swing_t': msg.swing_t,
+        'swing_id': msg.swing_id,
+        'com': [msg.com_pos_x, msg.com_pos_y, msg.com_pos_z],
+        'p_mov_l': [msg.left_arm_pos_x, msg.left_arm_pos_y, msg.left_arm_pos_z],
+        'p_mov_r': [msg.right_arm_pos_x, msg.right_arm_pos_y, msg.right_arm_pos_z],
+        'leg_ee': [[msg.fl_leg_pos_x, msg.fl_leg_pos_y, msg.fl_leg_pos_z],
+                   [msg.fr_leg_pos_x, msg.fr_leg_pos_y, msg.fr_leg_pos_z],
+                   [msg.hl_leg_pos_x, msg.hl_leg_pos_y, msg.hl_leg_pos_z],
+                   [msg.hr_leg_pos_x, msg.hr_leg_pos_y, msg.hr_leg_pos_z]]
+    }
+
+    print('Received trj message')
+
+
 def casannis(int_freq):
 
     """
@@ -55,147 +82,36 @@ def casannis(int_freq):
 
     """
 
-    #  name prefix for the node that published the motion plans
-    planner_node_prefix = '/casannis_planner'
-    # get inclination of terrain
-    inclination_deg = rospy.get_param(planner_node_prefix + "/inclination_deg")
-
-    # get param conservative_box which defines if the box constraints are near the chest or not
-    arm_box_conservative = rospy.get_param(planner_node_prefix + "/box_conservative")
-
-    # select gait among different developments
-    forward_arm_config = rospy.get_param(planner_node_prefix + "/forward_arms")
-    linear_fvirt = rospy.get_param(planner_node_prefix + "/linear_fvirt")
-
-    if forward_arm_config:
-        if linear_fvirt:
-            from gait_with_payload import Gait as SelectedGait
-        else:
-            from gait_with_payload import GaitNonlinear as SelectedGait
-    else:
-        if linear_fvirt:
-            from gait_with_payload_backward_arms import Gait as SelectedGait
-        else:
-            from gait_with_payload_backward_arms import GaitNonlinearBackward as SelectedGait
-
-    # map feet to a string for publishing to the corresponding topic
+    # # map feet to a string for publishing to the corresponding topic
     id_name = ['FL', 'FR', 'HL', 'HR']
-    id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
-
-    # accept one message for com and feet initial position
-    com_init = rospy.wait_for_message("/cartesian/com/current_reference", PoseStamped, timeout=None)
+    # id_contact_name = ['f_left', 'f_right', 'h_left', 'h_right']
 
     f_init = []     # position of wheel frames
-    f_cont = []     # position of contact frames
 
-    # loop for all feet
+    # # loop for all feet
     for i in range(len(id_name)):
         f_init.append(rospy.wait_for_message("/cartesian/" + id_name[i] + "_wheel/current_reference",
                                              PoseStamped,
                                              timeout=None))
-        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z - R])
-
-        '''f_init.append(rospy.wait_for_message("/cartesian/" + task_name_contact[i] + "/current_reference",
-                                             PoseStamped,
-                                             timeout=None))
-        f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z])'''
 
     # hands
     lhand_init = rospy.wait_for_message("/cartesian/left_hand/current_reference", PoseStamped, timeout=None)
     rhand_init = rospy.wait_for_message("/cartesian/right_hand/current_reference", PoseStamped, timeout=None)
 
-    # contact points as array
-    contacts = [np.array(x) for x in f_cont]
-
-    # hands
-    h_init = [lhand_init, rhand_init]
-    lh_mov = [lhand_init.pose.position.x, lhand_init.pose.position.y, lhand_init.pose.position.z]
-    rh_mov = [rhand_init.pose.position.x, rhand_init.pose.position.y, rhand_init.pose.position.z]
-
-    # hands
-    moving_contact = [[np.array(lh_mov), np.zeros(3)], [np.array(rh_mov), np.zeros(3)]]
-
-    # state vector
-    c0 = np.array([com_init.pose.position.x, com_init.pose.position.y, com_init.pose.position.z])
-    dc0 = np.zeros(3)
-    ddc0 = np.zeros(3)
-    x0 = np.hstack([c0, dc0, ddc0])
-
-    # Get ROS Parameters
-
-    # ID of the foot to be moved, get from parameters
-    swing_id = rospy.get_param(planner_node_prefix + "/sw_id")    # from command line as swing_id:=1/2/3/4
-    swing_id = swing_id.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
-    swing_id = [int(i) for i in swing_id]
-
-    # number of steps
-    step_num = len(swing_id)
-
-    # Target position of feet wrt to the current position
-    tgt_dx = rospy.get_param(planner_node_prefix + "/tgt_dx")    # from command line as swing_id:=1/2/3/4
-    tgt_dx = tgt_dx.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
-    tgt_dx = [float(i) for i in tgt_dx]
-
-    tgt_dy = rospy.get_param(planner_node_prefix + "/tgt_dy")    # from command line as swing_id:=1/2/3/4
-    tgt_dy = tgt_dy.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
-    tgt_dy = [float(i) for i in tgt_dy]
-
-    tgt_dz = rospy.get_param(planner_node_prefix + "/tgt_dz")    # from command line as swing_id:=1/2/3/4
-    tgt_dz = tgt_dz.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
-    tgt_dz = [float(i) for i in tgt_dz]
-
-    # Clearance to be achieved, counted from the highest point
-    swing_clear = rospy.get_param(planner_node_prefix + "/clear")  # get from command line as target_dx
-
-    # force threshold
-    minimum_force = rospy.get_param(planner_node_prefix + "/min_for")
-
-    # apply or no contact detection
-    cont_detection = rospy.get_param(planner_node_prefix + "/cont_det")  # from command line as contact_det:=True/False
-
-    # variables to loop for swing legs
-    swing_tgt = []  # target positions as list
-    swing_t = []    # time periods of the swing phases
     f_pub_ = []     # list of publishers for the swing foot
     com_msg = PoseStamped()     # message to be published for com
     f_msg = []                  # list of messages to be published for swing feet
-    swing_contacts = []         # contact positions of the swing feet
 
-    for i in range(step_num):
-        print(i)
-        # targets
-        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
-                          contacts[swing_id[i] - 1][1] + tgt_dy[i],
-                          contacts[swing_id[i] - 1][2] + tgt_dz[i]])
-
-        # swing phases
-        swing_t.append(rospy.get_param(planner_node_prefix + "/sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
-        swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
-        swing_t[i] = [float(ii) for ii in swing_t[i]]
-
-        # swing feet trj publishers
-        '''f_pub_.append(rospy.Publisher('/cartesian/' + id_name[swing_id[i] - 1] + '_wheel/reference',
-                                      PoseStamped,
-                                      queue_size=10))'''
-
-        f_pub_.append(rospy.Publisher('/cartesian/' + task_name_contact[swing_id[i] - 1] + '/reference',
+    # Leg ee trj publishers
+    for i in range(4):
+        f_pub_.append(rospy.Publisher('/cartesian/' + task_name_contact[i] + '/reference',
                                       PoseStamped,
                                       queue_size=10))
-
         # feet trj messages
         f_msg.append(PoseStamped())
 
         # keep same orientation
-        f_msg[i].pose.orientation = f_init[swing_id[i] - 1].pose.orientation
-
-        swing_contacts.append(contacts[swing_id[i] - 1])
-
-    # receive weight of payloads
-    payload_m = rospy.get_param(planner_node_prefix + "/mass_payl")  # from command line as swing_t:="[a,b]"
-    payload_m = payload_m.rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
-    payload_m = [float(i) for i in payload_m]
-
-    print('Payload masses', payload_m)
+        f_msg[i].pose.orientation = f_init[i].pose.orientation
 
     # CoM trj publisher
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
@@ -213,49 +129,32 @@ def casannis(int_freq):
 
     # Subscriber for motion plans
     rospy.Subscriber('/PayloadAware/motion_plan', MotionPlan_msg, motion_plan_callback)
-
-    # # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int((swing_t[-1][1] + 1.0) / 0.2), dt=0.2, payload_masses=payload_m,
-                        slope_deg=inclination_deg, conservative_box=arm_box_conservative)
-    #
-    # # call the solver of the optimization problem
-    # # sol is the directory returned by solve class function contains state, forces, control values
-    # sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=[x-1 for x in swing_id],
-    #                  swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+    rospy.Subscriber('/PayloadAware/interpolated_trj', Trj_msg, interpolated_trj_callback)
 
     # All points to be published
     # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
-    N_total = int(walk._dt * int_freq)  # total points --> total time * interpolation frequency
-
-    # executed trj points
-    executed_trj = []
-
-    # early contact flags default values
-    early_contact = [False, False, False, False]
-
-    # times activating contact detection
-    t_early = [swing_t[i][0] + 0.7 * (swing_t[i][1] - swing_t[i][0]) for i in range(step_num)]
-
-    # time intervals [swing_start, early_cont_detection_start, swing_stop]
-    delta_t_early = [[swing_t[i][0], t_early[i], swing_t[i][1]] for i in range(step_num)]
-
-    # trj points during all swing phases
-    N_swing_total = int(int_freq * sum([swing_t[i][1] - swing_t[i][0] for i in range(step_num)]))
+    shift = 13.0
+    N_total = int(shift * int_freq)  # total points --> total time * interpolation frequency
 
     # wait until planners sends a message that is connected
     planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
 
-    while True:
-        print('Current motion plan:', received_motion_plan)
-        # interpolate the trj, pass solution values and interpolation frequency
-        interpl = walk.interpolate(received_motion_plan, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+    # while True:
+    for iiii in range(1):
+        swing_id = received_trj['swing_id']
+        print('Swing id: ', swing_id)
+        step_num = len(received_trj['swing_id'])
 
-        # # approximate distance covered during swing
-        # tgt_ds = sum([interpl['sw'][i]['s'] for i in range(step_num)])
-        #
-        # # mean velocity of the swing foot
-        # mean_foot_velocity = tgt_ds / (step_num * (swing_t[0][1] - swing_t[0][0]))
-        # print('Mean foot velocity is:', mean_foot_velocity, 'm/sec')
+        # convert to list of lists
+        half_list_size = int(len(received_trj['swing_t']) / 2)  # half size of the flat list
+        swing_t = [[received_trj['swing_t'][2 * a], received_trj['swing_t'][2 * a + 1]] for a in range(half_list_size)]
+        print('Swing t: ', swing_t)
+
+        # plt.figure()
+        # for la in range(step_num):
+        #     for si in range(2, 3):
+        #         plt.plot(received_trj['leg_ee'][la][si])
+        # plt.show()
 
         rate = rospy.Rate(int_freq)  # Frequency trj publishing
         # loop interpolation points to publish on a specified frequency
@@ -267,40 +166,33 @@ def casannis(int_freq):
                 for i in range(step_num):
 
                     # swing phase check
-                    if delta_t_early[i][0] <= interpl['t'][counter] <= delta_t_early[i][2]:
+                    if swing_t[i][0] <= received_trj['t'][counter] <= swing_t[i][1]:
                         swing_phase = i
-
-                        # time for contact detection
-                        if interpl['t'][counter] >= delta_t_early[i][1]:
-                            early_check = True
-
-                        else:
-                            early_check = False
                         break
 
                     else:
                         swing_phase = -1    # not in swing phase
-                        early_check = False
 
                 # com trajectory
-                com_msg.pose.position.x = interpl['x'][0][counter]
-                com_msg.pose.position.y = interpl['x'][1][counter]
-                com_msg.pose.position.z = interpl['x'][2][counter]
+                com_msg.pose.position.x = received_trj['com'][0][counter]#interpl['x'][0][counter]
+                com_msg.pose.position.y = received_trj['com'][1][counter]
+                com_msg.pose.position.z = received_trj['com'][2][counter]
 
                 # hands trajectory
-                lh_msg.pose.position.x = interpl['p_mov_l'][0][counter]
-                lh_msg.pose.position.y = interpl['p_mov_l'][1][counter]
-                lh_msg.pose.position.z = interpl['p_mov_l'][2][counter]
+                lh_msg.pose.position.x = received_trj['p_mov_l'][0][counter] #interpl['p_mov_l'][0][counter]
+                lh_msg.pose.position.y = received_trj['p_mov_l'][1][counter]
+                lh_msg.pose.position.z = received_trj['p_mov_l'][2][counter]
 
-                rh_msg.pose.position.x = interpl['p_mov_r'][0][counter]
-                rh_msg.pose.position.y = interpl['p_mov_r'][1][counter]
-                rh_msg.pose.position.z = interpl['p_mov_r'][2][counter]
+                rh_msg.pose.position.x = received_trj['p_mov_r'][0][counter]
+                rh_msg.pose.position.y = received_trj['p_mov_r'][1][counter]
+                rh_msg.pose.position.z = received_trj['p_mov_r'][2][counter]
 
                 # swing foot
-                f_msg[swing_phase].pose.position.x = interpl['sw'][swing_phase]['x'][counter]
-                f_msg[swing_phase].pose.position.y = interpl['sw'][swing_phase]['y'][counter]
+                current_sw_leg_id = swing_id[swing_phase]
+                f_msg[current_sw_leg_id].pose.position.x = received_trj['leg_ee'][current_sw_leg_id][0][counter]
+                f_msg[current_sw_leg_id].pose.position.y = received_trj['leg_ee'][current_sw_leg_id][1][counter]
                 # add radius as origin of the wheel frame is in the center
-                f_msg[swing_phase].pose.position.z = interpl['sw'][swing_phase]['z'][counter] + R
+                f_msg[current_sw_leg_id].pose.position.z = received_trj['leg_ee'][current_sw_leg_id][2][counter] + R
 
                 # publish com trajectory regardless contact detection
                 com_msg.header.stamp = rospy.Time.now()
@@ -316,45 +208,27 @@ def casannis(int_freq):
                 if swing_phase == -1:
                     pass
 
-                # do not check for early contact
-                elif not cont_detection or early_check is False:
-
-                    # publish swing trajectory
-                    f_msg[swing_phase].header.stamp = rospy.Time.now()
-                    f_pub_[swing_phase].publish(f_msg[swing_phase])
-
-                # If no early contact detected yet
-                elif not early_contact[swing_phase]:
-
-                    # if there is contact
-                    if getattr(getattr(sw_contact_msg, id_contact_name[swing_id[swing_phase] - 1]), 'data'):
-
-                        early_contact[swing_phase] = True  # stop swing trajectory of this foot
-
-                        executed_trj.append(counter)    # save counter
-                        print("early contact detected ", counter)
-
-                    # if no contact
-                    else:
-                        # publish swing trajectory
-                        f_msg[swing_phase].header.stamp = rospy.Time.now()
-                        f_pub_[swing_phase].publish(f_msg[swing_phase])
+                # swing phase
+                else:
+                    f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
+                    f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
+                    pass
 
             rate.sleep()
 
     # print the trajectories
-    try:
-        # there was early contact detected
-        if early_contact.index(True) + 1:
-            print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
-
-            if rospy.get_param(planner_node_prefix + "/plots"):
-                walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], executed_trj)
-    except:
-        print("No early contact detected")
-
-        if rospy.get_param(planner_node_prefix + "/plots"):
-            walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], [N_total-1, N_total-1, N_total-1, N_total-1])
+    # try:
+    #     # there was early contact detected
+    #     if early_contact.index(True) + 1:
+    #         print("Early contact detected. Trj Counter is:", executed_trj, "out of total", N_total-1)
+    #
+    #         if rospy.get_param(planner_node_prefix + "/plots"):
+    #             walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], executed_trj)
+    # except:
+    #     print("No early contact detected")
+    #
+    #     if rospy.get_param(planner_node_prefix + "/plots"):
+    #         walk.print_trj(sol, interpl, int_freq, contacts, [x-1 for x in swing_id], [N_total-1, N_total-1, N_total-1, N_total-1])
 
 
 if __name__ == '__main__':
