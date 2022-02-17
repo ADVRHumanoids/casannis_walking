@@ -64,6 +64,9 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
     :return: swing_durations and new_swing_id for the next optimization
     '''
 
+    finished_step = False
+    started_step = False        # flags
+
     max_step_num = len(desired_gait_pattern)    # maximum number of steps defined in the desired gait pattern
     new_swing_id = swing_id                     # first set the new swing id same as the previous
 
@@ -75,6 +78,7 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
     if durations_flat[1] <= 0.0:
         durations_flat = durations_flat[2:]     # delete first swing phase
         new_swing_id = new_swing_id[1:]         # delete first swing id
+        finished_step = True                    # flag to show that swing phase was finished
 
     # else if first swing phase has started but not elapsed
     elif durations_flat[0] < 0.0:
@@ -94,6 +98,7 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
         # append new swing phase timings
         durations_flat.append(new_swing_time)
         durations_flat.append(min(new_swing_time + swing_dur, horizon_dur))
+        started_step = True  # flag to show that swing phase was finished
 
     # if duration of the last swing phase to be planned is less than default duration, then swing phase should
     # last until the end of the horizon
@@ -105,7 +110,7 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
     half_list_size = int(len(durations_flat)/2)     # half size of the flat list
     swing_durations = [[durations_flat[2*a], durations_flat[2*a+1]] for a in range(half_list_size)]
 
-    return swing_durations, new_swing_id
+    return swing_durations, new_swing_id, [started_step, finished_step]
 
 
 def get_swing_targets(gait_pattern, contacts, strides):
@@ -125,9 +130,8 @@ def get_swing_targets(gait_pattern, contacts, strides):
     step_num = len(gait_pattern)    # number of planned steps
 
     swing_tgt = []  # target positions as list
-    print(gait_pattern)
+
     for i in range(step_num):
-        print(i)
         # targets
         swing_tgt.append([contacts[gait_pattern[i]][0] + tgt_dx[i],
                           contacts[gait_pattern[i]][1] + tgt_dy[i],
@@ -151,12 +155,12 @@ def get_current_leg_pos(swing_trj, previous_gait_pattern, time_shifting, freq):
     trj_index = int(time_shifting * freq)       # index of the trajectory to which the desired time corresponds
     step_num = len(previous_gait_pattern)       # number of last planned steps
 
+    # todo swing_trj does not consider repeated swing legs
+
     # append positions of the legs that were last planned to swing
     swing_ee_pos = []
     for i in range(step_num):
-
         swing_ee_pos.append(np.array([swing_trj[i][coord_name][trj_index] for coord_name in ['x', 'y', 'z']]))
-        print('Swing num ', i, 'is ', np.array([swing_trj[i][coord_name][trj_index] for coord_name in ['x', 'y', 'z']]))
     return swing_ee_pos
 
 
@@ -344,36 +348,75 @@ def casannis(int_freq):
     motionplan_pub_.publish(plan_msg)  # publish plan
     starting_pub_.publish(start_msg)    # publish to start replay
 
-    for i in range(5):
+    for i in range(10):
         # update arguments of solve function
         x0 = sol['x'][9:18]
         moving_contact = [[np.array(sol['Pl_mov'][3:6]), np.array(sol['DPl_mov'][3:6])],
                           [np.array(sol['Pr_mov'][3:6]), np.array(sol['DPr_mov'][3:6])]]
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
-        print('-------------', swing_id)
-        prev_swing_contacts = get_current_leg_pos(interpl['sw'], swing_id, walk._dt, 300)
-        print('-------------', prev_swing_contacts)
-
-        all_contacts = []
+        prev_swing_leg_pos = get_current_leg_pos(interpl['sw'], swing_id, walk._dt, 300)
+        all_contacts = []   # all contacts at the desired time
         for i in range(4):
             if i in swing_id:
-                all_contacts.append(prev_swing_contacts[swing_id.index(i)])
+                all_contacts.append(prev_swing_leg_pos[swing_id.index(i)])
             else:
                 all_contacts.append(contacts[i])
+        prev_swing_t = swing_t      # save old swing_t and swing_id
+        prev_swing_id = swing_id
 
-        swing_t, swind_id = get_swing_durations(swing_t, swing_id, [2, 0, 3, 1], walk._dt, optim_horizon)
-        print('*Initial contacts:', contacts)
-        print('*All contacts:', all_contacts)
-        print('Initial state:', x0)
-        print('Moving contact:', moving_contact)
-        print('Swing timings:', swing_t)
-        print('Swing id:', swing_id)
+        # debug some stuff
+        print('**Initial state:', x0)
+        print('**Moving contact:', moving_contact)
+        print('**Initial contacts:', contacts)
+        print('**All contacts:', all_contacts)
 
+        # new swing_t and swing_id for next optimization
+        swing_t, swind_id, another_step = get_swing_durations(swing_t, swing_id, [2, 0, 3, 1], walk._dt, optim_horizon)
+
+        # debug some stuff
+        print('==Swing timings:', swing_t)
+        print('==Swing id:', swing_id)
+        print('==Another step:', another_step)
+
+        # form position of swing legs for next optimization
+        if another_step[0] is True:
+            next_swing_leg_pos = prev_swing_leg_pos + [np.array(all_contacts[swing_id[-1]])]
+        else:
+            next_swing_leg_pos = prev_swing_leg_pos
+
+        if another_step[1] is True:
+            next_swing_leg_pos = next_swing_leg_pos[1:]
+
+        # debug some stuff
+        print('!!!!Prev swing leg pos:', prev_swing_leg_pos)
+        print('!!!!Next swing leg pos:', next_swing_leg_pos)
+
+        # get initial guess
         shifted_guess = shift_solution(sol, 1, variables_dim)
 
+        # update tgt_dx heuristically
+        new_step_num = len(swing_id)
+        tgt_dx = [tgt_dx[0]] * new_step_num
+        tgt_dy = [tgt_dy[0]] * new_step_num
+        tgt_dz = [tgt_dz[0]] * new_step_num
+        print('!!!!', tgt_dx, tgt_dy, tgt_dz)
+
+        # get target positions fot the swing legs
         swing_tgt = get_swing_targets(swing_id, all_contacts, [tgt_dx, tgt_dy, tgt_dz])
 
+        # debug some stuff
+        print('================================================')
+        print('================================================')
+        print('**Initial state:', x0)
+        print('**All contacts:', all_contacts)
+        print('**Moving contact:', moving_contact)
+        print('==Swing id:', swing_id)
+        print('==Swing tgt:', swing_tgt)
+        print('==Swing clear:', swing_clear)
+        print('==Swing timings:', swing_t)
+        print('================================================')
+        print('================================================')
         sol = walk.solve(x0=x0, contacts=all_contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                              swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
                              init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
@@ -391,8 +434,9 @@ def casannis(int_freq):
         # plt.xlabel('Time [s]')
         # plt.show()
 
-        interpl = walk.interpolate(sol, prev_swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
-        walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
+        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq)
+        # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
+        print('&&&&&', len(interpl['sw']))
 
         # set fields of the message
         plan_msg.state = sol['x']
