@@ -345,7 +345,6 @@ def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, nc
 
     # swing phases
     is_swing = []
-
     for i in range(steps_number):
         is_swing.append(swing_time_integral[i][0] / dt <= knot <= swing_time_integral[i][1] / dt)
 
@@ -392,7 +391,7 @@ def friction_pyramid(force_vector, friction_coeff, ncontacts=4):
 
 
 def bound_moving_contact_variables(p_mov_initial, dp_mov_initial, p_mov_bound, dp_mov_bound,
-                                   knot, knot_num, dp_mov_final_bound=np.zeros(3)):
+                                   knot, knot_num, dp_mov_final_bound=[np.zeros(3), np.zeros(3)]):
 
     if knot == 0:
         p_mov_max = p_mov_initial
@@ -405,8 +404,8 @@ def bound_moving_contact_variables(p_mov_initial, dp_mov_initial, p_mov_bound, d
         p_mov_min = p_mov_bound[0]
         p_mov_max = p_mov_bound[1]
 
-        dp_mov_min = dp_mov_final_bound    # final velocity (default zero)
-        dp_mov_max = dp_mov_final_bound
+        dp_mov_min = dp_mov_final_bound[0]    # final velocity (default zero)
+        dp_mov_max = dp_mov_final_bound[1]
 
     else:
         p_mov_min = p_mov_bound[0]

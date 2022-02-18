@@ -571,10 +571,10 @@ class Gait(object):
         # swing leg trajectory planning & interpolation
         sw_interpl = []
         for i in range(len(sw_curr)):
-            # print(i)
-            # print(sw_curr)
-            # print(sw_tgt)
-            # print(sw_t)
+            print(i)
+            print(sw_curr)
+            print(sw_tgt)
+            print(sw_t)
             # swing trajectories with one intemediate point
             sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
             # spline optimization
@@ -1208,7 +1208,8 @@ class GaitNonlinear(Gait):
                 lmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                k, self._knot_number)
+                k, self._knot_number,
+                dp_mov_final_bound=[np.full(3, -cs.inf), np.full(3, cs.inf)])
             Pl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_max']
             Pl_movl[u_slice1:u_slice2] = left_mov_contact_bounds['p_mov_min']
             DPl_movu[u_slice1:u_slice2] = left_mov_contact_bounds['dp_mov_max']
@@ -1219,7 +1220,8 @@ class GaitNonlinear(Gait):
                 rmov_contact_initial[1],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
                 [np.full(3, -cs.inf), np.full(3, cs.inf)],
-                k, self._knot_number)
+                k, self._knot_number,
+                dp_mov_final_bound=[np.full(3, -cs.inf), np.full(3, cs.inf)])
             Pr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_max']
             Pr_movl[u_slice1:u_slice2] = right_mov_contact_bounds['p_mov_min']
             DPr_movu[u_slice1:u_slice2] = right_mov_contact_bounds['dp_mov_max']
