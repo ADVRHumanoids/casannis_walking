@@ -332,6 +332,21 @@ def casannis(int_freq):
         'F_virt_r': walk._dimf
     }
 
+    # debug some stuff
+    print('================================================')
+    print('================ Solver inputs =====================')
+    print('================================================')
+    print('**Initial state:', x0)
+    print('**All contacts:', contacts)
+    print('**Moving contact:', moving_contact)
+    print('==Swing id:', swing_id)
+    print('==Swing tgt:', swing_tgt)
+    print('==Swing clear:', swing_clear)
+    print('==Swing_t:', swing_t)
+    print('================================================')
+    print('================================================')
+    print(swing_contacts)
+
     # call the solver of the optimization problem
     sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
@@ -382,7 +397,9 @@ def casannis(int_freq):
     intertrj_pub_.publish(intertrj_msg)  # publish trj
     starting_pub_.publish(start_msg)    # publish to start replay
 
-    for i in range(10):
+    # for i in range(20):
+    while True:
+        # print('________', knots_shift*walk._dimx , (knots_shift + 1)*walk._dimx)
         # update arguments of solve function
         x0 = sol['x'][knots_shift*walk._dimx : (knots_shift + 1)*walk._dimx]
         moving_contact = [[np.array(sol['Pl_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov]),
@@ -392,12 +409,9 @@ def casannis(int_freq):
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
         prev_swing_leg_pos = get_current_leg_pos(interpl['sw'], swing_id, horizon_shift, 300)
-        all_contacts = []   # all contacts at the desired time
-        for i in range(4):
-            if i in swing_id:
-                all_contacts.append(prev_swing_leg_pos[swing_id.index(i)])
-            else:
-                all_contacts.append(contacts[i])
+        for i in swing_id:
+            contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
+
         prev_swing_t = swing_t      # save old swing_t and swing_id
         prev_swing_id = swing_id
 
@@ -421,7 +435,7 @@ def casannis(int_freq):
 
         # form position of swing legs for next optimization
         if another_step[0] is True:
-            next_swing_leg_pos = prev_swing_leg_pos + [np.array(all_contacts[swing_id[-1]])]
+            next_swing_leg_pos = prev_swing_leg_pos + [np.array(contacts[swing_id[-1]])]
         else:
             next_swing_leg_pos = prev_swing_leg_pos
 
@@ -440,17 +454,17 @@ def casannis(int_freq):
         tgt_dx = [tgt_dx[0]] * new_step_num
         tgt_dy = [tgt_dy[0]] * new_step_num
         tgt_dz = [tgt_dz[0]] * new_step_num
-        # print('!!!!', tgt_dx, tgt_dy, tgt_dz)
+        print('!!!!', tgt_dx, tgt_dy, tgt_dz)
 
         # get target positions fot the swing legs
-        swing_tgt = get_swing_targets(swing_id, all_contacts, [tgt_dx, tgt_dy, tgt_dz])
+        swing_tgt = get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
 
         # debug some stuff
         print('================================================')
         print('================ Solver inputs =====================')
         print('================================================')
         print('**Initial state:', x0)
-        print('**All contacts:', all_contacts)
+        print('**All contacts:', contacts)
         print('**Moving contact:', moving_contact)
         print('==Swing id:', swing_id)
         print('==Swing tgt:', swing_tgt)
@@ -458,7 +472,9 @@ def casannis(int_freq):
         print('==Swing_t:', swing_t)
         print('================================================')
         print('================================================')
-        sol = walk.solve(x0=x0, contacts=all_contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
+        print(next_swing_leg_pos)
+
+        sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                              swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
                              init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
 
@@ -475,6 +491,7 @@ def casannis(int_freq):
         # plt.xlabel('Time [s]')
         # plt.show()
 
+        print(next_swing_leg_pos)
         interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq)
         # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
         # print('&&&&&', len(interpl['sw']))
