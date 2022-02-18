@@ -547,7 +547,7 @@ class Gait(object):
             time list for interpolation times (in sec)
             list of list with state trajectory points
             list of lists with forces' trajectory points
-            list of lists with the swinging feet's trajectory points
+            list of lists with the swinging feet's trajectory points, ordered according to the swing order
 
         """
 
@@ -571,6 +571,10 @@ class Gait(object):
         # swing leg trajectory planning & interpolation
         sw_interpl = []
         for i in range(len(sw_curr)):
+            # print(i)
+            # print(sw_curr)
+            # print(sw_tgt)
+            # print(sw_t)
             # swing trajectories with one intemediate point
             sw_interpl.append(interpol.swing_trj_triangle(sw_curr[i], sw_tgt[i], clearance, sw_t[i], t_tot, resol))
             # spline optimization
@@ -1077,7 +1081,7 @@ class GaitNonlinear(Gait):
             'ipopt.linear_solver': 'ma57',
             # 'ipopt.mu_strategy': 'adaptive'
             # 'ipopt.warm_start_init_point': 'yes'
-            'ipopt.print_level': 6
+            # 'ipopt.print_level': 6
         }
 
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
@@ -1160,7 +1164,7 @@ class GaitNonlinear(Gait):
                 final_contacts.append(contacts[i])
         # print("Final contacts are", final_contacts)
 
-        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
+        # final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts)
 
         # get bounds for arms' box constraints
         arm_bounds = parameters.get_arm_box_bounds('forward', self._box_conservative)
@@ -1181,7 +1185,7 @@ class GaitNonlinear(Gait):
 
             # state bounds
             state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)],
-                                                             k, self._knot_number, final_state)
+                                                             k, self._knot_number)#, final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -1375,7 +1379,7 @@ if __name__ == "__main__":
 
     # swing id from 0 to 3
     # sw_id = 2
-    sw_id = [2,3,0,1]
+    sw_id = [2,3,0]
 
     step_num = len(sw_id)
 
@@ -1392,7 +1396,8 @@ if __name__ == "__main__":
 
     # swing_time
     # swing_time = [[1.0, 4.0], [5.0, 8.0]]
-    swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
+    #swing_time = [[1.0, 2.5], [3.5, 5.0], [6.0, 7.5], [8.5, 10.0]]
+    swing_time = [[1.0, 3.0], [4.0, 6.0], [7.0, 9.0], [10.0, 12.0]]
 
     step_clear = 0.05
 
