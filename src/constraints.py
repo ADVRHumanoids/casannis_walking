@@ -465,20 +465,25 @@ def bound_state_variables(initial_state, state_bound, knot, knot_num, final_stat
     }
 
 
-def set_contact_parameters(contacts, swing_id, swing_target, clearance_times, pos_at_max_clearance, knot, dt, steps_number=1):
+def set_contact_parameters(contacts, swing_id, swing_target, clearance_times,
+                           pos_at_max_clearance, knot, dt, steps_number=1):
     """
     Assign the footholds to the parameter vector of the optimization problem
-    :param contacts:
+    :param contacts: the contacts at the beginning of the optimization
     :param swing_id: list of swing ids (list of one integer for a single step)
     :param swing_target: list of swing targets (arrays) for the swing feet (list of one array for a single step)
     :param clearance_times: list of maximum clearance timings (list of one float for a single step)
     :param pos_at_max_clearance: list of lists for the position of the maximum clearance point
            (list of one list for a single step)
-    :param knot:
-    :param dt:
-    :param steps_number:
-    :return:
+    :param knot: current knot
+    :param dt: time segment based on nlp discretization
+    :param steps_number: number of steps of the optimization
+    :return: contacts parameters to be used as parameters of the nlp
     """
+    # todo: for receding horizon implementations, a swing phase may be already in progress.
+    # I should detect in which phase of the swing phase I am (initial/max clearance/final) and update accordingly
+    # the parameters
+
     p_k = np.hstack(contacts)  # start with initial contacts (4x3)
 
     # for all swing legs overwrite with target positions
