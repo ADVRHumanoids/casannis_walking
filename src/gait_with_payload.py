@@ -1087,7 +1087,7 @@ class GaitNonlinear(Gait):
         self._solver = cs.nlpsol('solver', 'ipopt', self._nlp, solver_options)
 
     def solve(self, x0, contacts, mov_contact_initial, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50,
-              init_guess=None, state_lamult=None, constr_lamult=None):
+              init_guess=None, state_lamult=None, constr_lamult=None, nlp_params=None):
 
         """Solve the stepping problem
 
@@ -1101,6 +1101,7 @@ class GaitNonlinear(Gait):
             swing_t ([type]): list of lists with swing times in secs
             min_f: minimum threshold for forces in z direction
             init_guess: initial guess of the solution
+            nlp_params: parameters to assign to the nlp problem, here contact positions
         """
 
         # zero initial guess if not specified
@@ -1236,11 +1237,14 @@ class GaitNonlinear(Gait):
             F_virt_r_l[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [-f_magn_xy, -f_magn_xy, - f_magn_z]
             F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [f_magn_xy, f_magn_xy, f_magn_z]
 
-            # foothold positions
-            contact_params = constraints.set_contact_parameters(
-                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
-            )
-            P.append(contact_params)
+            # foothold positions - parameters
+            if nlp_params is None:
+                contact_params = constraints.set_contact_parameters(
+                    contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
+                )
+                P.append(contact_params)
+            else:
+                P = nlp_params
 
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
@@ -1328,7 +1332,7 @@ class GaitNonlinear(Gait):
             'F_virt_l': self.evaluate(sol['x'], f_virt_l_trj),  # virtual force
             'F_virt_r': self.evaluate(sol['x'], f_virt_r_trj),  # virtual force
             'lam_x': sol['lam_x'],    # lagrange multipliers
-            'lam_g': sol['lam_g']
+            'lam_g': sol['lam_g'],
         }
 
     def print_trj(self, solution, results, resol, contacts, swing_id, t_exec=[0, 0, 0, 0]):
@@ -1410,6 +1414,7 @@ if __name__ == "__main__":
     sol = w.solve(x0=x_init, contacts=foot_contacts, mov_contact_initial=moving_contact, swing_id=sw_id,
                   swing_tgt=swing_target, swing_clearance=step_clear, swing_t=swing_time[0:step_num], min_f=100)
 
+    print(w._nlp['p'])
     # interpolate the values, pass values and interpolation resolution
     res = 300
 
