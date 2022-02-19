@@ -7,6 +7,7 @@ from std_msgs.msg import Bool
 from casannis_walking.msg import PayloadAware_plans as MotionPlan_msg
 from casannis_walking.msg import Pa_interpolated_trj as Trj_msg
 import matplotlib.pyplot as plt
+import constraints
 
 # radius of centauro wheels
 R = 0.078
@@ -165,6 +166,41 @@ def get_current_leg_pos(swing_trj, previous_gait_pattern, time_shifting, freq):
     for i in range(step_num):
         swing_ee_pos.append(np.array([swing_trj[i][coord_name][trj_index] for coord_name in ['x', 'y', 'z']]))
     return swing_ee_pos
+
+
+def get_updated_nlp_params(previous_params, knots_to_shift, different_step_phase, swing_id, swing_t, swing_tgt,
+                           contacts, swing_clearance, opt_horizon, nlp_discretization=0.2, swing_phase_dur=2.0):
+
+    next_params = previous_params[knots_to_shift:]
+
+    if different_step_phase[0] is True:
+        # time that maximum clearance occurs - approximate
+        clearance_times = 0.5 * (swing_t[-1][0] + swing_t[-1][1])
+
+        # number of steps
+        # step_num = len(swing_id)
+
+        # swing feet positions at maximum clearance
+        clearance_swing_position = []
+
+        if contacts[swing_id[-1]][2] >= swing_tgt[-1][2]:
+            clearance_swing_position.append(contacts[swing_id[-1]][0:2].tolist() +
+                                            [contacts[swing_id[-1]][2] + swing_clearance])
+        else:
+            clearance_swing_position.append(contacts[swing_id[-1]][0:2].tolist() +
+                                            [swing_tgt[-1][2] + swing_clearance])
+
+        for k in range(knots_to_shift):
+            current_knot_params = constraints.set_contact_parameters(
+                contacts, [swing_id[-1]], swing_tgt[-1], [clearance_times], clearance_swing_position[-1],
+                k, nlp_discretization, steps_number=1
+            )
+
+            next_params.append(current_knot_params)
+    else:
+        next_params = next_params + next_params[-knots_to_shift:]
+
+    return next_params
 
 
 def casannis(int_freq):
@@ -472,11 +508,21 @@ def casannis(int_freq):
         print('==Swing_t:', swing_t)
         print('================================================')
         print('================================================')
-        print(next_swing_leg_pos)
+
+        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+        print('^^^^^^^^^^^^^^^^ Targets ^^^^^^^^^^^^^^^^^^^')
+        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+        print('Swing tgt:', swing_tgt)
+        print('Contacts:', contacts)
+        # print('Next swing leg position', next_swing_leg_pos)
+
+        new_nlp_params = get_updated_nlp_params(walk._P, knots_shift, another_step, swing_id, swing_t,
+                                                swing_tgt, contacts, swing_clear, optim_horizon)
 
         sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                              swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force,
-                             init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'])
+                             init_guess=shifted_guess, state_lamult=sol['lam_x'], constr_lamult=sol['lam_g'],
+                             nlp_params=new_nlp_params)
 
         # # debug force plot
         # tt = np.linspace(0.0, (swing_t[-1][1] + 1.0), walk._knot_number)
