@@ -28,7 +28,8 @@ def shift_solution(solution, knots_toshift, dims):
     return shifted_sol_array
 
 
-def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shifting, horizon_dur, swing_dur=2.0, stance_dur=1.0):
+def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shifting, horizon_dur,
+                        swing_dur=2.0, stance_dur=1.0):
     '''
     Compute the swing durations for the next optimization based on a default duration of swing and stance periods and
     the optimization horizon. Compute also the swing_id for the next optimization based on desired gait pattern and
@@ -66,8 +67,9 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
     # time of the next swing phase
     new_swing_time = durations_flat[-2] + swing_dur + stance_dur
 
-    # if next swing phase is within the horizon to plan
+    # if next swing phase is within the horizon to plan, add it in the list
     if horizon_dur > new_swing_time:
+        # identify which swing leg is the next one
         last_swing_id = new_swing_id[-1]        # the last leg that is stepping in the horizon
         last_swing_index = desired_gait_pattern.index(last_swing_id)        # index of the last step
         new_swing_id.append(        # append new swing leg id based of desired gait pattern
@@ -79,11 +81,14 @@ def get_swing_durations(previous_dur, swing_id, desired_gait_pattern, time_shift
         durations_flat.append(min(new_swing_time + swing_dur, horizon_dur))
         started_step = True  # flag to show that swing phase was finished
 
-    # if duration of the last swing phase to be planned is less than default duration, then swing phase should
-    # last more
-    last_duration = round(durations_flat[-1] - durations_flat[-2], 2)
-    if last_duration < swing_dur:
-        durations_flat[-1] = durations_flat[-2] + swing_dur
+    # if duration of the last swing phase to be planned is less than default duration,
+    # then swing phase should last more
+    # last_duration = round(durations_flat[-1] - durations_flat[-2], 2)
+    final_swing_phase_end_time = durations_flat[-2] + swing_dur
+    # if final_swing_phase_end_time < horizon_dur:
+    durations_flat[-1] = min(final_swing_phase_end_time, horizon_dur)
+    # if last_duration < swing_dur:
+    #     durations_flat[-1] = durations_flat[-2] + swing_dur
 
     # convert to list of lists
     half_list_size = int(len(durations_flat)/2)     # half size of the flat list

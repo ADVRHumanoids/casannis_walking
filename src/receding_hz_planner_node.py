@@ -138,13 +138,7 @@ def casannis(int_freq):
     swing_t = []    # time periods of the swing phases
     swing_contacts = []         # contact positions of the swing feet
 
-    # swing_tgt2 = []
     for i in range(step_num):
-        # targets
-        # swing_tgt2.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
-        #                   contacts[swing_id[i] - 1][1] + tgt_dy[i],
-        #                   contacts[swing_id[i] - 1][2] + tgt_dz[i]])
-
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
@@ -239,6 +233,7 @@ def casannis(int_freq):
     # interpolated trj message
     intertrj_msg = Trj_msg()
     intertrj_msg.horizon_shift = horizon_shift
+    intertrj_msg.horizon_dur = optim_horizon
     intertrj_msg.swing_t = [a for k in swing_t for a in k]
     intertrj_msg.time = interpl['t']
     intertrj_msg.swing_id = swing_id
@@ -362,7 +357,8 @@ def casannis(int_freq):
         # plt.show()
 
         print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq)
+        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq,
+                                   feet_ee_swing_trj=interpl['sw'])
         # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
         # print('&&&&&', len(interpl['sw']))
 
@@ -380,6 +376,7 @@ def casannis(int_freq):
         # interpolated trj message
         intertrj_msg.time = interpl['t']
         intertrj_msg.horizon_shift = horizon_shift
+        intertrj_msg.horizon_dur = optim_horizon
         intertrj_msg.swing_t = [a for k in swing_t for a in k]
         intertrj_msg.swing_id = swing_id
         for j, coord_name in enumerate(['x', 'y', 'z']):

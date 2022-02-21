@@ -56,6 +56,7 @@ def interpolated_trj_callback(msg):
     global received_trj
     received_trj = {
         'horizon_shift': msg.horizon_shift,
+        'horizon_dur': msg.horizon_dur,
         't': msg.time,
         'swing_t': msg.swing_t,
         'swing_id': msg.swing_id,
@@ -138,9 +139,12 @@ def casannis(int_freq):
     # All points to be published
     # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
     horizon_shift = received_trj['horizon_shift']
+    horizon_dur = received_trj['horizon_dur']
     print('horizon_shift', horizon_shift)
-    N_total = int(horizon_shift * int_freq)  # total points --> total time * interpolation frequency
-
+    N_shift = int(horizon_shift * int_freq)  # total points --> total time * interpolation frequency
+    N_horizon = int(horizon_dur * int_freq)  # total points --> total time * interpolation frequency
+    print('kkkkkkkk', N_horizon)
+    horizon_completance_counter = [0, 0, 0, 0]
     while True:
     # for iiii in range(1):
         swing_id = received_trj['swing_id']
@@ -160,7 +164,7 @@ def casannis(int_freq):
 
         rate = rospy.Rate(int_freq)  # Frequency trj publishing
         # loop interpolation points to publish on a specified frequency
-        for counter in range(N_total):
+        for counter in range(N_shift):
 
             if not rospy.is_shutdown():
 
@@ -191,10 +195,14 @@ def casannis(int_freq):
 
                 # swing foot
                 current_sw_leg_id = swing_id[swing_phase]
-                f_msg[current_sw_leg_id].pose.position.x = received_trj['leg_ee'][current_sw_leg_id][0][counter]
-                f_msg[current_sw_leg_id].pose.position.y = received_trj['leg_ee'][current_sw_leg_id][1][counter]
+                print('.....', horizon_completance_counter)
+                f_msg[current_sw_leg_id].pose.position.x = \
+                    received_trj['leg_ee'][current_sw_leg_id][0][horizon_completance_counter[current_sw_leg_id]]
+                f_msg[current_sw_leg_id].pose.position.y = \
+                    received_trj['leg_ee'][current_sw_leg_id][1][horizon_completance_counter[current_sw_leg_id]]
                 # add radius as origin of the wheel frame is in the center
-                f_msg[current_sw_leg_id].pose.position.z = received_trj['leg_ee'][current_sw_leg_id][2][counter] + R
+                f_msg[current_sw_leg_id].pose.position.z = \
+                    received_trj['leg_ee'][current_sw_leg_id][2][horizon_completance_counter[current_sw_leg_id]] + R
 
                 # publish com trajectory regardless contact detection
                 com_msg.header.stamp = rospy.Time.now()
@@ -215,6 +223,10 @@ def casannis(int_freq):
                     f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
                     f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
 
+                if horizon_completance_counter[current_sw_leg_id] == N_horizon - 1:
+                    horizon_completance_counter = [0, 0, 0, 0]
+                else:
+                    horizon_completance_counter[current_sw_leg_id] += 1
             rate.sleep()
 
     # print the trajectories

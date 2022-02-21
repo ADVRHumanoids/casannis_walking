@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
         # new swing_t and swing_id for next optimization
         swing_t, swing_id, another_step = rh.get_swing_durations(prev_swing_t, prev_swing_id, [2, 0, 3, 1],
-                                                              horizon_shift, optim_horizon)
+                                                                 horizon_shift, optim_horizon)
         # debug some stuff
         print('======', prev_swing_id)
         print('====== New Swing timings:', swing_t)
@@ -170,7 +170,9 @@ if __name__ == '__main__':
         # plt.show()
 
         # print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq)
+        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq,
+                                   feet_ee_swing_trj=interpl['sw'])
+        walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
 
     # optim_horizon = 7.0
     # nlp_discr = 0.2
