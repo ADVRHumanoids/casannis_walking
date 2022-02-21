@@ -63,7 +63,7 @@ if __name__ == '__main__':
     horizon_shift = knots_shift * nlp_discr
 
     solutions_counter = 1   # counter of solutions acquired
-    # for i in range(20):
+    # for i in range(1):
     while True:
         # start of the next horizon wrt to initial time
         start_of_next_horizon = solutions_counter * horizon_shift
@@ -154,9 +154,13 @@ if __name__ == '__main__':
         print('Contacts:', contacts)
         # print('Next swing leg position', next_swing_leg_pos)
         print('PPPPPPPPP previous:', walk._P[0][:6])
-
+        old_nlp_params = walk._P
         new_nlp_params = rh.get_updated_nlp_params(walk._P, knots_shift, another_step, swing_id, swing_t,
                                                    swing_tgt, contacts, swing_clear)
+
+        if old_nlp_params[3:] == new_nlp_params[:-3]:
+            print('Frist part of params shifted correctly')
+        print('Last part of params:', new_nlp_params[-3:])
 
         print('PPPPPPPPP new:', new_nlp_params[0][:6])
         sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
@@ -179,7 +183,83 @@ if __name__ == '__main__':
         # print(next_swing_leg_pos)
         interpl = walk.interpolate(sol, [contacts[ii] for ii in swing_id], swing_tgt, swing_clear, swing_t, int_freq,
                                    feet_ee_swing_trj=interpl['sw'])
-        if solutions_counter > 4:
-            walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
+
+        # walk.print_trj(sol1, interpl1, int_freq, contacts, swing_id)
 
         solutions_counter += 1
+
+    from matplotlib import pyplot as plt
+
+    # Interpolated state plot
+    shifted_time = [0.6 + i for i in walk._tjunctions]#walk._tjunctions[3:] + [(walk._tjunctions[-1] + walk._dt*i) for i in range(1, 4)]
+    shifted_interpol_time = [0.6 + i for i in interpl1['t']]
+
+    state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+    colors = ['r', 'g', 'b']
+    plt.figure()
+    for i, name in enumerate(state_labels):
+        plt.subplot(3, 1, i + 1)
+        for j in range(walk._dimc):
+            plt.plot(interpl['t'], interpl['x'][walk._dimc * i + j], '-')
+            plt.plot(shifted_interpol_time, interpl1['x'][walk._dimc * i + j], '-')
+
+            plt.plot(walk._tjunctions, sol['x'][walk._dimc * i + j::9], '.-')
+            plt.plot(shifted_time, sol1['x'][walk._dimc * i + j::9], '.--')
+        plt.grid()
+        plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
+        plt.title(name)
+    plt.xlabel('Time [s]')
+
+    feet_labels = ['front left', 'front right', 'hind left', 'hind right']
+    # Interpolated force plot
+    plt.figure()
+    for i, name in enumerate(feet_labels):
+        plt.subplot(2, 2, i + 1)
+        for k in range(3):
+            plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
+            plt.plot(interpl1['t'], interpl1['f'][3 * i + k], '-')
+            plt.plot(walk._tjunctions, sol1['F'][3 * i + k::walk._dimf_tot], '.')
+        plt.grid()
+        plt.title(name)
+        plt.legend([str(name) + '_x', str(name) + '_x1',
+                    str(name) + '_y', str(name) + '_y2',
+                    str(name) + '_z', str(name) + '_z1'])
+    plt.xlabel('Time [s]')
+    # plt.savefig('../plots/gait_forces.png')
+
+    # Interpolated moving contact trajectory
+    mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
+    plt.figure()
+    for i, name in enumerate(mov_contact_labels):
+        plt.subplot(2, 3, i + 1)
+        for k in range(3):
+            plt.plot(shifted_interpol_time, interpl1[name][k], '.--')
+            plt.plot(interpl['t'], interpl[name][k], '.-')
+            plt.grid()
+            plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
+        plt.ylabel(name)
+        plt.suptitle('Moving Contact trajectory')
+    plt.xlabel('Time [s]')
+
+    # plot swing trajectory
+    # All points to be published
+    N_total = int(walk._Nseg * walk._dt * int_freq)  # total points --> total time * frequency
+    s = np.linspace(0, walk._dt * walk._Nseg, N_total)
+    coord_labels = ['x', 'y', 'z']
+    for j in range(len(interpl['sw'])):
+        plt.figure()
+        for i, name in enumerate(coord_labels):
+            plt.subplot(3, 1, i + 1)
+            plt.plot(interpl['t'], interpl['sw'][j][name])  # nominal trj
+            plt.plot(interpl1['t'], interpl1['sw'][j][name])  # nominal trj
+
+            # plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+            plt.grid()
+            plt.legend(['nominal', 'real'])
+            plt.title('Trajectory ' + name)
+        plt.xlabel('Time [s]')
+
+    plt.show()
+
+
+
