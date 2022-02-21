@@ -1238,13 +1238,10 @@ class GaitNonlinear(Gait):
             F_virt_r_u[u_slice1:u_slice2] = self._payload_mass_r * self._gravity + [f_magn_xy, f_magn_xy, f_magn_z]
 
             # foothold positions - parameters
-            if nlp_params is None:
-                contact_params = constraints.set_contact_parameters(
-                    contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
-                )
-                P.append(contact_params)
-            else:
-                P = nlp_params
+            contact_params = constraints.set_contact_parameters(
+                contacts, swing_id, swing_tgt, clearance_times, clearance_swing_position, k, self._dt, step_num
+            )
+            P.append(contact_params)
 
             # constraint bounds (newton-euler eq.)
             gl.append(np.zeros(6))
@@ -1282,6 +1279,10 @@ class GaitNonlinear(Gait):
             # arm self collision avoidance
             gl.append(arm_distance_bounds['lower'])
             gu.append(arm_distance_bounds['upper'])
+
+        # in case the nlp params are already known then use them
+        if nlp_params is not None:
+            P = nlp_params
 
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
