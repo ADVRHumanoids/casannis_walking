@@ -346,7 +346,9 @@ def bound_force_variables(min_fz, max_f, knot, swing_time_integral, swing_id, nc
     # swing phases
     is_swing = []
     for i in range(steps_number):
-        is_swing.append(swing_time_integral[i][0] / dt <= knot <= swing_time_integral[i][1] / dt)
+        swing_start_knot = swing_time_integral[i][0] / dt
+        swing_end_knot = swing_time_integral[i][1] / dt
+        is_swing.append(swing_start_knot - 1 < knot < swing_end_knot + 1)
 
         if is_swing[i]:
             # we are in swing phase
