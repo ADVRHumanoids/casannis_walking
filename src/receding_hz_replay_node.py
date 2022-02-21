@@ -57,6 +57,7 @@ def interpolated_trj_callback(msg):
     received_trj = {
         'horizon_shift': msg.horizon_shift,
         'horizon_dur': msg.horizon_dur,
+        'id': msg.id,
         't': msg.time,
         'swing_t': msg.swing_t,
         'swing_id': msg.swing_id,
@@ -136,27 +137,32 @@ def casannis(int_freq):
     # wait until planners sends a message that is connected
     planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
 
-    # All points to be published
-    # N_total = int(walk._problem_duration * int_freq)  # total points --> total time * interpolation frequency
+    # Number of points to be published
     horizon_shift = received_trj['horizon_shift']
     horizon_dur = received_trj['horizon_dur']
-    print('horizon_shift', horizon_shift)
-    N_shift = int(horizon_shift * int_freq)  # total points --> total time * interpolation frequency
-    N_horizon = int(horizon_dur * int_freq)  # total points --> total time * interpolation frequency
-    print('kkkkkkkk', N_horizon)
-    horizon_completance_counter = [0, 0, 0, 0]
+    N_shift = int(horizon_shift * int_freq)  # points --> time * interpolation frequency
+    N_horizon = int(horizon_dur * int_freq)
+
+    # debug
+    # print('horizon_shift', horizon_shift)
+    # print('kkkkkkkk', N_horizon)
+    # horizon_completance_counter = 0
+    plans_counter = 0
     while True:
-    # for iiii in range(1):
+        print('.................................')      # debug
+        print('.................................')
+        print('.........plan n. ', received_trj['id'])
+
         swing_id = received_trj['swing_id']
-        print('Swing id: ', swing_id)
         step_num = len(received_trj['swing_id'])
 
         # convert to list of lists
         half_list_size = int(len(received_trj['swing_t']) / 2)  # half size of the flat list
         swing_t = [[received_trj['swing_t'][2 * a], received_trj['swing_t'][2 * a + 1]] for a in range(half_list_size)]
-        print('Swing t: ', swing_t)
+        # print('Swing t: ', swing_t)
+        # print('Swing id: ', swing_id)
 
-        # plt.figure()
+        # plt.figure()  # debug
         # for la in range(step_num):
         #     for si in range(2, 3):
         #         plt.plot(received_trj['leg_ee'][la][si])
@@ -167,6 +173,8 @@ def casannis(int_freq):
         for counter in range(N_shift):
 
             if not rospy.is_shutdown():
+
+                horizon_trj_point = plans_counter * N_shift + counter
 
                 # check if current time is within swing phase and contact detection
                 for i in range(step_num):
@@ -180,12 +188,12 @@ def casannis(int_freq):
                         swing_phase = -1    # not in swing phase
 
                 # com trajectory
-                com_msg.pose.position.x = received_trj['com'][0][counter]#interpl['x'][0][counter]
+                com_msg.pose.position.x = received_trj['com'][0][counter]   #interpl['x'][0][counter]
                 com_msg.pose.position.y = received_trj['com'][1][counter]
                 com_msg.pose.position.z = received_trj['com'][2][counter]
 
                 # hands trajectory
-                lh_msg.pose.position.x = received_trj['p_mov_l'][0][counter] #interpl['p_mov_l'][0][counter]
+                lh_msg.pose.position.x = received_trj['p_mov_l'][0][counter]    #interpl['p_mov_l'][0][counter]
                 lh_msg.pose.position.y = received_trj['p_mov_l'][1][counter]
                 lh_msg.pose.position.z = received_trj['p_mov_l'][2][counter]
 
@@ -195,14 +203,13 @@ def casannis(int_freq):
 
                 # swing foot
                 current_sw_leg_id = swing_id[swing_phase]
-                print('.....', horizon_completance_counter)
+                print('.....', horizon_trj_point)
                 f_msg[current_sw_leg_id].pose.position.x = \
-                    received_trj['leg_ee'][current_sw_leg_id][0][horizon_completance_counter[current_sw_leg_id]]
+                    received_trj['leg_ee'][current_sw_leg_id][0][horizon_trj_point]
                 f_msg[current_sw_leg_id].pose.position.y = \
-                    received_trj['leg_ee'][current_sw_leg_id][1][horizon_completance_counter[current_sw_leg_id]]
-                # add radius as origin of the wheel frame is in the center
-                f_msg[current_sw_leg_id].pose.position.z = \
-                    received_trj['leg_ee'][current_sw_leg_id][2][horizon_completance_counter[current_sw_leg_id]] + R
+                    received_trj['leg_ee'][current_sw_leg_id][1][horizon_trj_point]
+                f_msg[current_sw_leg_id].pose.position.z =\
+                    received_trj['leg_ee'][current_sw_leg_id][2][horizon_trj_point] + R   # add radius
 
                 # publish com trajectory regardless contact detection
                 com_msg.header.stamp = rospy.Time.now()
@@ -215,19 +222,23 @@ def casannis(int_freq):
                 rh_msg.header.stamp = rospy.Time.now()
                 right_h_pub_.publish(rh_msg)
 
-                if swing_phase == -1:
-                    pass
+                # if swing_phase == -1:
+                #     pass
+                #
+                # # swing phase
+                # else:
+                f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
+                f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
 
-                # swing phase
-                else:
-                    f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
-                    f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
+                if horizon_trj_point == N_horizon - 1:
+                    plans_counter = 0
 
-                if horizon_completance_counter[current_sw_leg_id] == N_horizon - 1:
-                    horizon_completance_counter = [0, 0, 0, 0]
-                else:
-                    horizon_completance_counter[current_sw_leg_id] += 1
-            rate.sleep()
+                # if horizon_completance_counter == N_horizon - 1:
+                #     horizon_completance_counter = 0
+                # else:
+                #     horizon_completance_counter += 1
+                rate.sleep()
+        plans_counter += 1
 
     # print the trajectories
     # try:

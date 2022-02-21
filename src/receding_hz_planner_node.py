@@ -232,6 +232,7 @@ def casannis(int_freq):
 
     # interpolated trj message
     intertrj_msg = Trj_msg()
+    intertrj_msg.id = 0
     intertrj_msg.horizon_shift = horizon_shift
     intertrj_msg.horizon_dur = optim_horizon
     intertrj_msg.swing_t = [a for k in swing_t for a in k]
@@ -271,8 +272,8 @@ def casannis(int_freq):
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
         prev_swing_leg_pos = rh.get_current_leg_pos(interpl['sw'], swing_id, start_of_next_horizon, 300)
-        for i in swing_id:
-            contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
+        # for i in swing_id:
+        #     contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
 
         prev_swing_t = swing_t      # save old swing_t and swing_id
         prev_swing_id = swing_id
@@ -366,11 +367,10 @@ def casannis(int_freq):
         # plt.show()
 
         print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq,
+        interpl = walk.interpolate(sol, [contacts[ii] for ii in swing_id], swing_tgt, swing_clear, swing_t, int_freq,
                                    feet_ee_swing_trj=interpl['sw'])
         # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
         # print('&&&&&', len(interpl['sw']))
-        solutions_counter += 1
 
         # set fields of the message
         plan_msg.state = sol['x']
@@ -385,6 +385,7 @@ def casannis(int_freq):
 
         # interpolated trj message
         intertrj_msg.time = interpl['t']
+        intertrj_msg.id = solutions_counter
         intertrj_msg.horizon_shift = horizon_shift
         intertrj_msg.horizon_dur = optim_horizon
         intertrj_msg.swing_t = [a for k in swing_t for a in k]
@@ -402,6 +403,7 @@ def casannis(int_freq):
         intertrj_pub_.publish(intertrj_msg)  # publish trj
 
         solutions_counter += 1
+
 
 if __name__ == '__main__':
 

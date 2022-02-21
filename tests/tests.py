@@ -17,8 +17,8 @@ if __name__ == '__main__':
 
     # object class of the optimization problem
     nlp_discr = 0.2
-    optim_horizon = 7.0
-    payload_m = [10.0,10.0]
+    optim_horizon = 4.0
+    payload_m = [10.0, 10.0]
     inclination_deg = 0
     arm_box_conservative = False
 
@@ -45,14 +45,12 @@ if __name__ == '__main__':
     all_contacts = contacts
     moving_contact = [[np.array([0.52584379, 0.18904212, 0.28303459]), np.array([0., 0., 0.])],
                       [np.array([0.52582343, -0.18897632, 0.28300443]), np.array([0., 0., 0.])]]
-    swing_id = [2, 0]
-    swing_tgt = [[-0.24942160289010637, 0.34977278149106616, -0.718849844313593],
-                 [0.4494214287188567, 0.3497726202477771, -0.7188498443127623]]
+    swing_id = [2]
+    swing_tgt = [[-0.24942160289010637, 0.34977278149106616, -0.718849844313593]]
     swing_clear = 0.050
-    swing_t = [[1.0, 3.0], [4.0, 6.0]]
+    swing_t = [[1.0, 3.0]]
 
-    swing_contacts = [np.array([-0.3494216, 0.34977278, -0.71884984]),
-                      np.array([0.34942143, 0.34977262, -0.71884984])]
+    swing_contacts = [np.array([-0.3494216, 0.34977278, -0.71884984])]
 
     minimum_force, int_freq = 100, 300
     # call the solver of the optimization problem
@@ -85,8 +83,8 @@ if __name__ == '__main__':
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
         prev_swing_leg_pos = rh.get_current_leg_pos(interpl['sw'], swing_id, start_of_next_horizon, 300)
-        for i in swing_id:
-            contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
+        # for i in swing_id:
+        #     contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
 
         prev_swing_t = swing_t      # save old swing_t and swing_id
         prev_swing_id = swing_id
@@ -158,7 +156,7 @@ if __name__ == '__main__':
         print('PPPPPPPPP previous:', walk._P[0][:6])
 
         new_nlp_params = rh.get_updated_nlp_params(walk._P, knots_shift, another_step, swing_id, swing_t,
-                                                swing_tgt, contacts, swing_clear)
+                                                   swing_tgt, contacts, swing_clear)
 
         print('PPPPPPPPP new:', new_nlp_params[0][:6])
         sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
@@ -179,52 +177,9 @@ if __name__ == '__main__':
         # plt.show()
 
         # print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, next_swing_leg_pos, swing_tgt, swing_clear, swing_t, int_freq,
+        interpl = walk.interpolate(sol, [contacts[ii] for ii in swing_id], swing_tgt, swing_clear, swing_t, int_freq,
                                    feet_ee_swing_trj=interpl['sw'])
-        #walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
+        if solutions_counter > 4:
+            walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
 
         solutions_counter += 1
-    # optim_horizon = 7.0
-    # nlp_discr = 0.2
-    # payload_m = [10.0, 10.0]
-    # inclination_deg = 0.0
-    # arm_box_conservative = False
-    #
-    # walk = Gait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, payload_masses=payload_m,
-    #                     slope_deg=inclination_deg, conservative_box=arm_box_conservative)
-    # # walk = SimpleGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr,
-    # #                     slope_deg=inclination_deg)
-    # x0 = [0.06730191639719647, 0.01552940421869955, -0.020572223202718995,
-    #       -0.03245918116395145, 0.04225748795988705, 0.003309643059751207,
-    #       -0.05942779069968623, 0.010279407423706612, -0.00017711019279872668]
-    #
-    # contacts = [np.array([ 0.34942143,  0.34977262, -0.71884984]),
-    #             np.array([ 0.34942143, -0.34977262, -0.71884984]),
-    #             np.array([-0.3494216 ,  0.34977278, -0.71884984]),
-    #             np.array([-0.3494216 , -0.34977278, -0.71884984])]
-    #
-    # moving_contact = [[np.array([0.4299506 , 0.34797929, 0.32349138]),
-    #                    np.array([-0.091154  ,  0.1098635 ,  0.02881774])],
-    #                   [np.array([0.43488849, 0.10052735, 0.31455664]),
-    #                    np.array([-0.10567345,  0.10306788,  0.04993922])]]
-    #
-    # swing_id = [1, 2, 0]
-    # swing_tgt = [[0.4494214287161541, -0.3497726202507546, -0.7188498443129442],
-    #              [-0.24942160289010637, 0.34977278149106616, -0.718849844313593],
-    #              [0.4494214287188567, 0.3497726202477771, -0.7188498443127623]]
-    #
-    #
-    # swing_clear = 0.050
-    # swing_t = [[0.2, 2.2], [3.2, 5.2], [6.2, 7.0]]
-    #
-    # # call the solver of the optimization problem
-    # sol = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
-    #                  swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=100)
-    # # sol = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id,
-    # #                  swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=100)
-    # int_freq = 300
-    # swing_contacts = [np.array([ 0.34942143, -0.34977262, -0.71884984]),
-    #                   np.array([-0.3494216 ,  0.34977278, -0.71884984]),
-    #                   np.array([0.34942143,  0.34977262, -0.71884984])]
-    # interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
-    # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
