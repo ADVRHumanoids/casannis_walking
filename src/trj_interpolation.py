@@ -23,6 +23,8 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
         interpolated swing trajectory
     '''
 
+    swing_duration = sw_t[1] - sw_t[0]
+
     # intermediate point, clearance counted from the highest point
     if sw_curr[2] >= sw_tgt[2]:
         max_point = np.array([0.5 * (sw_curr[0] + sw_tgt[0]), 0.5 * (sw_curr[1] + sw_tgt[1]), sw_curr[2] + clear])
@@ -38,8 +40,8 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
     sw_z = [sw_points[0][2], sw_points[1][2], sw_points[2][2]]
 
     # velocities x and y for the intermediate point
-    vel_x = 3 * (sw_x[2] - sw_x[0]) / (sw_t[1] - sw_t[0])
-    vel_y = 3 * (sw_y[2] - sw_y[0]) / (sw_t[1] - sw_t[0])
+    vel_x = 3 * (sw_x[2] - sw_x[0]) / swing_duration
+    vel_y = 3 * (sw_y[2] - sw_y[0]) / swing_duration
 
     # conditions, initial point of swing phase
     cond1_x = [sw_x[0], 0, 0]
@@ -68,7 +70,7 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
         dist_fraction2 = 0.5
 
     # assign spline time according to distances
-    t_middle = sw_t[0] + dist_fraction1 * (sw_t[1] - sw_t[0])
+    t_middle = sw_t[0] + dist_fraction1 * swing_duration
     sw_t1 = [sw_t[0], t_middle]
     sw_t2 = [t_middle, sw_t[1]]
 
@@ -101,9 +103,8 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
     sw_pz2 = np.polynomial.polynomial.Polynomial(sw_cz2)
 
     # construct list of interpolated points according to specified resolution
-    sw_dt = sw_t[1] - sw_t[0]
-    sw_interpl_t1 = np.linspace(sw_t1[0], sw_t1[1], round(dist_fraction1 * resol * sw_dt))
-    sw_interpl_t2 = np.linspace(sw_t2[0], sw_t2[1], round(dist_fraction2 * resol * sw_dt))
+    sw_interpl_t1 = np.linspace(sw_t1[0], sw_t1[1], round(dist_fraction1 * resol * swing_duration))
+    sw_interpl_t2 = np.linspace(sw_t2[0], sw_t2[1], round(dist_fraction2 * resol * swing_duration))
 
     sw_interpl_x = np.concatenate((sw_px1(sw_interpl_t1), sw_px2(sw_interpl_t2)))
     sw_interpl_y = np.concatenate((sw_py1(sw_interpl_t1), sw_py2(sw_interpl_t2)))

@@ -250,8 +250,17 @@ def casannis(int_freq):
     intertrj_pub_.publish(intertrj_msg)  # publish trj
     starting_pub_.publish(start_msg)    # publish to start replay
 
+    solutions_counter = 1   # counter of solutions acquired
     # for i in range(20):
     while True:
+        # start of the next horizon wrt to initial time
+        start_of_next_horizon = solutions_counter * horizon_shift
+
+        difference = start_of_next_horizon - optim_horizon
+        if difference > 0.0:
+            solutions_counter = 1
+            start_of_next_horizon = solutions_counter * horizon_shift
+
         # print('________', knots_shift*walk._dimx , (knots_shift + 1)*walk._dimx)
         # update arguments of solve function
         x0 = sol['x'][knots_shift*walk._dimx : (knots_shift + 1)*walk._dimx]
@@ -261,7 +270,7 @@ def casannis(int_freq):
                            np.array(sol['DPr_mov'][knots_shift*walk._dimp_mov : (knots_shift + 1)*walk._dimp_mov])]]
 
         # swing contacts based on previous plan at the desired time (start of next planning horizon)
-        prev_swing_leg_pos = rh.get_current_leg_pos(interpl['sw'], swing_id, horizon_shift, 300)
+        prev_swing_leg_pos = rh.get_current_leg_pos(interpl['sw'], swing_id, start_of_next_horizon, 300)
         for i in swing_id:
             contacts[i] = prev_swing_leg_pos[swing_id.index(i)]
 
@@ -361,6 +370,7 @@ def casannis(int_freq):
                                    feet_ee_swing_trj=interpl['sw'])
         # walk.print_trj(sol, interpl, int_freq, contacts, swing_id)
         # print('&&&&&', len(interpl['sw']))
+        solutions_counter += 1
 
         # set fields of the message
         plan_msg.state = sol['x']
@@ -391,6 +401,7 @@ def casannis(int_freq):
         motionplan_pub_.publish(plan_msg)       # publish
         intertrj_pub_.publish(intertrj_msg)  # publish trj
 
+        solutions_counter += 1
 
 if __name__ == '__main__':
 

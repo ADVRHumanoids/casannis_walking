@@ -126,19 +126,19 @@ def get_swing_targets(gait_pattern, contacts, strides):
     return swing_tgt
 
 
-def get_current_leg_pos(swing_trj, previous_gait_pattern, time_shifting, freq):
+def get_current_leg_pos(swing_trj, previous_gait_pattern, desired_time, freq):
     '''
     Get the position of the legs at the desired time in the horizon of the last optimization based on this last plan.
     :param swing_trj: the planned trajectories of the swing legs from the last motion plan.
     It is a list of dictionaries with keys ['x', 'y', 'z', 's'] as returned by the walking.interpolate method.
     :param previous_gait_pattern: order of the swing legs of the last optimization
-    :param time_shifting: desired time wrt to the start of the last optimization horizon
+    :param desired_time: desired time wrt to the start of the last optimization horizon
     :param freq: frequency at which the last motion plan was interpolated
     :return: swing_ee_pos which is a list of np.array(x,y,z). It is the position of the swing legs of the last
     motion plan at the desired time within the last opt. horizon.
     '''
 
-    trj_index = int(time_shifting * freq)       # index of the trajectory to which the desired time corresponds
+    trj_index = int(desired_time * freq)       # index of the trajectory to which the desired time corresponds
     step_num = len(previous_gait_pattern)       # number of last planned steps
 
     # todo swing_trj does not consider repeated swing legs
