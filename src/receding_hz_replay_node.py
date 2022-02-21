@@ -214,7 +214,6 @@ def casannis(int_freq):
                 else:
                     f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
                     f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
-                    pass
 
             rate.sleep()
 
