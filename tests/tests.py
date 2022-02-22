@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # print('!!!!Next swing leg pos:', next_swing_leg_pos)
 
         # get initial guess
-        shifted_guess = rh.shift_solution(sol_previous, 1, variables_dim)
+        shifted_guess = rh.shift_solution(sol_previous, knots_shift, variables_dim)
 
         # update tgt_dx heuristically
         new_step_num = len(swing_id)

@@ -1,11 +1,12 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import constraints
 
 
-def shift_solution(solution, knots_toshift, dims):
+def shift_solution(prev_solution, knots_toshift, dims):
     '''
     Generate the new initial guess by shifting the previous solution.
-    :param solution: previous solution
+    :param prev_solution: previous solution
     :param knots_toshift: knots to shift the new solution
     :param dims: list with dimensions of the different variables
     :return: the shifted solution which can be used as initial guess
@@ -15,15 +16,26 @@ def shift_solution(solution, knots_toshift, dims):
     # solution_keys = solution.keys()
     solution_based_ordered_keys = ['x', 'u', 'F', 'Pl_mov', 'Pr_mov', 'DPl_mov', 'DPr_mov', 'F_virt_l', 'F_virt_r']
 
-    # shifted_sol = {}
+    shifted_sol = {}
     shifted_sol_array = []
     for keyname in solution_based_ordered_keys:
-        shifted_variables = solution[keyname][knots_toshift * dims[keyname]:] + \
-                            knots_toshift * solution[keyname][-knots_toshift * dims[keyname]:]  # same as last knot
+        shifted_variables = prev_solution[keyname][knots_toshift * dims[keyname]:] + \
+                            knots_toshift * prev_solution[keyname][-dims[keyname]:]  # same as last knot
                             # knots_toshift * dims[keyname] * new_values    # zero new values
 
-        # shifted_sol.update({keyname: shifted_variables})
+        shifted_sol.update({keyname: shifted_variables})
         shifted_sol_array = np.hstack((shifted_sol_array, shifted_variables))
+
+    # state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+    # colors = ['r', 'g', 'b']
+    # plt.figure()
+    # for i, name in enumerate(state_labels):
+    #     plt.subplot(3, 1, i + 1)
+    #     for j in range(3):
+    #         plt.plot(prev_solution['x'][3 * i + j::9], '.-')
+    #         plt.plot([None] * 3 + shifted_sol['x'][3 * i + j::9], '.--')
+    #     plt.grid()
+    # plt.show()
 
     return shifted_sol_array
 

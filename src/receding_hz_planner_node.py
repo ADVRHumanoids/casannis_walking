@@ -310,7 +310,7 @@ def casannis(int_freq):
         # print('!!!!Next swing leg pos:', next_swing_leg_pos)
 
         # get initial guess
-        shifted_guess = rh.shift_solution(sol, 1, variables_dim)
+        shifted_guess = rh.shift_solution(sol, knots_shift, variables_dim)
 
         # update tgt_dx heuristically
         new_step_num = len(swing_id)
