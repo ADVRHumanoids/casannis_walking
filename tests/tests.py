@@ -160,7 +160,9 @@ if __name__ == '__main__':
         old_nlp_params = walk._P
         new_nlp_params = rh.get_updated_nlp_params(walk._P, knots_shift, another_step, swing_id, swing_t,
                                                    swing_tgt, contacts, swing_clear)
-
+        # update contacts
+        contacts = [np.array(new_nlp_params[knots_shift][3*i:3*(i+1)]) for i in range(4)]
+        nlp_params_extension = new_nlp_params[-3:]
         if old_nlp_params[3:] == new_nlp_params[:-3]:
             print('Params shifted correctly')
         else:
@@ -196,56 +198,56 @@ if __name__ == '__main__':
         # ^^^^^^^^^^^^^^^^^^^ Print plots ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        # Interpolated state plot
-        shifted_time = [0.6 + i for i in walk._tjunctions]#walk._tjunctions[3:] + [(walk._tjunctions[-1] + walk._dt*i) for i in range(1, 4)]
-        shifted_interpol_time = [0.6 + i for i in interpl['t']]
-
-        state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
-        colors = ['r', 'g', 'b']
-        plt.figure()
-        for i, name in enumerate(state_labels):
-            plt.subplot(3, 1, i + 1)
-            for j in range(walk._dimc):
-                plt.plot(interpl_previous['t'], interpl_previous['x'][walk._dimc * i + j], '-')
-                plt.plot(shifted_interpol_time, interpl['x'][walk._dimc * i + j], '-')
-
-                plt.plot(walk._tjunctions, sol_previous['x'][walk._dimc * i + j::9], '.-')
-                plt.plot(shifted_time, sol['x'][walk._dimc * i + j::9], '.--')
-            plt.grid()
-            plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
-            plt.title(name)
-        plt.xlabel('Time [s]')
-
-        feet_labels = ['front left', 'front right', 'hind left', 'hind right']
-        # Interpolated force plot
-        plt.figure()
-        for i, name in enumerate(feet_labels):
-            plt.subplot(2, 2, i + 1)
-            for k in range(3):
-                plt.plot(interpl_previous['t'], interpl_previous['f'][3 * i + k], '-')
-                plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
-                plt.plot(walk._tjunctions, sol['F'][3 * i + k::walk._dimf_tot], '.')
-            plt.grid()
-            plt.title(name)
-            plt.legend([str(name) + '_x', str(name) + '_x1',
-                        str(name) + '_y', str(name) + '_y2',
-                        str(name) + '_z', str(name) + '_z1'])
-        plt.xlabel('Time [s]')
-        # plt.savefig('../plots/gait_forces.png')
-
-        # Interpolated moving contact trajectory
-        mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
-        plt.figure()
-        for i, name in enumerate(mov_contact_labels):
-            plt.subplot(2, 3, i + 1)
-            for k in range(3):
-                plt.plot(shifted_interpol_time, interpl[name][k], '.--')
-                plt.plot(interpl_previous['t'], interpl_previous[name][k], '.-')
-                plt.grid()
-                plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
-            plt.ylabel(name)
-            plt.suptitle('Moving Contact trajectory')
-        plt.xlabel('Time [s]')
+        # # Interpolated state plot
+        # shifted_time = [0.6 + i for i in walk._tjunctions]#walk._tjunctions[3:] + [(walk._tjunctions[-1] + walk._dt*i) for i in range(1, 4)]
+        # shifted_interpol_time = [0.6 + i for i in interpl['t']]
+        #
+        # state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+        # colors = ['r', 'g', 'b']
+        # plt.figure()
+        # for i, name in enumerate(state_labels):
+        #     plt.subplot(3, 1, i + 1)
+        #     for j in range(walk._dimc):
+        #         plt.plot(interpl_previous['t'], interpl_previous['x'][walk._dimc * i + j], '-')
+        #         plt.plot(shifted_interpol_time, interpl['x'][walk._dimc * i + j], '-')
+        #
+        #         plt.plot(walk._tjunctions, sol_previous['x'][walk._dimc * i + j::9], '.-')
+        #         plt.plot(shifted_time, sol['x'][walk._dimc * i + j::9], '.--')
+        #     plt.grid()
+        #     plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
+        #     plt.title(name)
+        # plt.xlabel('Time [s]')
+        #
+        # feet_labels = ['front left', 'front right', 'hind left', 'hind right']
+        # # Interpolated force plot
+        # plt.figure()
+        # for i, name in enumerate(feet_labels):
+        #     plt.subplot(2, 2, i + 1)
+        #     for k in range(3):
+        #         plt.plot(interpl_previous['t'], interpl_previous['f'][3 * i + k], '-')
+        #         plt.plot(interpl['t'], interpl['f'][3 * i + k], '-')
+        #         plt.plot(walk._tjunctions, sol['F'][3 * i + k::walk._dimf_tot], '.')
+        #     plt.grid()
+        #     plt.title(name)
+        #     plt.legend([str(name) + '_x', str(name) + '_x1',
+        #                 str(name) + '_y', str(name) + '_y2',
+        #                 str(name) + '_z', str(name) + '_z1'])
+        # plt.xlabel('Time [s]')
+        # # plt.savefig('../plots/gait_forces.png')
+        #
+        # # Interpolated moving contact trajectory
+        # mov_contact_labels = ['p_mov_l', 'dp_mov_l', 'ddp_mov_l', 'p_mov_r', 'dp_mov_r', 'ddp_mov_r']
+        # plt.figure()
+        # for i, name in enumerate(mov_contact_labels):
+        #     plt.subplot(2, 3, i + 1)
+        #     for k in range(3):
+        #         plt.plot(shifted_interpol_time, interpl[name][k], '.--')
+        #         plt.plot(interpl_previous['t'], interpl_previous[name][k], '.-')
+        #         plt.grid()
+        #         plt.legend(['x', 'x1', 'y', 'y1', 'z', 'z1'])
+        #     plt.ylabel(name)
+        #     plt.suptitle('Moving Contact trajectory')
+        # plt.xlabel('Time [s]')
 
         # # plot swing trajectory
         # # All points to be published
