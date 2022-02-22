@@ -491,12 +491,12 @@ def set_contact_parameters(contacts, swing_id, swing_target, clearance_times,
     # for all swing legs overwrite with target positions
     for i in range(steps_number):
         # time region around max clearance time
-        clearance_region = (clearance_times[i] / dt - 4 <= knot <= clearance_times[i] / dt + 4)
+        clearance_region = (round(clearance_times[i] / dt) - 4 <= knot <= round(clearance_times[i] / dt) + 4)
 
         if clearance_region:
             p_k[3 * swing_id[i]:3 * (swing_id[i] + 1)] = pos_at_max_clearance[i]
 
-        elif knot > clearance_times[i] / dt + 4:
+        elif knot > round(clearance_times[i] / dt) + 4:
             # after the swing, the swing foot is now at swing_tgt
             p_k[3 * swing_id[i]:3 * (swing_id[i] + 1)] = swing_target[i]
 
