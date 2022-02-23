@@ -302,8 +302,9 @@ def casannis(int_freq):
                          nlp_params=new_nlp_params)
 
         # print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt,
-                                   swing_clear, mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'])
+        interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt, swing_clear,
+                                   mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'],
+                                   shift_time=mpc._time_shifting)
 
         # set fields of the message
         plan_msg.state = sol['x']

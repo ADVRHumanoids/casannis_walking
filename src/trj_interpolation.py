@@ -1,4 +1,5 @@
 import casadi as cs
+import matplotlib.pyplot as plt
 import numpy as np
 import math
 import time
@@ -7,7 +8,7 @@ from scipy.stats import norm
 from operator import add
 
 
-def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_order=5):
+def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, trj_end=None, spline_order=5):
     '''
     Interpolates current, target foot position and a intermediate point with 5th order
     polynomials.
@@ -18,7 +19,8 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
         sw_t: time interval of swing phase
         total_t: total time of optimization problem
         resol: interpolation resolution (points per sec)
-
+        trj_end: time that we want to end trj, this is useful if we want to end trj earlier than total_t or
+                 if sw_t[1] > total_t and we want to have trj of length total_t.
     Returns:
         interpolated swing trajectory
     '''
@@ -118,6 +120,13 @@ def swing_trj_triangle(sw_curr, sw_tgt, clear, sw_t, total_t, resol, spline_orde
     sw_interpl_x = [sw_curr[0]] * sw_n1 + [sw_interpl_x[i] for i in range(len(sw_interpl_x))] + [sw_tgt[0]] * sw_n2
     sw_interpl_y = [sw_curr[1]] * sw_n1 + [sw_interpl_y[i] for i in range(len(sw_interpl_y))] + [sw_tgt[1]] * sw_n2
     sw_interpl_z = [sw_curr[2]] * sw_n1 + [sw_interpl_z[i] for i in range(len(sw_interpl_z))] + [sw_tgt[2]] * sw_n2
+
+    # end earlier trj if the user inputs trj_end
+    if trj_end is not None:
+        end_index = int(trj_end * resol)
+        sw_interpl_x = sw_interpl_x[:end_index]
+        sw_interpl_y = sw_interpl_y[:end_index]
+        sw_interpl_z = sw_interpl_z[:end_index]
 
     # compute arc length of swing trj
     sw_interpl_s = 0.0
@@ -486,3 +495,29 @@ def quintic_splines(dt, init_cond, fin_cond):
     coeffs = np.linalg.inv(A).dot(B)
 
     return coeffs
+
+
+if __name__ == "__main__":
+
+    sw_curr = np.array([-0.3494216 ,  0.34977278, -0.71884984])
+    sw_tgt = [-0.24942160289010637, 0.34977278149106616, -0.718849844313593]
+    clearance = 0.05
+    sw_t = [1.0, 3.0]
+    t_tot = [0.0, 4.0]
+    resol = 300
+
+    a = swing_trj_triangle(sw_curr, sw_tgt, clearance, sw_t, t_tot, resol)
+
+    sw_curr1 = [np.array([-0.3494216 ,  0.34977278, -0.71884984]),
+               np.array([ 0.34942143,  0.34977262, -0.71884984])]
+    sw_tgt1 = [[-0.24942160289010637, 0.34977278149106616, -0.718849844313593],
+              [0.44942143, 0.34977262, -0.71884984]]
+    sw_t1 = [[0.4, 2.4], [3.4, 4.0]]
+
+    b = swing_trj_triangle(sw_curr1[0], sw_tgt1[0], clearance, sw_t1[0], t_tot, resol)
+
+    from matplotlib import pyplot as plt
+    plt.figure()
+    plt.plot(a['z'])
+    plt.plot(180*[None] + b['z'])
+    plt.show()

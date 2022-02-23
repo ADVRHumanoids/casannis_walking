@@ -119,10 +119,12 @@ if __name__ == '__main__':
                          nlp_params=new_nlp_params)
 
         # print(next_swing_leg_pos)
-        interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt,
-                                   swing_clear, mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'])
+        interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt, swing_clear,
+                                   mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'],
+                                   shift_time=mpc._time_shifting)
 
         # walk.print_trj(sol1, interpl1, int_freq, contacts, swing_id)
+        print(interpl_previous['sw'][0]['z'][180], interpl['sw'][0]['z'][0])
 
         # debug
         if old_nlp_params[3:] == new_nlp_params[:-3]:
@@ -186,25 +188,25 @@ if __name__ == '__main__':
         #     plt.suptitle('Moving Contact trajectory')
         # plt.xlabel('Time [s]')
 
-        # # plot swing trajectory
-        # # All points to be published
-        # N_total = int(walk._Nseg * walk._dt * int_freq)  # total points --> total time * frequency
-        # s = np.linspace(0, walk._dt * walk._Nseg, N_total)
-        # coord_labels = ['x', 'y', 'z']
-        # for j in range(len(interpl_previous['sw'])):
-        #     plt.figure()
-        #     for i, name in enumerate(coord_labels):
-        #         plt.subplot(3, 1, i + 1)
-        #         plt.plot(interpl_previous['t'], interpl_previous['sw'][j][name])  # nominal trj
-        #         plt.plot(interpl['t'], interpl['sw'][j][name])  # nominal trj
-        #
-        #         # plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
-        #         plt.grid()
-        #         plt.legend(['nominal', 'real'])
-        #         plt.title('Trajectory ' + name)
-        #     plt.xlabel('Time [s]')
+        # plot swing trajectory
+        # All points to be published
+        N_total = int(walk._Nseg * walk._dt * int_freq)  # total points --> total time * frequency
+        s = np.linspace(0, walk._dt * walk._Nseg, N_total)
+        coord_labels = ['x', 'y', 'z']
+        for j in range(min(len(interpl_previous['sw']), len(interpl['sw']))):
+            plt.figure()
+            for i, name in enumerate(coord_labels):
+                plt.subplot(3, 1, i + 1)
+                plt.plot(interpl_previous['sw'][j][name])  # nominal trj
+                plt.plot([None]*180 + interpl['sw'][j][name])  # nominal trj
 
-        # plt.show()
+                # plt.plot(s[0:t_exec[j]], results['sw'][j][name][0:t_exec[j]])  # executed trj
+                plt.grid()
+                plt.legend(['previous', 'current'])
+                plt.title('Trajectory ' + name)
+            plt.xlabel('Time [s]')
+
+        plt.show()
 
         # set to general variables
         mpc.count_optimizations(1)      # solutions_counter += 1
