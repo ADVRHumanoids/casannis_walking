@@ -151,6 +151,8 @@ def casannis(int_freq):
 
         swing_contacts.append(contacts[swing_id[i]])
 
+    default_swing_dur = swing_t[0][1] - swing_t[0][0]
+    default_stance_dur = swing_t[0][0]
     swing_tgt = rh.get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
 
     # receive weight of payloads
@@ -179,7 +181,7 @@ def casannis(int_freq):
 
     # handler
     mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=[2, 0, 3, 1],
-                   swing_dur=2.0, stance_dur=1.0, interpolation_freq=int_freq)
+                   swing_dur=default_swing_dur, stance_dur=default_stance_dur, interpolation_freq=int_freq)
 
     # object class of the optimization problem
     walk = SelectedGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, payload_masses=payload_m,
@@ -200,7 +202,8 @@ def casannis(int_freq):
     # call the solver of the optimization problem
     sol_previous = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
-    interpl_previous = walk.interpolate(sol_previous, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+    interpl_previous = walk.interpolate(sol_previous, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq,
+                                        swing_default_dur=default_swing_dur)
 
     # set fields of the motion plan message
     sw_leg_tostring = [['fl_leg_pos_x', 'fl_leg_pos_y', 'fl_leg_pos_z'],
@@ -304,7 +307,7 @@ def casannis(int_freq):
         # print(next_swing_leg_pos)
         interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt, swing_clear,
                                    mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'],
-                                   shift_time=mpc._time_shifting)
+                                   shift_time=mpc._time_shifting, swing_default_dur=1.0)
 
         # # set fields of the message
         # plan_msg.state = sol['x']
