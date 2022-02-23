@@ -18,6 +18,8 @@ task_name_contact = ['FL_wheel', 'FR_wheel', 'HL_wheel', 'HR_wheel']
 task_name_moving_contact = ['left_hand', 'right_hand']
 rod_plate_CoG_urdf = [4.8407693e-02,  2.0035723e-02,  7.7533287e-02]    # not used currently
 
+received_trj = []
+
 
 def contacts_callback(msg):
 
@@ -49,12 +51,13 @@ def motion_plan_callback(msg):
 
 def interpolated_trj_callback(msg):
 
-    global trj_waiting
-    trj_waiting = True
+    # global trj_waiting
+    # trj_waiting = True
 
     # pass message to global scope
     global received_trj
-    received_trj = {
+
+    received_trj.append({
         'horizon_shift': msg.horizon_shift,
         'horizon_dur': msg.horizon_dur,
         'id': msg.id,
@@ -68,7 +71,7 @@ def interpolated_trj_callback(msg):
                    [msg.fr_leg_pos_x, msg.fr_leg_pos_y, msg.fr_leg_pos_z],
                    [msg.hl_leg_pos_x, msg.hl_leg_pos_y, msg.hl_leg_pos_z],
                    [msg.hr_leg_pos_x, msg.hr_leg_pos_y, msg.hr_leg_pos_z]]
-    }
+    })
 
     print('Received trj message')
 
@@ -138,107 +141,102 @@ def casannis(int_freq):
     planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
 
     # Number of points to be published
-    horizon_shift = received_trj['horizon_shift']
-    horizon_dur = received_trj['horizon_dur']
-    N_shift = int(horizon_shift * int_freq)  # points --> time * interpolation frequency
+    horizon_shift = received_trj[0]['horizon_shift']
+    horizon_dur = received_trj[0]['horizon_dur']
+    N_shift = int(horizon_shift * float(int_freq))  # points --> time * interpolation frequency
     N_horizon = int(horizon_dur * int_freq)
 
-    # debug
-    # print('horizon_shift', horizon_shift)
-    # print('kkkkkkkk', N_horizon)
-    # horizon_completance_counter = 0
-    plans_counter = 0
+    global_trj_point, local_trj_point = 0, 0
+    previous_plan_id = 0
+
     while True:
-        print('.................................')      # debug
-        print('.................................')
-        print('.........plan n. ', received_trj['id'])
+        if not rospy.is_shutdown():
 
-        swing_id = received_trj['swing_id']
-        step_num = len(received_trj['swing_id'])
+            trj_time = float(global_trj_point) / float(int_freq)
+            plan_id = int(trj_time // horizon_shift)
+            if plan_id > previous_plan_id:
+                local_trj_point = 0
+            print('global_trj_time, plan_id: ', trj_time, plan_id)
+            print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
 
-        # convert to list of lists
-        half_list_size = int(len(received_trj['swing_t']) / 2)  # half size of the flat list
-        swing_t = [[received_trj['swing_t'][2 * a], received_trj['swing_t'][2 * a + 1]] for a in range(half_list_size)]
-        # print('Swing t: ', swing_t)
-        # print('Swing id: ', swing_id)
+            # swing_id = received_trj[plan_id]['swing_id']
+            # step_num = len(received_trj[plan_id]['swing_id'])
+            #
+            # # convert to list of lists
+            # flat_swing_t = received_trj[plan_id]['swing_t']
+            # half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
+            # swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
 
-        # plt.figure()  # debug
-        # for la in range(step_num):
-        #     for si in range(2, 3):
-        #         plt.plot(received_trj['leg_ee'][la][si])
-        # plt.show()
+            rate = rospy.Rate(int_freq)  # Frequency trj publishing
+            # loop interpolation points to publish on a specified frequency
+        # for counter in range(N_shift):
 
-        rate = rospy.Rate(int_freq)  # Frequency trj publishing
-        # loop interpolation points to publish on a specified frequency
-        for counter in range(N_shift):
+            # horizon_trj_point = plans_counter * N_shift + counter
 
-            if not rospy.is_shutdown():
+            # check if current time is within swing phase and contact detection
+            # for i in range(step_num):
+            #
+            #     # swing phase check
+            #     if swing_t[i][0] <= received_trj['t'][counter] <= swing_t[i][1]:
+            #         swing_phase = i
+            #         break
+            #
+            #     else:
+            #         swing_phase = -1    # not in swing phase
 
-                horizon_trj_point = plans_counter * N_shift + counter
+            # com trajectory
+            com_trj = received_trj[plan_id]['com']
+            com_msg.pose.position.x = com_trj[0][local_trj_point]   #interpl['x'][0][counter]
+            com_msg.pose.position.y = com_trj[1][local_trj_point]
+            com_msg.pose.position.z = com_trj[2][local_trj_point]
 
-                # check if current time is within swing phase and contact detection
-                for i in range(step_num):
+            # hands trajectory
+            lh_trj = received_trj[plan_id]['p_mov_l']
+            rh_trj = received_trj[plan_id]['p_mov_r']
+            lh_msg.pose.position.x = lh_trj[0][local_trj_point]    #interpl['p_mov_l'][0][counter]
+            lh_msg.pose.position.y = lh_trj[1][local_trj_point]
+            lh_msg.pose.position.z = lh_trj[2][local_trj_point]
 
-                    # swing phase check
-                    if swing_t[i][0] <= received_trj['t'][counter] <= swing_t[i][1]:
-                        swing_phase = i
-                        break
+            rh_msg.pose.position.x = rh_trj[0][local_trj_point]
+            rh_msg.pose.position.y = rh_trj[1][local_trj_point]
+            rh_msg.pose.position.z = rh_trj[2][local_trj_point]
 
-                    else:
-                        swing_phase = -1    # not in swing phase
+            # # swing foot
+            # current_sw_leg_id = swing_id[swing_phase]
+            # print('.....', horizon_trj_point)
+            # f_msg[current_sw_leg_id].pose.position.x = \
+            #     received_trj['leg_ee'][current_sw_leg_id][0][horizon_trj_point]
+            # f_msg[current_sw_leg_id].pose.position.y = \
+            #     received_trj['leg_ee'][current_sw_leg_id][1][horizon_trj_point]
+            # f_msg[current_sw_leg_id].pose.position.z =\
+            #     received_trj['leg_ee'][current_sw_leg_id][2][horizon_trj_point] + R   # add radius
 
-                # com trajectory
-                com_msg.pose.position.x = received_trj['com'][0][counter]   #interpl['x'][0][counter]
-                com_msg.pose.position.y = received_trj['com'][1][counter]
-                com_msg.pose.position.z = received_trj['com'][2][counter]
+            # publish com trajectory regardless contact detection
+            com_msg.header.stamp = rospy.Time.now()
+            com_pub_.publish(com_msg)
 
-                # hands trajectory
-                lh_msg.pose.position.x = received_trj['p_mov_l'][0][counter]    #interpl['p_mov_l'][0][counter]
-                lh_msg.pose.position.y = received_trj['p_mov_l'][1][counter]
-                lh_msg.pose.position.z = received_trj['p_mov_l'][2][counter]
+            # publish hands trajectory regardless contact detection
+            lh_msg.header.stamp = rospy.Time.now()
+            left_h_pub_.publish(lh_msg)
 
-                rh_msg.pose.position.x = received_trj['p_mov_r'][0][counter]
-                rh_msg.pose.position.y = received_trj['p_mov_r'][1][counter]
-                rh_msg.pose.position.z = received_trj['p_mov_r'][2][counter]
+            rh_msg.header.stamp = rospy.Time.now()
+            right_h_pub_.publish(rh_msg)
 
-                # swing foot
-                current_sw_leg_id = swing_id[swing_phase]
-                print('.....', horizon_trj_point)
-                f_msg[current_sw_leg_id].pose.position.x = \
-                    received_trj['leg_ee'][current_sw_leg_id][0][horizon_trj_point]
-                f_msg[current_sw_leg_id].pose.position.y = \
-                    received_trj['leg_ee'][current_sw_leg_id][1][horizon_trj_point]
-                f_msg[current_sw_leg_id].pose.position.z =\
-                    received_trj['leg_ee'][current_sw_leg_id][2][horizon_trj_point] + R   # add radius
+            # if swing_phase == -1:
+            #     pass
+            #
+            # # swing phase
+            # else:
+            # f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
+            # f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
 
-                # publish com trajectory regardless contact detection
-                com_msg.header.stamp = rospy.Time.now()
-                com_pub_.publish(com_msg)
+            # if horizon_trj_point == N_horizon - 1:
+            #     plans_counter = 0
 
-                # publish hands trajectory regardless contact detection
-                lh_msg.header.stamp = rospy.Time.now()
-                left_h_pub_.publish(lh_msg)
-
-                rh_msg.header.stamp = rospy.Time.now()
-                right_h_pub_.publish(rh_msg)
-
-                # if swing_phase == -1:
-                #     pass
-                #
-                # # swing phase
-                # else:
-                f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
-                f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
-
-                if horizon_trj_point == N_horizon - 1:
-                    plans_counter = 0
-
-                # if horizon_completance_counter == N_horizon - 1:
-                #     horizon_completance_counter = 0
-                # else:
-                #     horizon_completance_counter += 1
-                rate.sleep()
-        plans_counter += 1
+            rate.sleep()
+            global_trj_point += 1
+            local_trj_point += 1
+            previous_plan_id = plan_id
 
     # print the trajectories
     # try:
