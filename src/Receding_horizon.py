@@ -266,10 +266,10 @@ class Receding_hz_handler(object):
         knot_num = len(previous_params)
         next_params = previous_params[self._knots_toshift:]
 
-        new_knot_times = [self._nlp_dt * i for i in range(knot_num - 3, knot_num)]
+        new_knot_times = [self._nlp_dt * i for i in range(knot_num - self._knots_toshift, knot_num)]
         new_knots_in_last_swing = [self._swing_t[-1][0] <= i <= self._swing_t[-1][1] for i in new_knot_times]
 
-        for k in range(knot_num - 3, knot_num):
+        for k in range(knot_num - self._knots_toshift, knot_num):
             #
             # if self._swing_id == [0] and self._swing_t == [[1.0, 3.0]] and k == 20:
             #     print('stop')
