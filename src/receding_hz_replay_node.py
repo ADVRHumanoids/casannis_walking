@@ -151,38 +151,37 @@ def casannis(int_freq):
 
     while True:
         if not rospy.is_shutdown():
-
+            
             trj_time = float(global_trj_point) / float(int_freq)
             plan_id = int(trj_time // horizon_shift)
             if plan_id > previous_plan_id:
                 local_trj_point = 0
-            print('global_trj_time, plan_id: ', trj_time, plan_id)
-            print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
 
-            # swing_id = received_trj[plan_id]['swing_id']
-            # step_num = len(received_trj[plan_id]['swing_id'])
-            #
+            print('available plans', len(received_trj))
+            print('used plan', plan_id)
+
+            # print('global_trj_time, plan_id: ', trj_time, plan_id)
+            # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
+            swing_id = received_trj[plan_id]['swing_id']
+            step_num = len(swing_id)
+
             # # convert to list of lists
-            # flat_swing_t = received_trj[plan_id]['swing_t']
-            # half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
-            # swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
+            flat_swing_t = received_trj[plan_id]['swing_t']
+            half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
+            swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
 
             rate = rospy.Rate(int_freq)  # Frequency trj publishing
-            # loop interpolation points to publish on a specified frequency
-        # for counter in range(N_shift):
-
-            # horizon_trj_point = plans_counter * N_shift + counter
 
             # check if current time is within swing phase and contact detection
-            # for i in range(step_num):
-            #
-            #     # swing phase check
-            #     if swing_t[i][0] <= received_trj['t'][counter] <= swing_t[i][1]:
-            #         swing_phase = i
-            #         break
-            #
-            #     else:
-            #         swing_phase = -1    # not in swing phase
+            for i in range(step_num):
+
+                # swing phase check
+                if swing_t[i][0] <= received_trj[plan_id]['t'][local_trj_point] <= swing_t[i][1]:
+                    swing_phase = i
+                    break
+
+                else:
+                    swing_phase = -1    # not in swing phase
 
             # com trajectory
             com_trj = received_trj[plan_id]['com']
@@ -202,14 +201,20 @@ def casannis(int_freq):
             rh_msg.pose.position.z = rh_trj[2][local_trj_point]
 
             # # swing foot
-            # current_sw_leg_id = swing_id[swing_phase]
-            # print('.....', horizon_trj_point)
-            # f_msg[current_sw_leg_id].pose.position.x = \
-            #     received_trj['leg_ee'][current_sw_leg_id][0][horizon_trj_point]
-            # f_msg[current_sw_leg_id].pose.position.y = \
-            #     received_trj['leg_ee'][current_sw_leg_id][1][horizon_trj_point]
-            # f_msg[current_sw_leg_id].pose.position.z =\
-            #     received_trj['leg_ee'][current_sw_leg_id][2][horizon_trj_point] + R   # add radius
+            current_sw_leg_id = swing_id[swing_phase]
+
+            if swing_phase == -1:
+                pass
+
+            # swing phase
+            else:
+                leg_ee_trj = received_trj[plan_id]['leg_ee'][current_sw_leg_id]
+                f_msg[current_sw_leg_id].pose.position.x = leg_ee_trj[0][local_trj_point]
+                f_msg[current_sw_leg_id].pose.position.y = leg_ee_trj[1][local_trj_point]
+                f_msg[current_sw_leg_id].pose.position.z = leg_ee_trj[2][local_trj_point] + R   # add radius
+
+                f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
+                f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
 
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
@@ -221,17 +226,6 @@ def casannis(int_freq):
 
             rh_msg.header.stamp = rospy.Time.now()
             right_h_pub_.publish(rh_msg)
-
-            # if swing_phase == -1:
-            #     pass
-            #
-            # # swing phase
-            # else:
-            # f_msg[current_sw_leg_id].header.stamp = rospy.Time.now()
-            # f_pub_[current_sw_leg_id].publish(f_msg[current_sw_leg_id])
-
-            # if horizon_trj_point == N_horizon - 1:
-            #     plans_counter = 0
 
             rate.sleep()
             global_trj_point += 1
