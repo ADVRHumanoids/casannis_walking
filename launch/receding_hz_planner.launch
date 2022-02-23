@@ -34,6 +34,9 @@
     <arg name="forward_arms_config" default="True"/>
     <arg name="linear_fvirtual" default="False"/>
 
+    <!-- receding horizon -->
+    <arg name="shift_knots" default="3"/>
+
     <node name="casannis_planner" pkg="casannis_walking" type="receding_hz_planner_node.py" output="screen">
         <param name="inclination_deg" value="$(arg slope_x)"/>
         <param name="box_conservative" value="$(arg box_far_from_chest)"/>
@@ -58,5 +61,8 @@
 
         <param name="forward_arms" value="$(arg forward_arms_config)"/>
         <param name="linear_fvirt" value="$(arg linear_fvirtual)"/>
+        <param name="shifted_knots" value="$(arg shift_knots)"/>
+
     </node>
+
 </launch>

@@ -166,14 +166,22 @@ def casannis(int_freq):
     start_msg.data = True
 
     # motion plans publisher
-    motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
+    # motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
     intertrj_pub_ = rospy.Publisher('/PayloadAware/interpolated_trj', Trj_msg, queue_size=10)
 
     optim_horizon = swing_t[-1][1] + 1.0
     print('Optimize with horizon: ', optim_horizon)
 
-    # object class of the optimization problem
+    # receding time of the horizon
     nlp_discr = 0.2
+    knots_shift = int(rospy.get_param("~shifted_knots"))
+    horizon_shift = knots_shift * nlp_discr
+
+    # handler
+    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=[2, 0, 3, 1],
+                   swing_dur=2.0, stance_dur=1.0, interpolation_freq=int_freq)
+
+    # object class of the optimization problem
     walk = SelectedGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, payload_masses=payload_m,
                         slope_deg=inclination_deg, conservative_box=arm_box_conservative)
 
@@ -194,10 +202,6 @@ def casannis(int_freq):
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
     interpl_previous = walk.interpolate(sol_previous, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
 
-    # receding time of the horizon
-    knots_shift = 3
-    horizon_shift = knots_shift * nlp_discr
-
     # set fields of the motion plan message
     sw_leg_tostring = [['fl_leg_pos_x', 'fl_leg_pos_y', 'fl_leg_pos_z'],
                        ['fr_leg_pos_x', 'fr_leg_pos_y', 'fr_leg_pos_z'],
@@ -209,16 +213,16 @@ def casannis(int_freq):
 
     com_tostring = ['com_pos_x', 'com_pos_y', 'com_pos_z']
 
-    plan_msg = MotionPlan_msg()
-    plan_msg.state = sol_previous['x']
-    plan_msg.control = sol_previous['u']
-    plan_msg.left_arm_pos = sol_previous['Pl_mov']
-    plan_msg.right_arm_pos = sol_previous['Pr_mov']
-    plan_msg.left_arm_vel = sol_previous['DPl_mov']
-    plan_msg.right_arm_vel = sol_previous['DPr_mov']
-    plan_msg.leg_forces = sol_previous['F']
-    plan_msg.left_arm_force = sol_previous['F_virt_l']
-    plan_msg.right_arm_force = sol_previous['F_virt_r']
+    # plan_msg = MotionPlan_msg()
+    # plan_msg.state = sol_previous['x']
+    # plan_msg.control = sol_previous['u']
+    # plan_msg.left_arm_pos = sol_previous['Pl_mov']
+    # plan_msg.right_arm_pos = sol_previous['Pr_mov']
+    # plan_msg.left_arm_vel = sol_previous['DPl_mov']
+    # plan_msg.right_arm_vel = sol_previous['DPr_mov']
+    # plan_msg.leg_forces = sol_previous['F']
+    # plan_msg.left_arm_force = sol_previous['F_virt_l']
+    # plan_msg.right_arm_force = sol_previous['F_virt_r']
 
     # interpolated trj message
     intertrj_msg = Trj_msg()
@@ -237,20 +241,16 @@ def casannis(int_freq):
         for i in range(len(swing_id)):                              # legs
             setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl_previous['sw'][i][coord_name])
 
-    motionplan_pub_.publish(plan_msg)  # publish plan
-    intertrj_pub_.publish(intertrj_msg)  # publish trj
-    starting_pub_.publish(start_msg)    # publish to start replay
-
-    # handler
-    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=[2, 0, 3, 1],
-                   swing_dur=2.0, stance_dur=1.0, interpolation_freq=int_freq)
-
     mpc.set_current_contacts(contacts)
     mpc.set_current_swing_tgt(swing_tgt)
     mpc.set_previous_solution(sol_previous)
     mpc.set_previous_interpolated_solution(interpl_previous)
     mpc.set_swing_durations(swing_t, swing_id)
     mpc.count_optimizations(1)
+
+    # motionplan_pub_.publish(plan_msg)  # publish plan
+    intertrj_pub_.publish(intertrj_msg)  # publish trj
+    starting_pub_.publish(start_msg)    # publish to start replay
 
     # for i in range(20):
     while True:
@@ -283,18 +283,18 @@ def casannis(int_freq):
         sol_previous = mpc.get_previous_solution()
         interpl_previous = mpc.get_previous_interpolated_solution()
 
-        # debug some stuff
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        print('@@@@@@@@@ prev_swing_t', mpc._prev_swing_t)
-        print('@@@@@@@@@ new swing_t', mpc._swing_t)
-        print('@@@@@@@@@ prev_swing_id', mpc._prev_swing_id)
-        print('@@@@@@@@@ new swing_id', mpc._swing_id)
-        print('@@@@@@@@@ Another step:', another_step)
-        print('@@@@@@@@@ Contacts:', mpc._contacts)
-        print('@@@@@@@@@ Swing tgt:', mpc._swing_tgt)
-        # for i in range(knots_shift):
-        #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # # debug some stuff
+        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # print('@@@@@@@@@ prev_swing_t', mpc._prev_swing_t)
+        # print('@@@@@@@@@ new swing_t', mpc._swing_t)
+        # print('@@@@@@@@@ prev_swing_id', mpc._prev_swing_id)
+        # print('@@@@@@@@@ new swing_id', mpc._swing_id)
+        # print('@@@@@@@@@ Another step:', another_step)
+        # print('@@@@@@@@@ Contacts:', mpc._contacts)
+        # print('@@@@@@@@@ Swing tgt:', mpc._swing_tgt)
+        # # for i in range(knots_shift):
+        # #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
+        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
         sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
@@ -306,16 +306,16 @@ def casannis(int_freq):
                                    mpc._swing_t, int_freq, feet_ee_swing_trj=interpl_previous['sw'],
                                    shift_time=mpc._time_shifting)
 
-        # set fields of the message
-        plan_msg.state = sol['x']
-        plan_msg.control = sol['u']
-        plan_msg.left_arm_pos = sol['Pl_mov']
-        plan_msg.right_arm_pos = sol['Pr_mov']
-        plan_msg.left_arm_vel = sol['DPl_mov']
-        plan_msg.right_arm_vel = sol['DPr_mov']
-        plan_msg.leg_forces = sol['F']
-        plan_msg.left_arm_force = sol['F_virt_l']
-        plan_msg.right_arm_force = sol['F_virt_r']
+        # # set fields of the message
+        # plan_msg.state = sol['x']
+        # plan_msg.control = sol['u']
+        # plan_msg.left_arm_pos = sol['Pl_mov']
+        # plan_msg.right_arm_pos = sol['Pr_mov']
+        # plan_msg.left_arm_vel = sol['DPl_mov']
+        # plan_msg.right_arm_vel = sol['DPr_mov']
+        # plan_msg.leg_forces = sol['F']
+        # plan_msg.left_arm_force = sol['F_virt_l']
+        # plan_msg.right_arm_force = sol['F_virt_r']
 
         # interpolated trj message
         intertrj_msg.time = interpl['t']
@@ -333,7 +333,7 @@ def casannis(int_freq):
             for i in range(len(swing_id)):                              # legs
                 setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl['sw'][i][coord_name])
 
-        motionplan_pub_.publish(plan_msg)       # publish
+        # motionplan_pub_.publish(plan_msg)       # publish
         intertrj_pub_.publish(intertrj_msg)  # publish trj
 
         # set to general variables

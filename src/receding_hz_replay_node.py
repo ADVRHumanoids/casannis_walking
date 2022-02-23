@@ -46,7 +46,7 @@ def motion_plan_callback(msg):
         'F_virt_l': msg.left_arm_force,
         'F_virt_r': msg.right_arm_force,
     }
-    print('Received message')
+    # print('Received message')
 
 
 def interpolated_trj_callback(msg):
@@ -73,7 +73,7 @@ def interpolated_trj_callback(msg):
                    [msg.hr_leg_pos_x, msg.hr_leg_pos_y, msg.hr_leg_pos_z]]
     })
 
-    print('Received trj message')
+    # print('Received trj message')
 
 
 def casannis(int_freq):
@@ -134,7 +134,7 @@ def casannis(int_freq):
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
 
     # Subscriber for motion plans
-    rospy.Subscriber('/PayloadAware/motion_plan', MotionPlan_msg, motion_plan_callback)
+    # rospy.Subscriber('/PayloadAware/motion_plan', MotionPlan_msg, motion_plan_callback)
     rospy.Subscriber('/PayloadAware/interpolated_trj', Trj_msg, interpolated_trj_callback)
 
     # wait until planners sends a message that is connected
@@ -151,14 +151,14 @@ def casannis(int_freq):
 
     while True:
         if not rospy.is_shutdown():
-            
+
             trj_time = float(global_trj_point) / float(int_freq)
             plan_id = int(trj_time // horizon_shift)
             if plan_id > previous_plan_id:
                 local_trj_point = 0
 
-            print('available plans', len(received_trj))
-            print('used plan', plan_id)
+            # print('available plans', len(received_trj))
+            # print('used plan', plan_id)
 
             # print('global_trj_time, plan_id: ', trj_time, plan_id)
             # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
