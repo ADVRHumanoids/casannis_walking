@@ -1105,7 +1105,7 @@ class GaitNonlinear(Gait):
 
         solver_options = {
             'ipopt.linear_solver': 'ma57',
-            # 'ipopt.mu_strategy': 'adaptive'
+            'ipopt.mu_strategy': 'adaptive',
             'ipopt.warm_start_init_point': 'yes'
             # 'ipopt.print_level': 6
         }

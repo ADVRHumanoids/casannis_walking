@@ -299,9 +299,12 @@ def casannis(int_freq):
         # #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
         # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
+        # shift state langrange multipliers
+        shift_lamultx = mpc.get_shifted_variable(sol_previous['lam_x'], int(walk._nvars / mpc._knot_number))
+
         sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
-                         init_guess=shifted_guess, state_lamult=sol_previous['lam_x'], constr_lamult=sol_previous['lam_g'],
+                         init_guess=shifted_guess, state_lamult=shift_lamultx, constr_lamult=sol_previous['lam_g'],
                          nlp_params=new_nlp_params)
 
         # print(next_swing_leg_pos)
