@@ -18,7 +18,7 @@
         value="[j_wheel_1, j_wheel_2, j_wheel_3, j_wheel_4]"/>
 
     <include file="$(find cartesian_interface)/launch/cartesio.launch">
-        <arg name="rate" value="100.0"/>
+        <arg name="rate" value="500.0"/>
         <arg name="prefix" value="$(arg prefix)"/>
     </include>
 
