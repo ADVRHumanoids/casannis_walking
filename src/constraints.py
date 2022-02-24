@@ -31,7 +31,7 @@ def newton_euler_constraint(CoM_state, mass, accel_grav, contacts_num, forces, c
         'newton': newton_violation,
         'euler': euler_violation,
         'size': 6,
-        'name': ['dynamics' for i in range(6)]
+        'name': ['dynamics']*6
     }
 
 
@@ -86,7 +86,7 @@ def SRBD_dynamics_constraint(CoM_state, base_euler_state, mass, accel_grav, cont
         'newton': newton_violation,
         'euler': euler_violation,
         'size': 6,
-        'name': ['dynamics' for i in range(6)]
+        'name': ['dynamics']*6
     }
 
 
@@ -218,7 +218,7 @@ def newton_point_mass_constraint(p_mov_list, dp_mov_list, dt, junction_index, pa
     return {
         'constraint': newton_violation,
         'size': 3,
-        'name': ['point_mass_dynamics' for i in range(3)]
+        'name': ['point_mass_dynamics'] * 3
     }
 
 
@@ -230,7 +230,7 @@ def state_constraint(state_function, current_state):
     return {
         'constraint': state_constraint_violation,
         'size': 9,
-        'name': ['state_constraint' for i in range(9)]
+        'name': ['state_constraint']*9
     }
 
 
@@ -282,7 +282,7 @@ def spline_acc_constraint(poly1, poly2, t):
     return {
         'constraint': acc_continuity_violation,
         'size': acc_continuity_violation.size1(),
-        'name': ['acceleration_continuity' for i in range(acc_continuity_violation.size1())]
+        'name': ['acceleration_continuity'] * acc_continuity_violation.size1()
     }
 
 
@@ -320,7 +320,7 @@ def spline_acc_constraint_3D(p_mov_list, dp_mov_list, dt, junction_index):
     return {
         'constraint': np.array(acc_continuity_violation),
         'size': 3,
-        'name': ['acceleration_continuity' for i in range(3)]
+        'name': ['acceleration_continuity']*3
     }
 
 
@@ -388,7 +388,7 @@ def friction_pyramid(force_vector, friction_coeff, ncontacts=4):
     return {
         'constraint': friction_violation,
         'size': len(friction_violation),
-        'name': ['friction_pyramid' for i in range(len(friction_violation))]
+        'name': ['friction_pyramid']*len(friction_violation)
     }
 
 
@@ -431,7 +431,7 @@ def moving_contact_box_constraint(p_mov, CoM_pos):
     return {
         'constraint': constraint_violation,
         'size': 3,
-        'name': ['box_constraint' for i in range(3)]
+        'name': ['box_constraint']*3
     }
 
 
@@ -442,7 +442,7 @@ def avoid_arm_self_collision_constraint(ee_left, ee_right):
     return {
         'constraint': constraint_violation,
         'size': constraint_violation.size1(),
-        'name': ['arm_self_collision' for i in range(constraint_violation.size1())]
+        'name': ['arm_self_collision']*constraint_violation.size1()
     }
 
 
@@ -505,11 +505,9 @@ def set_contact_parameters(contacts, swing_id, swing_target, clearance_times,
 
 def get_nominal_CoM_bounds_from_contacts(contacts, offset_from_payload=0):
 
-    mean_hor_foothold = [0.25 * coordinate
-                         for coordinate in [sum([sublist[0] for sublist in contacts]),
-                                            sum([sublist[1] for sublist in contacts]),
-                                            sum([sublist[2] for sublist in contacts])]
-                         ]
+    sum_contacts = sum([sublist for sublist in contacts])
+
+    mean_hor_foothold = [0.25 * coordinate for coordinate in sum_contacts]
 
     final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + \
                        [mean_hor_foothold[2] + 0.65 + offset_from_payload]
