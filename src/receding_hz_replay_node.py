@@ -143,12 +143,11 @@ def casannis(int_freq):
     # Number of points to be published
     horizon_shift = received_trj[0]['horizon_shift']
     horizon_dur = received_trj[0]['horizon_dur']
-    N_shift = int(horizon_shift * float(int_freq))  # points --> time * interpolation frequency
-    N_horizon = int(horizon_dur * int_freq)
 
     global_trj_point, local_trj_point = 0, 0
     previous_plan_id = 0
 
+    rate = rospy.Rate(int_freq)  # Frequency trj publishing
     while True:
         if not rospy.is_shutdown():
 
@@ -169,8 +168,6 @@ def casannis(int_freq):
             flat_swing_t = received_trj[plan_id]['swing_t']
             half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
             swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
-
-            rate = rospy.Rate(int_freq)  # Frequency trj publishing
 
             # check if current time is within swing phase and contact detection
             for i in range(step_num):
@@ -227,10 +224,10 @@ def casannis(int_freq):
             rh_msg.header.stamp = rospy.Time.now()
             right_h_pub_.publish(rh_msg)
 
-            rate.sleep()
             global_trj_point += 1
             local_trj_point += 1
             previous_plan_id = plan_id
+        rate.sleep()
 
     # print the trajectories
     # try:
