@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import constraints
+import casadi as cs
 
 
 class Receding_hz_handler(object):
@@ -18,6 +19,7 @@ class Receding_hz_handler(object):
         self._horizon = horizon
         self._knots_toshift = knots_toshift
         self._nlp_dt = nlp_dt
+        self._knot_number = int(horizon/nlp_dt) + 1
         self._desired_gait = desired_gait
         self._time_shifting = knots_toshift * nlp_dt
         self._swing_dur = swing_dur
@@ -42,7 +44,7 @@ class Receding_hz_handler(object):
 
         return self._optim_counter
 
-    def get_shifted_variable(self, key_var, dimension_var):
+    def get_variable_after_knots_toshift(self, key_var, dimension_var):
 
         shifted_var = self._prev_solution[key_var][self._knots_toshift * dimension_var:(self._knots_toshift + 1) * dimension_var]
 
@@ -109,6 +111,49 @@ class Receding_hz_handler(object):
         # plt.show()
 
         return shifted_sol_array
+
+    def get_shifted_variable(self, variable, dims):
+        '''
+        Generate the new initial guess by shifting the previous solution.
+        :param variable: the variable to shift
+        :param dims: dimension of the variable
+        :return: the shifted solution which can be used as initial guess
+        '''
+
+        shifted_variable = variable[self._knots_toshift * dims:]
+        for i in range(self._knots_toshift):
+            shifted_variable = cs.vertcat(shifted_variable, self._knots_toshift * variable[-dims:])  # same as last knot
+        # knots_toshift * dims[keyname] * new_values    # zero new values
+
+        # state_labels = ['CoM Position', 'CoM Velocity', 'CoM Acceleration']
+        # for l, field_name in enumerate(solution_based_ordered_keys):
+        #     if variables_dim[field_name] == 9:
+        #         plt.figure()
+        #         for i, name in enumerate(state_labels):
+        #
+        #             plt.subplot(3, 1, i + 1)
+        #             for j in range(3):
+        #                 plt.plot(prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
+        #                 plt.plot([None] * knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
+        #     elif variables_dim[field_name] == 3:
+        #         plt.figure()
+        #         for j in range(3):
+        #             plt.plot(prev_solution[field_name][j::variables_dim[field_name]], '.-')
+        #             plt.plot([None] * knots_toshift + shifted_sol[field_name][j::variables_dim[field_name]], '.--')
+        #
+        #     elif variables_dim[field_name] == 12:
+        #         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
+        #         # Interpolated force plot
+        #         plt.figure()
+        #         for i, name in enumerate(feet_labels):
+        #             plt.subplot(2, 2, i + 1)
+        #             for j in range(3):
+        #                 plt.plot(prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
+        #                 plt.plot([None] * knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
+        #     plt.suptitle(field_name)
+        # plt.show()
+
+        return shifted_variable
 
     def set_swing_durations(self, swing_t, swing_id):
         self._swing_t = swing_t

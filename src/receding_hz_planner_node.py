@@ -258,11 +258,11 @@ def casannis(int_freq):
     # for i in range(20):
     while True:
         # get shifted com and arm ee positions
-        shifted_com_state = mpc.get_shifted_variable(key_var='x', dimension_var=9)
+        shifted_com_state = mpc.get_variable_after_knots_toshift(key_var='x', dimension_var=9)
         shifted_arm_ee = [
             [
-                np.array(mpc.get_shifted_variable(pos, 3)),
-                np.array(mpc.get_shifted_variable(vel, 3))
+                np.array(mpc.get_variable_after_knots_toshift(pos, 3)),
+                np.array(mpc.get_variable_after_knots_toshift(vel, 3))
             ] for (pos, vel) in zip(['Pl_mov', 'Pr_mov'], ['DPl_mov', 'DPr_mov'])
         ]
 

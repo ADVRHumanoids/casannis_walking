@@ -72,11 +72,11 @@ if __name__ == '__main__':
     while True:
 
         # get shifted com and arm ee positions
-        shifted_com_state = mpc.get_shifted_variable(key_var='x', dimension_var=9)
+        shifted_com_state = mpc.get_variable_after_knots_toshift(key_var='x', dimension_var=9)
         shifted_arm_ee = [
             [
-                np.array(mpc.get_shifted_variable(pos, 3)),
-                np.array(mpc.get_shifted_variable(vel, 3))
+                np.array(mpc.get_variable_after_knots_toshift(pos, 3)),
+                np.array(mpc.get_variable_after_knots_toshift(vel, 3))
             ] for (pos, vel) in zip(['Pl_mov', 'Pr_mov'], ['DPl_mov', 'DPr_mov'])
         ]
 
@@ -112,6 +112,8 @@ if __name__ == '__main__':
         # for i in range(knots_shift):
         #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+
+        shift_lamultx = mpc.get_shifted_variable(sol_previous['lam_x'], int(walk._nvars / mpc._knot_number))
 
         sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
