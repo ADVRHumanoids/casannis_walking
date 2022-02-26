@@ -27,6 +27,11 @@ def contacts_callback(msg):
     sw_contact_msg = msg
 
 
+def start_replan_callback(msg):
+    global start_replanning
+    start_replanning = msg.data
+
+
 def casannis(int_freq):
 
     """
@@ -170,6 +175,9 @@ def casannis(int_freq):
     start_msg = Bool()
     start_msg.data = True
 
+    # subscriber to wait for message before replanning
+    start_replan_sub_ = rospy.Subscriber('/PayloadAware/connection', Bool, start_replan_callback)
+
     # motion plans publisher
     # motionplan_pub_ = rospy.Publisher('/PayloadAware/motion_plan', MotionPlan_msg, queue_size=10)
     intertrj_pub_ = rospy.Publisher('/PayloadAware/interpolated_trj', Trj_msg, queue_size=10)
@@ -258,12 +266,12 @@ def casannis(int_freq):
     # motionplan_pub_.publish(plan_msg)  # publish plan
     intertrj_pub_.publish(intertrj_msg)  # publish trj
     starting_pub_.publish(start_msg)    # publish to start replay
+    global start_replanning
+    start_replanning = False
 
     # for i in range(20):
     while True:
-
         # begin1 = time.time()
-
         # get shifted com and arm ee positions
         shifted_com_state = mpc.get_variable_after_knots_toshift(key_var='x', dimension_var=9)
         shifted_arm_ee = [
@@ -308,10 +316,16 @@ def casannis(int_freq):
 
         # shift state langrange multipliers
         shift_lamultx = mpc.get_shifted_variable(sol_previous['lam_x'], int(walk._nvars / mpc._knot_number))
+
         # end1 = time.time()
         # print('*****Updating time (msec):', 10e3 * (end1 - begin1))
 
         # begin1 = time.time()
+        # wait until you receive a message from replayer
+        # while start_replanning is False:
+        #     continue
+        # start_replanning = False
+
         sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
                          init_guess=shifted_guess, state_lamult=shift_lamultx, constr_lamult=sol_previous['lam_g'],

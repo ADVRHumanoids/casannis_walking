@@ -137,8 +137,13 @@ def casannis(int_freq):
     # rospy.Subscriber('/PayloadAware/motion_plan', MotionPlan_msg, motion_plan_callback)
     rospy.Subscriber('/PayloadAware/interpolated_trj', Trj_msg, interpolated_trj_callback)
 
+    # publisher to senf to planner so that it starts replanning
+    # replayer_avail_pub_ = rospy.Publisher('/PayloadAware/connection', Bool, queue_size=10)
+    # availblt_msg = Bool()
+    # availblt_msg.data = True
+
     # wait until planners sends a message that is connected
-    planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)
+    planner_connection = rospy.wait_for_message("/PayloadAware/connection", Bool, timeout=None)     # wait for start
 
     # Number of points to be published
     horizon_shift = received_trj[0]['horizon_shift']
@@ -154,6 +159,7 @@ def casannis(int_freq):
             trj_time = float(global_trj_point) / float(int_freq)
             plan_id = int(trj_time // horizon_shift)
             if plan_id > previous_plan_id:
+                # replayer_avail_pub_.publish(availblt_msg)
                 local_trj_point = 0
 
             print('available plans', len(received_trj))
@@ -182,14 +188,14 @@ def casannis(int_freq):
 
             # com trajectory
             com_trj = received_trj[plan_id]['com']
-            com_msg.pose.position.x = com_trj[0][local_trj_point]   #interpl['x'][0][counter]
+            com_msg.pose.position.x = com_trj[0][local_trj_point]
             com_msg.pose.position.y = com_trj[1][local_trj_point]
             com_msg.pose.position.z = com_trj[2][local_trj_point]
 
             # hands trajectory
             lh_trj = received_trj[plan_id]['p_mov_l']
             rh_trj = received_trj[plan_id]['p_mov_r']
-            lh_msg.pose.position.x = lh_trj[0][local_trj_point]    #interpl['p_mov_l'][0][counter]
+            lh_msg.pose.position.x = lh_trj[0][local_trj_point]
             lh_msg.pose.position.y = lh_trj[1][local_trj_point]
             lh_msg.pose.position.z = lh_trj[2][local_trj_point]
 
