@@ -262,7 +262,7 @@ def casannis(int_freq):
     # for i in range(20):
     while True:
 
-        begin1 = time.time()
+        # begin1 = time.time()
 
         # get shifted com and arm ee positions
         shifted_com_state = mpc.get_variable_after_knots_toshift(key_var='x', dimension_var=9)
@@ -308,16 +308,16 @@ def casannis(int_freq):
 
         # shift state langrange multipliers
         shift_lamultx = mpc.get_shifted_variable(sol_previous['lam_x'], int(walk._nvars / mpc._knot_number))
-        end1 = time.time()
-        print('*****Updating time (msec):', 10e3 * (end1 - begin1))
+        # end1 = time.time()
+        # print('*****Updating time (msec):', 10e3 * (end1 - begin1))
 
-        begin1 = time.time()
+        # begin1 = time.time()
         sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
                          init_guess=shifted_guess, state_lamult=shift_lamultx, constr_lamult=sol_previous['lam_g'],
                          nlp_params=new_nlp_params)
-        end1 = time.time()
-        print('*****Solution time (msec):', 10e3*(end1-begin1))
+        # end1 = time.time()
+        # print('*****Solution time (msec):', 10e3*(end1-begin1))
 
         # print(next_swing_leg_pos)
         interpl = walk.interpolate(sol, [mpc._contacts[ii] for ii in mpc._swing_id], mpc._swing_tgt, swing_clear,

@@ -156,8 +156,8 @@ def casannis(int_freq):
             if plan_id > previous_plan_id:
                 local_trj_point = 0
 
-            # print('available plans', len(received_trj))
-            # print('used plan', plan_id)
+            print('available plans', len(received_trj))
+            print('used plan', plan_id)
 
             # print('global_trj_time, plan_id: ', trj_time, plan_id)
             # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
