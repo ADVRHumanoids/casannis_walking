@@ -107,8 +107,11 @@ def casannis(int_freq):
 
     # ID of the foot to be moved, get from parameters
     swing_id = rospy.get_param("~sw_id")    # from command line as swing_id:=1/2/3/4
+    desired_gait = rospy.get_param("~des_gait")
     swing_id = swing_id.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
+    desired_gait = desired_gait.rstrip(']').lstrip('[').split(',')  # convert swing_id from "[a, b]" to [a,b]
     swing_id = [int(i)-1 for i in swing_id]
+    desired_gait = [int(i)-1 for i in desired_gait]
 
     # number of steps
     step_num = len(swing_id)
@@ -177,10 +180,11 @@ def casannis(int_freq):
     # receding time of the horizon
     nlp_discr = 0.2
     knots_shift = int(rospy.get_param("~shifted_knots"))
+
     horizon_shift = knots_shift * nlp_discr
 
     # handler
-    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=[2, 0, 3, 1],
+    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=desired_gait,
                    swing_dur=default_swing_dur, stance_dur=default_stance_dur, interpolation_freq=int_freq)
 
     # object class of the optimization problem
