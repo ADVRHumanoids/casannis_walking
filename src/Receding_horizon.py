@@ -348,6 +348,93 @@ class Receding_hz_handler(object):
 
         return next_params
 
+    def get_custom_swing_durations(self, strides):
+        '''
+        Compute the swing durations for the next optimization based on a default duration of swing and stance periods and
+        the optimization horizon. Compute also the swing_id for the next optimization based on desired gait pattern and
+        swing_id of previous solution.
+        :return: swing_durations and new_swing_id for the next optimization
+        '''
+
+        finished_step = False
+        started_step = False  # flags
+
+        max_step_num = len(self._desired_gait)  # maximum number of steps defined in the desired gait pattern
+        new_swing_id = self._swing_id  # first set the new swing id same as the previous
+
+        durations_flat = [a for k in self._swing_t for a in k]  # convert to flat list
+        durations_flat = (np.array(durations_flat) - self._time_shifting).tolist()  # shift all timings
+        durations_flat = [round(a, 2) for a in durations_flat]  # round on 2 decimal digits
+
+        if max_step_num == 1:
+            print('a')
+        # if first swing phase has elapsed already
+        if durations_flat[1] <= 0.0:
+            durations_flat = durations_flat[2:]  # delete first swing phase
+            if max_step_num > 1:
+                self._desired_gait.remove(new_swing_id[0])     # remove elapsed swing id from total list
+            new_swing_id = new_swing_id[1:]  # delete first swing id
+            finished_step = True  # flag to show that swing phase was finished
+            self.update_current_contacts_and_target([self._prev_swing_id[0]])   # update targets and contacts
+
+        # else if first swing phase has started but not elapsed
+        elif durations_flat[0] < 0.0:
+            durations_flat[0] = 0.0  # set starting of first swing phase to 0.0 time of the horizon
+
+        # time of the next swing phase
+        new_swing_time = durations_flat[-2] + self._swing_dur + self._stance_dur
+
+        # if next swing phase is within the horizon to plan and if there are desired steps remaining, add it in the list
+        if self._horizon > new_swing_time and max_step_num > 1:
+            # related with swing targets updating
+            tgt_dx = strides[0][0]
+            tgt_dy = strides[1][0]
+            tgt_dz = strides[2][0]
+
+            # identify which swing leg is the next one
+            last_swing_id = new_swing_id[-1]  # the last leg that is stepping in the horizon
+            last_swing_index = self._desired_gait.index(last_swing_id)  # index of the last step
+            new_swing_id.append(  # append new swing leg id based of desired gait pattern
+                self._desired_gait[last_swing_index - max_step_num + 1]
+            )
+
+            # append new swing phase timings
+            durations_flat.append(new_swing_time)
+            durations_flat.append(min(new_swing_time + self._swing_dur, self._horizon))
+            started_step = True  # flag to show that swing phase was finished
+            self._swing_tgt.append([self._contacts[new_swing_id[-1]][0] + tgt_dx,   # add new target
+                                    self._contacts[new_swing_id[-1]][1] + tgt_dy,
+                                    self._contacts[new_swing_id[-1]][2] + tgt_dz])
+
+        # else if we reach the time that there is one swing phase remaining in the desired gait
+        # elif self._horizon > new_swing_time and max_step_num == 1:
+        #     last_desired_swing += 1   # flag to recognise the moment
+
+        # if duration of the last swing phase to be planned is less than default duration,
+        # then swing phase should last more, apply the above unless it is already the last desired swing phase
+        if max_step_num != 1:
+            final_swing_phase_end_time = durations_flat[-2] + self._swing_dur
+            # if final_swing_phase_end_time < horizon_dur:
+            durations_flat[-1] = min(final_swing_phase_end_time, self._horizon)
+        else:
+            if self._swing_id != self._prev_swing_id:
+                final_swing_phase_end_time = durations_flat[-2] + self._swing_dur
+                # if final_swing_phase_end_time < horizon_dur:
+                durations_flat[-1] = min(final_swing_phase_end_time, self._horizon)
+        # if last_duration < swing_dur:
+        #     durations_flat[-1] = durations_flat[-2] + swing_dur
+
+        # convert to list of lists
+        half_list_size = int(len(durations_flat) / 2)  # half size of the flat list
+        swing_durations = [[durations_flat[2 * a], durations_flat[2 * a + 1]] for a in range(half_list_size)]
+
+        self._prev_swing_id = self._swing_id   # update class variables
+        self._prev_swing_t = self._swing_t
+        self._swing_id = new_swing_id
+        self._swing_t = swing_durations
+
+        return swing_durations, new_swing_id, [started_step, finished_step]
+
 
 variables_dim = {
     'x': 9,

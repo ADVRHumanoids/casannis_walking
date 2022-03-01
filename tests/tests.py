@@ -36,12 +36,26 @@ if __name__ == '__main__':
     all_contacts = contacts
     moving_contact = [[np.array([0.52584379, 0.18904212, 0.28303459]), np.array([0., 0., 0.])],
                       [np.array([0.52582343, -0.18897632, 0.28300443]), np.array([0., 0., 0.])]]
-    swing_id = [2]
-    swing_tgt = [[-0.24942160289010637, 0.34977278149106616, -0.718849844313593]]
+    swing_id = [0]
+    # swing_tgt = [[0.44942160289010637, 0.34977278149106616, -0.718849844313593]]
     swing_clear = 0.050
     swing_t = [[1.0, 3.0]]
 
     swing_contacts = [np.array([-0.3494216, 0.34977278, -0.71884984])]
+
+    # step up - debug custom stuff
+    total_swing_id = [0, 1, 2, 3]
+    steps_dx = [0.3, 0.3, 0.3, 0.3]
+    steps_dz = [0.3, 0.3, 0.0, 0.0]
+    steps_dy = [0.0, 0.0, 0.0, 0.0]
+    strides = [steps_dx, steps_dy, steps_dz]
+
+    swing_tgt = [[0.34942160289010637 + strides[0][0],
+                  0.34977278149106616 + strides[1][0],
+                  -0.718849844313593 + strides[2][0]]]
+    strides[0] = strides[0][1:]
+    strides[1] = strides[1][1:]
+    strides[2] = strides[2][1:]
 
     minimum_force, int_freq = 100, 300
     # call the solver of the optimization problem
@@ -58,7 +72,7 @@ if __name__ == '__main__':
     # interpl = interpl_previous
 
     # handler
-    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=[2, 0, 3, 1],
+    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=total_swing_id,
                    swing_dur=2.0, stance_dur=1.0, interpolation_freq=int_freq)
 
     mpc.set_current_contacts(contacts)
@@ -81,8 +95,14 @@ if __name__ == '__main__':
         ]
 
         # new swing_t and swing_id for next optimization
-        swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
+        # swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
+        swing_t, swing_id, another_step = mpc.get_custom_swing_durations(strides)
+        if another_step[0] is True:
+            strides[0] = strides[0][1:]
+            strides[1] = strides[1][1:]
+            strides[2] = strides[2][1:]
 
+        print(mpc._desired_gait)
         # get initial guess
         shifted_guess = mpc.get_shifted_solution(variables_dim)
 
