@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   centauro_contact_detection
-  hhcm_perception
+  #hhcm_perception
   actionlib_msgs
 )
 
@@ -76,7 +76,7 @@ add_action_files(
 generate_messages(
     DEPENDENCIES
     std_msgs
-    hhcm_perception
+    #hhcm_perception
     actionlib_msgs
     geometry_msgs
 )
@@ -113,7 +113,7 @@ generate_messages(
 catkin_package(
 #    INCLUDE_DIRS include
 #  LIBRARIES cartesio_with_py
-    CATKIN_DEPENDS rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs hhcm_perception
+    CATKIN_DEPENDS rospy geometry_msgs std_msgs centauro_contact_detection message_runtime actionlib_msgs #hhcm_perception
 #  DEPENDS system_lib
 )
 

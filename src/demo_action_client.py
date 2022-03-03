@@ -8,8 +8,8 @@ import actionlib
 # Brings in the messages used by the action, including the
 # goal message and the result message.
 import casannis_walking.msg
-from hhcm_perception.msg import Obstacles as Obst_array
-
+# from hhcm_perception.msg import Obstacles as Obst_array
+from casannis_walking.msg import Obstancles as Obst_array
 
 def demo_client():
     # Creates the SimpleActionClient, passing the type of the action
