@@ -165,6 +165,9 @@ def casannis(int_freq):
 
         swing_contacts.append(contacts[swing_id[i] - 1])
 
+    # get swing_duration
+    swing_duration = swing_t[0][1] - swing_t[0][0]
+
     # receive weight of payloads
     payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
     payload_m = payload_m.rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
@@ -196,7 +199,8 @@ def casannis(int_freq):
                      swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
 
     # interpolate the trj, pass solution values and interpolation frequency
-    interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq)
+    interpl = walk.interpolate(sol, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq,
+                               swing_default_dur=swing_duration)
 
     # import pickle
     # file = open('/home/ioannis/Desktop/interpl.txt', 'wb')
