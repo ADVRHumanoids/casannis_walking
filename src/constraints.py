@@ -504,9 +504,18 @@ def set_contact_parameters(contacts, swing_id, swing_target, clearance_times,
 
 
 def get_nominal_CoM_bounds_from_contacts(contacts, offset_from_payload=0):
+    '''
+    Get a nominal com region from the contact positions
+    Args:
+        contacts: the current contacts, should be a list of numpy.array (not a list of lists)
+        offset_from_payload: vertical offset, to be passed if we want to compensate for payload
+
+    Returns:
+        List of 2 np.arrays of 9 elements (pos, vel, acc), always zero velocity and acceleration,
+        thus it is currently only suitable for final knot constraints
+    '''
 
     sum_contacts = sum([sublist for sublist in contacts])
-
     mean_hor_foothold = [0.25 * coordinate for coordinate in sum_contacts]
 
     final_position_l = [mean_hor_foothold[0]] + [mean_hor_foothold[1]] + \

@@ -113,9 +113,10 @@ def casannis(int_freq):
     for i in range(step_num):
 
         # targets
-        swing_tgt.append([contacts[swing_id[i] - 1][0] + tgt_dx[i],
-                          contacts[swing_id[i] - 1][1] + tgt_dy[i],
-                          contacts[swing_id[i] - 1][2] + tgt_dz[i]])
+        swing_tgt.append(np.array([contacts[swing_id[i] - 1][0] + tgt_dx[i],
+                                   contacts[swing_id[i] - 1][1] + tgt_dy[i],
+                                   contacts[swing_id[i] - 1][2] + tgt_dz[i]
+                                   ]))
         # swing phases
         swing_t.append(rospy.get_param("~sw_t" + str(i+1)))  # from command line as swing_t:="[a,b]"
         swing_t[i] = swing_t[i].rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
