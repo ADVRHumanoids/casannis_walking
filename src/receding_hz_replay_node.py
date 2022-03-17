@@ -158,19 +158,19 @@ def casannis(int_freq):
 
             trj_time = float(global_trj_point) / float(int_freq)
             plan_id = int(trj_time // horizon_shift)
-            if plan_id > len(received_trj) - 1:
-                print('Not available plan.')
-                plan_id = previous_plan_id
-            else:
-                # print('global_trj_time, plan_id: ', trj_time, plan_id)
-                # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
-                swing_id = received_trj[plan_id]['swing_id']
-                step_num = len(swing_id)
-
-                # # convert to list of lists
-                flat_swing_t = received_trj[plan_id]['swing_t']
-                half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
-                swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
+            # if plan_id > len(received_trj) - 1:
+            #     print('Not available plan.')
+            #     plan_id = previous_plan_id
+            # else:
+            #     # print('global_trj_time, plan_id: ', trj_time, plan_id)
+            #     # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
+            #     swing_id = received_trj[plan_id]['swing_id']
+            #     step_num = len(swing_id)
+            #
+            #     # # convert to list of lists
+            #     flat_swing_t = received_trj[plan_id]['swing_t']
+            #     half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
+            #     swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
 
             if plan_id > previous_plan_id:
                 # replayer_avail_pub_.publish(availblt_msg)
@@ -179,6 +179,15 @@ def casannis(int_freq):
             print('available plans', len(received_trj))
             print('used plan', plan_id)
             print('local trj point', local_trj_point)
+
+            swing_id = received_trj[plan_id]['swing_id']
+            step_num = len(swing_id)
+
+            # # convert to list of lists
+            flat_swing_t = received_trj[plan_id]['swing_t']
+            half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
+            swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
+
             # check if current time is within swing phase and contact detection
             for i in range(step_num):
 

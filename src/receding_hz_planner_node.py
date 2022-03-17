@@ -161,7 +161,7 @@ def casannis(int_freq):
 
     default_swing_dur = swing_t[0][1] - swing_t[0][0]
     default_stance_dur = swing_t[0][0]
-    # swing_tgt = rh.get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
+    swing_tgt = rh.get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
 
     # receive weight of payloads
     payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
@@ -191,19 +191,19 @@ def casannis(int_freq):
 
     horizon_shift = knots_shift * nlp_discr
 
-    # step up # custommmmmmmmmmmmmmm
-    total_swing_id = [0, 1, 2, 3] * 3 + [2, 3]
-    steps_dx = [0.3, 0.3, 0.3, 0.3, 0.25, 0.25, 0.23, 0.23, 0.25, 0.25, 0.22, 0.22, 0.25, 0.25]
-    steps_dz = [0.3, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3]
-    steps_dy = [0.0] * 14
-    strides = [steps_dx, steps_dy, steps_dz]
-    swing_tgt = rh.get_swing_targets(swing_id, contacts, strides)
-    strides[0] = strides[0][1:]
-    strides[1] = strides[1][1:]
-    strides[2] = strides[2][1:]
+    # # step up # custommmmmmmmmmmmmmm
+    # total_swing_id = [0, 1, 2, 3] * 3 + [2, 3]
+    # steps_dx = [0.3, 0.3, 0.3, 0.3, 0.25, 0.25, 0.23, 0.23, 0.25, 0.25, 0.22, 0.22, 0.25, 0.25]
+    # steps_dz = [0.3, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3]
+    # steps_dy = [0.0] * 14
+    # strides = [steps_dx, steps_dy, steps_dz]
+    # swing_tgt = rh.get_swing_targets(swing_id, contacts, strides)
+    # strides[0] = strides[0][1:]
+    # strides[1] = strides[1][1:]
+    # strides[2] = strides[2][1:]
 
     # handler
-    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=total_swing_id,
+    mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=desired_gait,
                    swing_dur=default_swing_dur, stance_dur=default_stance_dur, interpolation_freq=int_freq)
 
     # object class of the optimization problem
@@ -293,12 +293,12 @@ def casannis(int_freq):
         ]
 
         # new swing_t and swing_id for next optimization
-        # swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
-        swing_t, swing_id, another_step = mpc.get_custom_swing_durations(strides)
-        if another_step[0] is True:
-            strides[0] = strides[0][1:]
-            strides[1] = strides[1][1:]
-            strides[2] = strides[2][1:]
+        swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
+        # swing_t, swing_id, another_step = mpc.get_custom_swing_durations(strides)
+        # if another_step[0] is True:
+        #     strides[0] = strides[0][1:]
+        #     strides[1] = strides[1][1:]
+        #     strides[2] = strides[2][1:]
 
         # get initial guess
         shifted_guess = mpc.get_shifted_solution(variables_dim)
@@ -308,7 +308,10 @@ def casannis(int_freq):
 
         # old_nlp_params = walk._P
         new_nlp_params = mpc.get_updated_nlp_params(walk._P, swing_clear)
-
+        if new_nlp_params[:-knots_shift] is walk._P[knots_shift:]:
+            print('^^^^^^^^^^same parameters')
+        else:
+            print('^^^^^^^^^^NOT same parameters')
         # # update contacts
         # # contacts = [np.array(new_nlp_params[knots_shift][3*i:3*(i+1)]) for i in range(4)]
         # nlp_params_extension = new_nlp_params[-3:]
