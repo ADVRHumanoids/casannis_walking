@@ -93,13 +93,13 @@ class Receding_hz_handler(object):
         #
         #             plt.subplot(3, 1, i + 1)
         #             for j in range(3):
-        #                 plt.plot(prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
-        #                 plt.plot([None] * knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
+        #                 plt.plot(self._prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
+        #                 plt.plot([None] * self._knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
         #     elif variables_dim[field_name] == 3:
         #         plt.figure()
         #         for j in range(3):
-        #             plt.plot(prev_solution[field_name][j::variables_dim[field_name]], '.-')
-        #             plt.plot([None] * knots_toshift + shifted_sol[field_name][j::variables_dim[field_name]], '.--')
+        #             plt.plot(self._prev_solution[field_name][j::variables_dim[field_name]], '.-')
+        #             plt.plot([None] * self._knots_toshift + shifted_sol[field_name][j::variables_dim[field_name]], '.--')
         #
         #     elif variables_dim[field_name] == 12:
         #         feet_labels = ['front left', 'front right', 'hind left', 'hind right']
@@ -108,8 +108,8 @@ class Receding_hz_handler(object):
         #         for i, name in enumerate(feet_labels):
         #             plt.subplot(2, 2, i + 1)
         #             for j in range(3):
-        #                 plt.plot(prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
-        #                 plt.plot([None] * knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
+        #                 plt.plot(self._prev_solution[field_name][3 * i + j::variables_dim[field_name]], '.-')
+        #                 plt.plot([None] * self._knots_toshift + shifted_sol[field_name][3 * i + j::variables_dim[field_name]], '.--')
         #     plt.suptitle(field_name)
         # plt.show()
 
@@ -259,8 +259,8 @@ class Receding_hz_handler(object):
         for i in range(step_num):
             # targets
             swing_tgt.append(np.array([self._contacts[self._swing_id[i]][0] + tgt_dx[i],
-                              self._contacts[self._swing_id[i]][1] + tgt_dy[i],
-                              self._contacts[self._swing_id[i]][2] + tgt_dz[i]]))
+                                       self._contacts[self._swing_id[i]][1] + tgt_dy[i],
+                                       self._contacts[self._swing_id[i]][2] + tgt_dz[i]]))
 
         self._swing_tgt = swing_tgt
 
@@ -349,6 +349,10 @@ class Receding_hz_handler(object):
 
             next_params.append(current_knot_params)
 
+            if next_params[:-self._knots_toshift] is previous_params[self._knots_toshift:]:
+                print('*************same parameters')
+            else:
+                print('*************NOT same parameters')
         return next_params
 
     def get_custom_swing_durations(self, strides):
@@ -473,7 +477,7 @@ def get_swing_targets(gait_pattern, contacts, strides):
     for i in range(step_num):
         # targets
         swing_tgt.append(np.array([contacts[gait_pattern[i]][0] + tgt_dx[i],
-                          contacts[gait_pattern[i]][1] + tgt_dy[i],
-                          contacts[gait_pattern[i]][2] + tgt_dz[i]]))
+                                   contacts[gait_pattern[i]][1] + tgt_dy[i],
+                                   contacts[gait_pattern[i]][2] + tgt_dz[i]]))
 
     return swing_tgt
