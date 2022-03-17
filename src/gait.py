@@ -271,12 +271,13 @@ class Gait:
                 gl.append(np.zeros(self._dimx))
                 gu.append(np.zeros(self._dimx))
 
+        # in case the nlp params are already known then use them
+        if nlp_params is not None:
+            P = nlp_params
+
         # final constraints
         Xl[-6:] = [0.0 for i in range(6)]  # zero velocity and acceleration
         Xu[-6:] = [0.0 for i in range(6)]
-
-        # initial guess
-        v0 = np.zeros(self._nvars)
 
         # format bounds and params according to solver
         lbv = cs.vertcat(Xl, Ul, Fl)
