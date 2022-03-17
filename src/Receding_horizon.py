@@ -61,7 +61,7 @@ class Receding_hz_handler(object):
 
         return shifted_var
 
-    def get_shifted_solution(self, dims):
+    def get_shifted_solution(self, dims, arms=True):
         '''
         Generate the new initial guess by shifting the previous solution.
         :param dims: dictionary with dimensions of the different variables
@@ -70,7 +70,10 @@ class Receding_hz_handler(object):
 
         # new_values = [0]
         # solution_keys = solution.keys()
-        solution_based_ordered_keys = ['x', 'u', 'F', 'Pl_mov', 'Pr_mov', 'DPl_mov', 'DPr_mov', 'F_virt_l', 'F_virt_r']
+        if arms is True:
+            solution_based_ordered_keys = ['x', 'u', 'F', 'Pl_mov', 'Pr_mov', 'DPl_mov', 'DPr_mov', 'F_virt_l', 'F_virt_r']
+        else:
+            solution_based_ordered_keys = ['x', 'u', 'F']
 
         shifted_sol = {}
         shifted_sol_array = []
@@ -212,9 +215,9 @@ class Receding_hz_handler(object):
             durations_flat.append(new_swing_time)
             durations_flat.append(min(new_swing_time + self._swing_dur, self._horizon))
             started_step = True  # flag to show that swing phase was finished
-            self._swing_tgt.append([self._contacts[new_swing_id[-1]][0] + tgt_dx,   # add new target
+            self._swing_tgt.append(np.array([self._contacts[new_swing_id[-1]][0] + tgt_dx,   # add new target
                                     self._contacts[new_swing_id[-1]][1] + tgt_dy,
-                                    self._contacts[new_swing_id[-1]][2] + tgt_dz])
+                                    self._contacts[new_swing_id[-1]][2] + tgt_dz]))
 
         # if duration of the last swing phase to be planned is less than default duration,
         # then swing phase should last more
@@ -255,9 +258,9 @@ class Receding_hz_handler(object):
 
         for i in range(step_num):
             # targets
-            swing_tgt.append([self._contacts[self._swing_id[i]][0] + tgt_dx[i],
+            swing_tgt.append(np.array([self._contacts[self._swing_id[i]][0] + tgt_dx[i],
                               self._contacts[self._swing_id[i]][1] + tgt_dy[i],
-                              self._contacts[self._swing_id[i]][2] + tgt_dz[i]])
+                              self._contacts[self._swing_id[i]][2] + tgt_dz[i]]))
 
         self._swing_tgt = swing_tgt
 
@@ -300,7 +303,7 @@ class Receding_hz_handler(object):
 
         for i in range(update_num):
             # update with first, second etc swing legs
-            self._contacts[swing_id_to_update[i]] = np.array(self._swing_tgt[i])
+            self._contacts[swing_id_to_update[i]] = self._swing_tgt[i]
 
             self._swing_tgt = self._swing_tgt[i+1:]
 
@@ -340,7 +343,7 @@ class Receding_hz_handler(object):
             contacts_before_new_knot = [np.array(next_params[-1][3 * i:3 * (i + 1)]) for i in range(4)]
             # print('Contacts before new knot: ', contacts_before_new_knot)
             current_knot_params = constraints.set_contact_parameters(
-                contacts_before_new_knot, [self._swing_id[-1]], [np.array(self._swing_tgt[-1])], [clearance_times],
+                contacts_before_new_knot, [self._swing_id[-1]], self._swing_tgt[-1], [clearance_times],
                 [np.array(clearance_swing_position[-1])], k, self._nlp_dt, steps_number=1
             )
 
@@ -402,9 +405,9 @@ class Receding_hz_handler(object):
             durations_flat.append(new_swing_time)
             durations_flat.append(min(new_swing_time + self._swing_dur, self._horizon))
             started_step = True  # flag to show that swing phase was finished
-            self._swing_tgt.append([self._contacts[new_swing_id[-1]][0] + tgt_dx,   # add new target
+            self._swing_tgt.append(np.array([self._contacts[new_swing_id[-1]][0] + tgt_dx,   # add new target
                                     self._contacts[new_swing_id[-1]][1] + tgt_dy,
-                                    self._contacts[new_swing_id[-1]][2] + tgt_dz])
+                                    self._contacts[new_swing_id[-1]][2] + tgt_dz]))
 
         # else if we reach the time that there is one swing phase remaining in the desired gait
         # elif self._horizon > new_swing_time and max_step_num == 1:
@@ -469,8 +472,8 @@ def get_swing_targets(gait_pattern, contacts, strides):
 
     for i in range(step_num):
         # targets
-        swing_tgt.append([contacts[gait_pattern[i]][0] + tgt_dx[i],
+        swing_tgt.append(np.array([contacts[gait_pattern[i]][0] + tgt_dx[i],
                           contacts[gait_pattern[i]][1] + tgt_dy[i],
-                          contacts[gait_pattern[i]][2] + tgt_dz[i]])
+                          contacts[gait_pattern[i]][2] + tgt_dz[i]]))
 
     return swing_tgt
