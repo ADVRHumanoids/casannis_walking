@@ -7,7 +7,7 @@
 
     <arg name="box_far_from_chest" default="False"/>
 
-    <arg name="swing_id" default="[3, 1, 4, 2]"/>
+    <arg name="swing_id" default="[3]"/>
 
     <arg name="target_dx" default="[0.1, 0.1, 0.1, 0.1]"/>
     <arg name="target_dy" default="[0.0, 0.0, 0.0, 0.0]"/>
@@ -35,7 +35,7 @@
     <arg name="linear_fvirtual" default="False"/>
 
     <!-- receding horizon -->
-    <arg name="shift_knots" default="3"/>
+    <arg name="shift_knots" default="1"/>
     <arg name="desired_gait" default="[3, 1, 4, 2]"/>
 
     <node name="casannis_planner" pkg="casannis_walking" type="receding_hz_planner_node.py" output="screen">
