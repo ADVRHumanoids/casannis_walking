@@ -219,9 +219,8 @@ class Gait:
             else:
                 final_contacts.append(contacts[i])
 
-        print(final_contacts)
-        final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts,
-                                                                       offset_from_payload=self._CoM_vert_offset)
+        # final_state = constraints.get_nominal_CoM_bounds_from_contacts(final_contacts,
+        #                                                                offset_from_payload=self._CoM_vert_offset)
 
         # iterate over knots starting from k = 0
         for k in range(self._knot_number):
@@ -235,8 +234,8 @@ class Gait:
             f_slice2 = (k + 1) * self._dimf_tot
 
             # state bounds
-            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k, self._knot_number,
-                                                             final_state)
+            state_bounds = constraints.bound_state_variables(x0, [np.full(9, -cs.inf), np.full(9, cs.inf)], k,
+                                                             self._knot_number)#, final_state)
             Xu[x_slice1:x_slice2] = state_bounds['max']
             Xl[x_slice1:x_slice2] = state_bounds['min']
 
@@ -437,12 +436,6 @@ class Gait:
             state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
             # forces
             forces_trajectory = self.forces_interpolation(solution=solution)
-
-        # state
-        state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
-
-        # forces
-        forces_trajectory = self.forces_interpolation(solution=solution)
 
         # swing leg trajectory planning & interpolation
         sw_interpl = []
