@@ -1133,7 +1133,7 @@ class GaitNonlinear(Gait):
 
     def solve(self, x0, contacts, mov_contact_initial, swing_id, swing_tgt, swing_clearance, swing_t, min_f=50,
               init_guess=None, state_lamult=None, constr_lamult=None, nlp_params=None):
-
+        # todo option to add final com constraint in the offline only case
         """Solve the stepping problem
 
         Args:
