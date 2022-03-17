@@ -438,12 +438,6 @@ class Gait:
             # forces
             forces_trajectory = self.forces_interpolation(solution=solution)
 
-        # state
-        state_trajectory = self.state_interpolation(solution=solution, resolution=resol)
-
-        # forces
-        forces_trajectory = self.forces_interpolation(solution=solution)
-
         # swing leg trajectory planning & interpolation
         sw_interpl = []
         for i in range(len(sw_curr)):

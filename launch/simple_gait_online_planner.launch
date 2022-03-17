@@ -9,7 +9,7 @@
 
     <arg name="swing_id" default="[3]"/>
 
-    <arg name="target_dx" default="[0.1, 0.1, 0.1, 0.1]"/>
+    <arg name="target_dx" default="[0.2, 0.2, 0.2, 0.2]"/>
     <arg name="target_dy" default="[0.0, 0.0, 0.0, 0.0]"/>
     <arg name="target_dz" default="[0.0, 0.0, 0.0, 0.0]"/>
 
