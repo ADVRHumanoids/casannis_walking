@@ -9,7 +9,7 @@
 
     <arg name="swing_id" default="[3]"/>
 
-    <arg name="target_dx" default="[0.1, 0.1, 0.1, 0.1]"/>
+    <arg name="target_dx" default="[0.25, 0.25, 0.25, 0.25]"/>
     <arg name="target_dy" default="[0.0, 0.0, 0.0, 0.0]"/>
     <arg name="target_dz" default="[0.0, 0.0, 0.0, 0.0]"/>
 
@@ -27,8 +27,8 @@
 
     <arg name="contact_det" default="False"/>
     <arg name="plots" default="False"/>
-    <arg name="clearance" default="0.05"/>
-    <arg name="min_force" default="100"/>
+    <arg name="clearance" default="0.1"/>
+    <arg name="min_force" default="180"/>
 
     <!-- Select Gait -->
     <arg name="forward_arms_config" default="True"/>

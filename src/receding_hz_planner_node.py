@@ -294,6 +294,7 @@ def casannis(int_freq):
 
         # new swing_t and swing_id for next optimization
         swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
+
         # swing_t, swing_id, another_step = mpc.get_custom_swing_durations(strides)
         # if another_step[0] is True:
         #     strides[0] = strides[0][1:]
