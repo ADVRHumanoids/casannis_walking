@@ -12,7 +12,7 @@ Trajectory Optimization based on CasADi, implemented for IIT's Centauro robot.
  
 :heavy_check_mark: Offline/online trajectory optimization for quadruped robots and quadruped manipulators carrying heavy payload.  
 :heavy_check_mark: Implemented using [CasADi] and its interface to [Ipopt] solver.  
-:heavy_check_mark: Based on ROS.  
+:heavy_check_mark: Implemented in Python, based on ROS.  
 
 <br>
 
@@ -23,8 +23,8 @@ To use the repo you will need:
 * [iit-centauro-ros-pkg]
 * [xbot2_examples]
 * [centauro_cartesio]
-* [cartesio_collision_support]
-* [yiannis_centauro_pytools]
+* [cartesio_collision_support] (optional)
+* [yiannis_centauro_pytools] (optional)
 * [hhcm_perception] (optional)
 
 ## Install & Build
@@ -32,28 +32,36 @@ casannis_walking is a catkin package. To install it you need to `git clone` into
 
 `git clone https://github.com/ADVRHumanoids/casannis_walking.git`
 
-Build with catkin_make or catkin build
+Build with `catkin_make` / `catkin build`
 
   
 ## Run
-  Launch the program using
+  For offline trajectory optimization try
   ```bash
-  roslaunch towr_ros towr_ros.launch  # debug:=true  (to debug with gdb)
+  mon launch casannis_walking cartesio.launch  
+  mon launch casannis_walking gait.launch
   ```
-  Click in the xterm terminal and hit 'o'. 
-  
-  Information about how to tune the paramters can be found [here](http://docs.ros.org/api/towr/html/group__Parameters.html). 
+  Or
+  ```bash
+  mon launch casannis_walking cartesio_with_arm_ee.launch  
+  mon launch casannis_walking gait_payload.launch
+  ```
+  For online trajectory optimization (under development) try
+  ```bash
+  mon launch casannis_walking cartesio.launch  
+  rosrun casannis_walking online_simple_gait_replay_node.py
+  mon launch casannis_walking simple_gait_online_planner.launch
+  ```
 
 ## Publications
 The repo is related with the following publication:
+
 Dadiotis I., Laurenzi A., Tsagarakis N., “Trajectory Optimization for Quadruped Mobile Manipulators that Carry Heavy
 Payload” (submitted)
 
 
-## Contributors 
+## Author 
 Ioannis Dadiotis
-
-Arturo Laurenzi
 
 [Ipopt]: https://github.com/coin-or/Ipopt
 [CasADi]: https://web.casadi.org/
