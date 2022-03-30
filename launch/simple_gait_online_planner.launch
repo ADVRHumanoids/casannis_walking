@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="dynamic" default="False"/>
+
+    <arg name="slope_x" default="0.0"/>
+
+    <arg name="box_far_from_chest" default="False"/>
+
+    <arg name="swing_id" default="[3]"/>
+
+    <arg name="target_dx" default="[0.25, 0.25, 0.25, 0.25]"/>
+    <arg name="target_dy" default="[0.0, 0.0, 0.0, 0.0]"/>
+    <arg name="target_dz" default="[0.0, 0.0, 0.0, 0.0]"/>
+
+    <arg name="swing_t1" default="[1.0, 3.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[4.0, 6.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[7.0, 9.0]" unless="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[10.0, 12.0]" unless="$(arg dynamic)"/>
+
+    <arg name="swing_t1" default="[1.0, 2.0]" if="$(arg dynamic)"/>
+    <arg name="swing_t2" default="[3.0, 4.0]" if="$(arg dynamic)"/>
+    <arg name="swing_t3" default="[5.0, 6.0" if="$(arg dynamic)"/>
+    <arg name="swing_t4" default="[7.0, 8.0]" if="$(arg dynamic)"/>
+
+    <!--arg name="payload_masses" default="[0.0, 0.0]"/-->
+
+    <arg name="contact_det" default="False"/>
+    <arg name="plots" default="False"/>
+    <arg name="clearance" default="0.1"/>
+    <arg name="min_force" default="180"/>
+
+    <!-- Select Gait -->
+    <arg name="forward_arms_config" default="True"/>
+    <arg name="linear_fvirtual" default="False"/>
+
+    <!-- receding horizon -->
+    <arg name="shift_knots" default="1"/>
+    <arg name="desired_gait" default="[3, 1, 4, 2]"/>
+
+    <node name="casannis_planner" pkg="casannis_walking" type="online_simple_gait_node.py" output="screen">
+        <param name="inclination_deg" value="$(arg slope_x)"/>
+        <param name="box_conservative" value="$(arg box_far_from_chest)"/>
+        <param name="sw_id" value="$(arg swing_id)"/>
+
+        <!-- step targets wrt to current position, order is based on swing_id -->
+        <param name="tgt_dx" value="$(arg target_dx)"/>
+        <param name="tgt_dy" value="$(arg target_dy)"/>
+        <param name="tgt_dz" value="$(arg target_dz)"/>
+
+        <param name="sw_t1" value="$(arg swing_t1)"/>
+        <param name="sw_t2" value="$(arg swing_t2)"/>
+        <param name="sw_t3" value="$(arg swing_t3)"/>
+        <param name="sw_t4" value="$(arg swing_t4)"/>
+        <param name="cont_det" value="$(arg contact_det)"/>
+        <param name="plots" value="$(arg plots)"/>
+        <param name="clear" value="$(arg clearance)"/>
+        <param name="min_for" value="$(arg min_force)"/>
+
+        <param name="forward_arms" value="$(arg forward_arms_config)"/>
+        <param name="linear_fvirt" value="$(arg linear_fvirtual)"/>
+        <param name="shifted_knots" value="$(arg shift_knots)"/>
+        <param name="des_gait" value="$(arg desired_gait)"/>
+
+    </node>
+
+</launch>

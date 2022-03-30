@@ -47,23 +47,8 @@ def casannis(int_freq):
     # get inclination of terrain
     inclination_deg = rospy.get_param("~inclination_deg")
 
-    # get param conservative_box which defines if the box constraints are near the chest or not
-    arm_box_conservative = rospy.get_param("~box_conservative")
-
-    # select gait among different developments
-    forward_arm_config = rospy.get_param("~forward_arms")
-    linear_fvirt = rospy.get_param("~linear_fvirt")
-
-    if forward_arm_config:
-        if linear_fvirt:
-            from gait_with_payload import Gait as SelectedGait
-        else:
-            from gait_with_payload import GaitNonlinear as SelectedGait
-    else:
-        if linear_fvirt:
-            from gait_with_payload_backward_arms import Gait as SelectedGait
-        else:
-            from gait_with_payload_backward_arms import GaitNonlinearBackward as SelectedGait
+    # select gait among different development
+    from gait import Gait as SelectedGait
 
     # map feet to a string for publishing to the corresponding topic
     id_name = ['FL', 'FR', 'HL', 'HR']
@@ -87,20 +72,8 @@ def casannis(int_freq):
                                              timeout=None))
         f_cont.append([f_init[i].pose.position.x, f_init[i].pose.position.y, f_init[i].pose.position.z])'''
 
-    # hands
-    lhand_init = rospy.wait_for_message("/cartesian/left_hand/current_reference", PoseStamped, timeout=None)
-    rhand_init = rospy.wait_for_message("/cartesian/right_hand/current_reference", PoseStamped, timeout=None)
-
     # contact points as array
     contacts = [np.array(x) for x in f_cont]
-
-    # hands
-    h_init = [lhand_init, rhand_init]
-    lh_mov = [lhand_init.pose.position.x, lhand_init.pose.position.y, lhand_init.pose.position.z]
-    rh_mov = [rhand_init.pose.position.x, rhand_init.pose.position.y, rhand_init.pose.position.z]
-
-    # hands
-    moving_contact = [[np.array(lh_mov), np.zeros(3)], [np.array(rh_mov), np.zeros(3)]]
 
     # state vector
     c0 = np.array([com_init.pose.position.x, com_init.pose.position.y, com_init.pose.position.z])
@@ -147,7 +120,6 @@ def casannis(int_freq):
     cont_detection = rospy.get_param("~cont_det")  # from command line as contact_det:=True/False
 
     # variables to loop for swing legs
-    # swing_tgt = []  # target positions as list
     swing_t = []    # time periods of the swing phases
     swing_contacts = []         # contact positions of the swing feet
 
@@ -162,13 +134,6 @@ def casannis(int_freq):
     default_swing_dur = swing_t[0][1] - swing_t[0][0]
     default_stance_dur = swing_t[0][0]
     swing_tgt = rh.get_swing_targets(swing_id, contacts, [tgt_dx, tgt_dy, tgt_dz])
-
-    # receive weight of payloads
-    payload_m = rospy.get_param("~mass_payl")  # from command line as swing_t:="[a,b]"
-    payload_m = payload_m.rstrip(']').lstrip('[').split(',')  # convert swing_t from "[a, b]" to [a,b]
-    payload_m = [float(i) for i in payload_m]
-
-    print('Payload masses', payload_m)
 
     # publisher to start replaying
     starting_pub_ = rospy.Publisher('PayloadAware/connection', Bool, queue_size=10)
@@ -191,40 +156,23 @@ def casannis(int_freq):
 
     horizon_shift = knots_shift * nlp_discr
 
-    # # step up # custommmmmmmmmmmmmmm
-    # total_swing_id = [0, 1, 2, 3] * 3 + [2, 3]
-    # steps_dx = [0.3, 0.3, 0.3, 0.3, 0.25, 0.25, 0.23, 0.23, 0.25, 0.25, 0.22, 0.22, 0.25, 0.25]
-    # steps_dz = [0.3, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3]
-    # steps_dy = [0.0] * 14
-    # strides = [steps_dx, steps_dy, steps_dz]
-    # swing_tgt = rh.get_swing_targets(swing_id, contacts, strides)
-    # strides[0] = strides[0][1:]
-    # strides[1] = strides[1][1:]
-    # strides[2] = strides[2][1:]
-
     # handler
     mpc = Receding(horizon=optim_horizon, knots_toshift=knots_shift, nlp_dt=nlp_discr, desired_gait=desired_gait,
                    swing_dur=default_swing_dur, stance_dur=default_stance_dur, interpolation_freq=int_freq)
 
     # object class of the optimization problem
-    walk = SelectedGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, payload_masses=payload_m,
-                        slope_deg=inclination_deg, conservative_box=arm_box_conservative)
+    walk = SelectedGait(mass=112, N=int(optim_horizon / nlp_discr), dt=nlp_discr, slope_deg=inclination_deg)
 
     variables_dim = {
         'x': walk._dimx,
         'u': walk._dimu,
-        'Pl_mov': walk._dimp_mov,
-        'Pr_mov': walk._dimp_mov,
-        'DPl_mov': walk._dimp_mov,
-        'DPr_mov': walk._dimp_mov,
         'F': walk._dimf_tot,
-        'F_virt_l': walk._dimf,
-        'F_virt_r': walk._dimf
     }
 
     # call the solver of the optimization problem
-    sol_previous = walk.solve(x0=x0, contacts=contacts, mov_contact_initial=moving_contact, swing_id=swing_id,
-                     swing_tgt=swing_tgt, swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+    sol_previous = walk.solve(x0=x0, contacts=contacts, swing_id=swing_id, swing_tgt=swing_tgt,
+                              swing_clearance=swing_clear, swing_t=swing_t, min_f=minimum_force)
+
     interpl_previous = walk.interpolate(sol_previous, swing_contacts, swing_tgt, swing_clear, swing_t, int_freq,
                                         swing_default_dur=default_swing_dur)
 
@@ -233,9 +181,6 @@ def casannis(int_freq):
                        ['fr_leg_pos_x', 'fr_leg_pos_y', 'fr_leg_pos_z'],
                        ['hl_leg_pos_x', 'hl_leg_pos_y', 'hl_leg_pos_z'],
                        ['hr_leg_pos_x', 'hr_leg_pos_y', 'hr_leg_pos_z']]
-
-    sw_arm_tostring = [['left_arm_pos_x', 'left_arm_pos_y', 'left_arm_pos_z'],
-                       ['right_arm_pos_x', 'right_arm_pos_y', 'right_arm_pos_z']]
 
     com_tostring = ['com_pos_x', 'com_pos_y', 'com_pos_z']
 
@@ -261,9 +206,6 @@ def casannis(int_freq):
     for j, coord_name in enumerate(['x', 'y', 'z']):
         setattr(intertrj_msg, com_tostring[j], interpl_previous['x'][j])     # com
 
-        for i, arm_name in enumerate(['p_mov_l', 'p_mov_r']):       # arms
-            setattr(intertrj_msg, sw_arm_tostring[i][j], interpl_previous[arm_name][j])
-
         for i in range(len(swing_id)):                              # legs
             setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl_previous['sw'][i][coord_name])
 
@@ -285,34 +227,19 @@ def casannis(int_freq):
         # begin1 = time.time()
         # get shifted com and arm ee positions
         shifted_com_state = mpc.get_variable_after_knots_toshift(key_var='x', dimension_var=9)
-        shifted_arm_ee = [
-            [
-                np.array(mpc.get_variable_after_knots_toshift(pos, 3)),
-                np.array(mpc.get_variable_after_knots_toshift(vel, 3))
-            ] for (pos, vel) in zip(['Pl_mov', 'Pr_mov'], ['DPl_mov', 'DPr_mov'])
-        ]
 
         # new swing_t and swing_id for next optimization
         swing_t, swing_id, another_step = mpc.get_next_swing_durations(stride)
 
-        # swing_t, swing_id, another_step = mpc.get_custom_swing_durations(strides)
-        # if another_step[0] is True:
-        #     strides[0] = strides[0][1:]
-        #     strides[1] = strides[1][1:]
-        #     strides[2] = strides[2][1:]
-
         # get initial guess
-        shifted_guess = mpc.get_shifted_solution(variables_dim)
+        shifted_guess = mpc.get_shifted_solution(variables_dim, arms=False)
 
         # get target positions fot the swing legs
         # swing_tgt = mpc.get_swing_targets(contacts, [tgt_dx, tgt_dy, tgt_dz])
 
         # old_nlp_params = walk._P
         new_nlp_params = mpc.get_updated_nlp_params(walk._P, swing_clear)
-        if new_nlp_params[:-knots_shift] is walk._P[knots_shift:]:
-            print('^^^^^^^^^^same parameters')
-        else:
-            print('^^^^^^^^^^NOT same parameters')
+
         # # update contacts
         # # contacts = [np.array(new_nlp_params[knots_shift][3*i:3*(i+1)]) for i in range(4)]
         # nlp_params_extension = new_nlp_params[-3:]
@@ -321,18 +248,18 @@ def casannis(int_freq):
         sol_previous = mpc.get_previous_solution()
         interpl_previous = mpc.get_previous_interpolated_solution()
 
-        # # debug some stuff
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        # print('@@@@@@@@@ prev_swing_t', mpc._prev_swing_t)
-        # print('@@@@@@@@@ new swing_t', mpc._swing_t)
-        # print('@@@@@@@@@ prev_swing_id', mpc._prev_swing_id)
-        # print('@@@@@@@@@ new swing_id', mpc._swing_id)
-        # print('@@@@@@@@@ Another step:', another_step)
-        # print('@@@@@@@@@ Contacts:', mpc._contacts)
-        # print('@@@@@@@@@ Swing tgt:', mpc._swing_tgt)
-        # # for i in range(knots_shift):
-        # #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        # debug some stuff
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        print('@@@@@@@@@ prev_swing_t', mpc._prev_swing_t)
+        print('@@@@@@@@@ new swing_t', mpc._swing_t)
+        print('@@@@@@@@@ prev_swing_id', mpc._prev_swing_id)
+        print('@@@@@@@@@ new swing_id', mpc._swing_id)
+        print('@@@@@@@@@ Another step:', another_step)
+        print('@@@@@@@@@ Contacts:', mpc._contacts)
+        print('@@@@@@@@@ Swing tgt:', mpc._swing_tgt)
+        # for i in range(knots_shift):
+        #     print('@@@@@@@@@ New nlp params:', nlp_params_extension[i])
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
         # shift state langrange multipliers
         shift_lamultx = mpc.get_shifted_variable(sol_previous['lam_x'], int(walk._nvars / mpc._knot_number))
@@ -346,7 +273,7 @@ def casannis(int_freq):
         #     continue
         # start_replanning = False
 
-        sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, mov_contact_initial=shifted_arm_ee, swing_id=mpc._swing_id,
+        sol = walk.solve(x0=shifted_com_state, contacts=mpc._contacts, swing_id=mpc._swing_id,
                          swing_tgt=mpc._swing_tgt, swing_clearance=swing_clear, swing_t=mpc._swing_t, min_f=minimum_force,
                          init_guess=shifted_guess, state_lamult=shift_lamultx, constr_lamult=sol_previous['lam_g'],
                          nlp_params=new_nlp_params)
@@ -379,9 +306,6 @@ def casannis(int_freq):
         intertrj_msg.swing_id = swing_id
         for j, coord_name in enumerate(['x', 'y', 'z']):
             setattr(intertrj_msg, com_tostring[j], interpl['x'][j])     # com
-
-            for i, arm_name in enumerate(['p_mov_l', 'p_mov_r']):       # arms
-                setattr(intertrj_msg, sw_arm_tostring[i][j], interpl[arm_name][j])
 
             for i in range(len(swing_id)):                              # legs
                 setattr(intertrj_msg, sw_leg_tostring[swing_id[i]][j], interpl['sw'][i][coord_name])

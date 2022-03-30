@@ -100,10 +100,6 @@ def casannis(int_freq):
                                              PoseStamped,
                                              timeout=None))
 
-    # hands
-    lhand_init = rospy.wait_for_message("/cartesian/left_hand/current_reference", PoseStamped, timeout=None)
-    rhand_init = rospy.wait_for_message("/cartesian/right_hand/current_reference", PoseStamped, timeout=None)
-
     f_pub_ = []     # list of publishers for the swing foot
     com_msg = PoseStamped()     # message to be published for com
     f_msg = []                  # list of messages to be published for swing feet
@@ -121,14 +117,6 @@ def casannis(int_freq):
 
     # CoM trj publisher
     com_pub_ = rospy.Publisher('/cartesian/com/reference', PoseStamped, queue_size=10)
-
-    # hands' publishers and msgs
-    left_h_pub_ = rospy.Publisher('/cartesian/' + task_name_moving_contact[0] + '/reference', PoseStamped, queue_size=10)
-    right_h_pub_ = rospy.Publisher('/cartesian/' + task_name_moving_contact[1] + '/reference', PoseStamped, queue_size=10)
-    lh_msg = PoseStamped()
-    rh_msg = PoseStamped()
-    lh_msg.pose.orientation = lhand_init.pose.orientation  # hands
-    rh_msg.pose.orientation = rhand_init.pose.orientation
 
     # Subscriber for contact flags
     rospy.Subscriber('/contacts', Contacts_msg, contacts_callback)
@@ -158,6 +146,19 @@ def casannis(int_freq):
 
             trj_time = float(global_trj_point) / float(int_freq)
             plan_id = int(trj_time // horizon_shift)
+            # if plan_id > len(received_trj) - 1:
+            #     print('Not available plan.')
+            #     plan_id = previous_plan_id
+            # else:
+            #     # print('global_trj_time, plan_id: ', trj_time, plan_id)
+            #     # print('global_trj, local_trj, plan_id: ', global_trj_point, local_trj_point, plan_id)
+            #     swing_id = received_trj[plan_id]['swing_id']
+            #     step_num = len(swing_id)
+            #
+            #     # # convert to list of lists
+            #     flat_swing_t = received_trj[plan_id]['swing_t']
+            #     half_list_size = int(len(flat_swing_t) / 2)  # half size of the flat list
+            #     swing_t = [[flat_swing_t[2 * a], flat_swing_t[2 * a + 1]] for a in range(half_list_size)]
 
             if plan_id > previous_plan_id:
                 # replayer_avail_pub_.publish(availblt_msg)
@@ -192,17 +193,6 @@ def casannis(int_freq):
             com_msg.pose.position.y = com_trj[1][local_trj_point]
             com_msg.pose.position.z = com_trj[2][local_trj_point]
 
-            # hands trajectory
-            lh_trj = received_trj[plan_id]['p_mov_l']
-            rh_trj = received_trj[plan_id]['p_mov_r']
-            lh_msg.pose.position.x = lh_trj[0][local_trj_point]
-            lh_msg.pose.position.y = lh_trj[1][local_trj_point]
-            lh_msg.pose.position.z = lh_trj[2][local_trj_point]
-
-            rh_msg.pose.position.x = rh_trj[0][local_trj_point]
-            rh_msg.pose.position.y = rh_trj[1][local_trj_point]
-            rh_msg.pose.position.z = rh_trj[2][local_trj_point]
-
             # # swing foot
             current_sw_leg_id = swing_id[swing_phase]
 
@@ -222,13 +212,6 @@ def casannis(int_freq):
             # publish com trajectory regardless contact detection
             com_msg.header.stamp = rospy.Time.now()
             com_pub_.publish(com_msg)
-
-            # publish hands trajectory regardless contact detection
-            lh_msg.header.stamp = rospy.Time.now()
-            left_h_pub_.publish(lh_msg)
-
-            rh_msg.header.stamp = rospy.Time.now()
-            right_h_pub_.publish(rh_msg)
 
             global_trj_point += 1
             local_trj_point += 1
