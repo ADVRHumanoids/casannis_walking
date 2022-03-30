@@ -1,0 +1,33 @@
+<launch>
+
+    <arg name="rate" default="100.0"/>
+    <arg name="prefix" default=""/>
+    <arg name="ik" default="$(find casannis_walking)/config/wbc_acceleration.yaml"/>
+    <arg name="gui" default="true"/>
+    
+    <param name="robot_description" 
+        textfile="$(find centauro_urdf)/urdf/centauro.urdf"/>
+    
+    <param name="robot_description_semantic"
+        textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
+    
+    <param name="cartesian/problem_description" 
+        textfile="$(arg ik)"/>
+    
+    <param name="cartesian/joint_blacklist" type="yaml" 
+        value="[velodyne_joint]"/>
+        
+    <param name="cartesian/velocity_whitelist" type="yaml" 
+        value="[j_wheel_1, j_wheel_2, j_wheel_3, j_wheel_4]"/>
+    
+
+    <include file="$(find cartesian_interface)/launch/cartesio.launch">
+        <arg name="rate" value="$(arg rate)"/>
+        <arg name="prefix" value="$(arg prefix)"/>
+    </include>
+
+    <node if="$(arg gui)"
+            pkg="rviz" type="rviz" name="rviz_centauro"
+            args="-d $(find centauro_cartesio)/configs/rviz/centauro_force.rviz"/>
+    
+</launch>

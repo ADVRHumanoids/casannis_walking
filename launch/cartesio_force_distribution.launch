@@ -1,0 +1,23 @@
+<launch>
+
+    <arg name="rate" default="100.0"/>
+    <arg name="prefix" default=""/>
+    <arg name="fopt" default="$(find casannis_walking)/config/wbc_force_distribution.yaml"/>
+
+    <param name="robot_description" 
+        textfile="$(find centauro_urdf)/urdf/centauro.urdf"/>
+    
+    <param name="robot_description_semantic"
+        textfile="$(find centauro_srdf)/srdf/centauro.srdf"/>
+
+    <node pkg="cartesio_acceleration_support" type="force_optimization_node" name="fopt">
+        <param name="problem_description" textfile="$(arg fopt)"/>
+        <remap from="force_opt/joint_states" to="cartesian/solution"/>
+        <param name="tf_prefix" value="fopt"/>
+        <param name="publish_tf" value="true"/>
+    </node>
+
+    <node pkg="tf" type="static_transform_publisher" name="fopt_to_ci"
+        args="0 0 0  0 0 0  ci/world fopt/world  10"/>
+    
+</launch>

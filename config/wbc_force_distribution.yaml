@@ -1,0 +1,104 @@
+solver_options:
+    regularization: 1e-6
+    back_end: qpoases
+    
+stack:
+    - [underactuation]
+    - [force_1, force_2, force_3, force_4]
+
+constraints:
+    - fc_1
+    - fc_2
+    - fc_3
+    - fc_4
+    - flim_1
+    - flim_2
+    - flim_3
+    - flim_4
+
+params:
+  - &f_weight 1e-1
+  - &f_min [-1000, -1000, 20, 0, 0, 0]
+  - &f_max [1000, 1000, 1000,  0, 0, 0]
+
+force_1:
+    lib_name: libcartesio_acceleration_support.so
+    type: Force
+    link: contact_1
+    weight: *f_weight
+
+force_2:
+    lib_name: libcartesio_acceleration_support.so
+    type: Force
+    link: contact_2
+    weight: *f_weight
+
+force_3:
+    lib_name: libcartesio_acceleration_support.so
+    type: Force
+    link: contact_3
+    weight: *f_weight
+
+force_4:
+    lib_name: libcartesio_acceleration_support.so
+    type: Force
+    link: contact_4
+    weight: *f_weight
+
+fc_1:
+    lib_name: libcartesio_acceleration_support.so
+    type: FrictionCone
+    link: contact_1
+    local: false
+
+fc_2:
+    lib_name: libcartesio_acceleration_support.so
+    type: FrictionCone
+    link: contact_2
+    local: false
+
+fc_3:
+    lib_name: libcartesio_acceleration_support.so
+    type: FrictionCone
+    link: contact_3
+    local: false
+
+fc_4:
+    lib_name: libcartesio_acceleration_support.so
+    type: FrictionCone
+    link: contact_4
+    local: false
+
+flim_1:
+    lib_name: libcartesio_acceleration_support.so
+    type: ForceLimits
+    link: contact_1
+    min: *f_min
+    max: *f_max
+
+flim_2:
+    lib_name: libcartesio_acceleration_support.so
+    type: ForceLimits
+    link: contact_2
+    min: *f_min
+    max: *f_max
+
+flim_3:
+    lib_name: libcartesio_acceleration_support.so
+    type: ForceLimits
+    link: contact_3
+    min: *f_min
+    max: *f_max
+
+flim_4:
+    lib_name: libcartesio_acceleration_support.so
+    type: ForceLimits
+    link: contact_4
+    min: *f_min
+    max: *f_max
+
+underactuation:
+    lib_name: libcartesio_acceleration_support.so
+    type: DynamicFeasibility
+    contacts: [contact_1, contact_2, contact_3, contact_4]
+    dynamics: false  # no acceleration here!
