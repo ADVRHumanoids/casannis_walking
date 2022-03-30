@@ -3,9 +3,9 @@ solver_options:
     back_end: qpoases
     
 stack:
-    - [contact_1, contact_2, contact_3, contact_4]
-    - [com]
-    - [postural, force_1, force_2, force_3, force_4, lhand, rhand]
+    - [contact_1, contact_2, contact_3, contact_4, com]
+    - [lhand, rhand]
+    - [postural, force_1, force_2, force_3, force_4]
 
 constraints:
     - underactuation
@@ -24,6 +24,7 @@ params:
   - &f_weight 1e-1
   - &f_min [-1000, -1000, -1000, 0, 0, 0]
   - &f_max [1000, 1000, 1000,  0, 0, 0]
+  - &hand_dof [0, 1, 2]
 
 force_1:
     lib_name: libcartesio_acceleration_support.so
@@ -145,7 +146,7 @@ lhand:
     lambda: 0.1
     base_link: pelvis
     distal_link: arm1_8
-    indices: [0, 1, 2]
+    indices: *hand_dof	#[0, 1, 2]
 
 rhand:
     lib_name: libcartesio_acceleration_support.so
@@ -153,7 +154,7 @@ rhand:
     lambda: 0.1
     base_link: pelvis
     distal_link: arm2_8
-    indices: [0, 1, 2]
+    indices: *hand_dof	#[0, 1, 2]
 
 com:
     lib_name: libcartesio_acceleration_support.so
@@ -164,6 +165,7 @@ postural:
     lib_name: libcartesio_acceleration_support.so
     type: Postural
     lambda: 0.1
+    # weight: 1e-1
 
 jlim: 
     lib_name: libcartesio_acceleration_support.so
