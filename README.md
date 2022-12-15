@@ -36,6 +36,8 @@ Build with `catkin_make` / `catkin build`
 
   
 ## Run
+The repo is not maintained to enable off-the-self deploying, but rather consists a record of the work done for the corresponding publication mentioned below. People interested are encouraged to contact the author.
+
   For offline trajectory optimization try
   ```bash
   mon launch casannis_walking cartesio.launch  
@@ -63,7 +65,7 @@ Available: https://arxiv.org/abs/2210.06803
 
 
 ## Author 
-Ioannis Dadiotis
+Ioannis Dadiotis, ioannis.dadiotis@iit.it
 
 [Ipopt]: https://github.com/coin-or/Ipopt
 [CasADi]: https://web.casadi.org/
