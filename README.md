@@ -36,7 +36,7 @@ Build with `catkin_make` / `catkin build`
 
   
 ## Run
-The repo is not maintained to enable off-the-self deploying, but rather consists a record of the work done for the corresponding publication mentioned below. People interested are encouraged to contact the author.
+The repo is **not maintained** to enable off-the-self deploying, but rather consists a record of the work done for the corresponding publication mentioned below. People interested are encouraged to contact the author.
 
   For offline trajectory optimization try
   ```bash
