@@ -61,7 +61,7 @@ The repo is related with the following publication:
 Dadiotis I., Laurenzi A., Tsagarakis N., “Trajectory Optimization for Quadruped Mobile Manipulators that Carry Heavy
 Payload”, 2022 IEEE-RAS International Conference on Humanoid Robots (Humanoids 2022), Ginowan, Okinawa, Japan
 
-Available: https://arxiv.org/abs/2210.06803
+Available: https://ieeexplore.ieee.org/document/10000252
 
 
 ## Author 
