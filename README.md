@@ -58,11 +58,22 @@ The repo is **not maintained** to enable off-the-self deploying, but rather cons
 ## Publications
 The repo is related with the following publication:
 
-Dadiotis I., Laurenzi A., Tsagarakis N., “Trajectory Optimization for Quadruped Mobile Manipulators that Carry Heavy
-Payload”, 2022 IEEE-RAS International Conference on Humanoid Robots (Humanoids 2022), Ginowan, Okinawa, Japan
+*Dadiotis I., Laurenzi A., Tsagarakis N., “Trajectory Optimization for Quadruped Mobile Manipulators that Carry Heavy
+Payload”, 2022 IEEE-RAS International Conference on Humanoid Robots (Humanoids 2022), Ginowan, Okinawa, Japan*
 
 Available: https://ieeexplore.ieee.org/document/10000252
 
+If you want to refer to this work please cite with:
+```
+@inproceedings{dadiotis2022trajectory,
+  title={Trajectory Optimization for Quadruped Mobile Manipulators that Carry Heavy Payload},
+  author={Dadiotis, Ioannis and Laurenzi, Arturo and Tsagarakis, Nikos},
+  booktitle={2022 IEEE-RAS 21st International Conference on Humanoid Robots (Humanoids)},
+  pages={291--298},
+  year={2022},
+  organization={IEEE}
+}
+```
 
 ## Author 
 Ioannis Dadiotis, ioannis.dadiotis@iit.it
